@@ -1,0 +1,16 @@
+[
+{
+  "modid": "Galacticc",
+  "name": "Galacticc",
+  "description": "Minecraft ghost client",
+  "version": "${version}",
+  "mcversion": "${mcversion}",
+  "url": "https://kopamed.cf",
+  "updateUrl": "",
+  "authorList": ["Kopamed"],
+  "credits": "SebSB for the tutorial",
+  "logoFile": "",
+  "screenshots": [],
+  "dependencies": []
+}
+]
