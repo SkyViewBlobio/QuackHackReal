@@ -7,7 +7,7 @@ import org.lwjgl.input.Keyboard;
 
 public class ClickGUI extends Module {
     public ClickGUI(){
-        super("ClickGUI", "Allows you to manage modules", false, true, Category.RENDER);
+        super("Menü", "Allows you to manage modules", false, true, Category.VISUELLES);
         this.setKey(Keyboard.KEY_RSHIFT);
     }
 

@@ -6,16 +6,15 @@ import me.kopamed.galacticc.Galacticc;
 import me.kopamed.galacticc.module.Category;
 import me.kopamed.galacticc.module.Module;
 import me.kopamed.galacticc.settings.Setting;
-import net.minecraft.client.gui.GuiShareToLan;
 import net.minecraft.network.play.client.C03PacketPlayer;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 import java.util.ArrayList;
-
+//ist draußen
 public class NoFall extends Module {
     public NoFall() {
-        super("NoFall", "You take zero fall damage", true, false, Category.PLAYER);
+        super("NoFall", "You take zero fall damage", true, false, Category.SPIELER);
         ArrayList<String> modes = new ArrayList<String>();
         modes.add("Vanilla");
         modes.add("Waterbucket");

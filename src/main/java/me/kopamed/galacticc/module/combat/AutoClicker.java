@@ -35,7 +35,7 @@ public class AutoClicker extends Module {
 
     public AutoClicker() {
         //Setting module attributes
-        super("AutoClicker", "Clicks for you", false, false, Category.COMBAT);
+        super("AutoKlicker", "Clicks for you", false, false, Category.ANGRIFF);
 
         //Creating left click settings
         Setting leftActive = new Setting("Left Click", this, true);

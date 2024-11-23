@@ -31,21 +31,21 @@ public class HUD extends Module {
     public ArrayList<Module> modList;
 
     public HUD() {
-        super("HUD", "Draws the module list on your screen", false, false, Category.RENDER);
+        super("Bildschirmzeugs", "Draws the module list on your screen", false, false, Category.VISUELLES);
 
         ArrayList<String> sort = new ArrayList<String>();
-        sort.add("Length long > short");
-        sort.add("Length short > long");
-        sort.add("Alphabet");
-        sort.add("idfc");
+        sort.add("Lang bis > kurz");
+        sort.add("kurz bis > lang");
+        sort.add("Alphabetisch");
+        sort.add("random");
 
-        Setting waterMark = new Setting("Watermark", this, true);
-        Setting background = new Setting("Background", this, false);
-        Setting textShadow = new Setting("Text Shadow", this, true);
-        Setting arrayListSort = new Setting("Arraylist sort", this, "Length long > short", sort);
+        Setting waterMark = new Setting("Modname", this, true);
+        Setting background = new Setting("Hintergrund", this, false);
+        Setting textShadow = new Setting("Text Sschatten", this, true);
+        Setting arrayListSort = new Setting("Arraylist sort", this, "lang bis > kurz", sort);
 
         Setting margin = new Setting("Module padding", this, 2, 0, 10, true);
-        Setting waterMarkMargin = new Setting("Watermark padding", this, 3, 0, 10, true);
+        Setting waterMarkMargin = new Setting("Modname padding", this, 3, 0, 10, true);
         Setting miniboxWidth = new Setting("Mini box width", this, 1, 0, 10, true);
         Setting topOffSet = new Setting("HUD top offset", this, 4, 0, 10, true);
         Setting rightOffSet = new Setting("HUD right offset", this, 4, 0, 10, true);
@@ -73,15 +73,15 @@ public class HUD extends Module {
         }
 
         sortMode = Galacticc.instance.settingsManager.getSettingByName(this, "Arraylist sort").getValString();
-        watermark = Galacticc.instance.settingsManager.getSettingByName(this, "Watermark").getValBoolean();
-        background = Galacticc.instance.settingsManager.getSettingByName(this, "Background").getValBoolean();
-        textShadow = Galacticc.instance.settingsManager.getSettingByName(this, "Text Shadow").getValBoolean();
+        watermark = Galacticc.instance.settingsManager.getSettingByName(this, "Modname").getValBoolean();
+        background = Galacticc.instance.settingsManager.getSettingByName(this, "Hintergrund").getValBoolean();
+        textShadow = Galacticc.instance.settingsManager.getSettingByName(this, "Text Sschatten").getValBoolean();
         // Renders active modules
         ScaledResolution sr = new ScaledResolution(Minecraft.getMinecraft());
 
 
         margin = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Module padding").getValDouble();
-        waterMarkMargin = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Watermark padding").getValDouble();
+        waterMarkMargin = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Modname padding").getValDouble();
         topOffSet = (int) Galacticc.instance.settingsManager.getSettingByName(this, "HUD top offset").getValDouble();;
         rightOffSet = (int) Galacticc.instance.settingsManager.getSettingByName(this, "HUD right offset").getValDouble();;
         miniboxWidth = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Mini box width").getValDouble();;
@@ -105,11 +105,11 @@ public class HUD extends Module {
 
         modList = Galacticc.instance.moduleManager.getModulesList();
 
-        if (sortMode.equalsIgnoreCase("Length long > short")) {
+        if (sortMode.equalsIgnoreCase("lang bis > kurz")) {
             modList = arch.longShort();
-        } else if (sortMode.equalsIgnoreCase("Length short > long")) {
+        } else if (sortMode.equalsIgnoreCase("kurz bis > lang")) {
             modList = arch.shortLong();
-        } else if (sortMode.equalsIgnoreCase("Alphabet")) {
+        } else if (sortMode.equalsIgnoreCase("Alphabetisch")) {
             modList = arch.abcList();
         }
 

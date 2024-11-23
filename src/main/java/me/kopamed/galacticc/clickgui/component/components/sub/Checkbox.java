@@ -26,7 +26,7 @@ public class Checkbox extends Component {
 		this.y = button.parent.getY() + button.offset;
 		this.offset = offset;
 	}
-
+// schau mal nach den kack farben alda was soll das junge
 	@Override
 	public void renderComponent() {
 		Gui.drawRect(parent.parent.getX() + 2, parent.parent.getY() + offset, parent.parent.getX() + (parent.parent.getWidth() * 1), parent.parent.getY() + offset + 12, this.hovered ? 0xFF222222 : 0xFF111111);

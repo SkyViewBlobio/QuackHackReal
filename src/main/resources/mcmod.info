@@ -1,14 +1,14 @@
 [
 {
-  "modid": "Galacticc",
-  "name": "Galacticc",
-  "description": "Minecraft ghost client",
+  "modid": "Quackhack",
+  "name": "QuackHack",
+  "description": "Ein hack für mich und meine freundin",
   "version": "${version}",
   "mcversion": "${mcversion}",
-  "url": "https://kopamed.cf",
+  "url": "https://github.com/SkyViewBlobio?tab=repositories",
   "updateUrl": "",
-  "authorList": ["Kopamed"],
-  "credits": "SebSB for the tutorial",
+  "authorList": ["SkyView"],
+  "credits": "Nur fische nutzen das",
   "logoFile": "",
   "screenshots": [],
   "dependencies": []

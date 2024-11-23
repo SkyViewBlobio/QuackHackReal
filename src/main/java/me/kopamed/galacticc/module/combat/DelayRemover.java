@@ -17,7 +17,7 @@ public class DelayRemover extends Module {
     private Field rightCap = null;
 
     public DelayRemover() {
-        super("Delay Remover", "Does not cap cps", false, false, Category.COMBAT);
+        super("-Umgeher", "Does not cap cps", false, false, Category.ANGRIFF);
 
         Setting leftDisable = new Setting("Remove LeftClick Delay", this, true);
         Setting rightDisable = new Setting("Remove RightClick Delay", this, true);

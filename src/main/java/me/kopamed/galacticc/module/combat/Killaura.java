@@ -1,21 +1,17 @@
 package me.kopamed.galacticc.module.combat;
 
-import akka.actor.dsl.Creators;
 import me.kopamed.galacticc.Galacticc;
 import me.kopamed.galacticc.module.Category;
 import me.kopamed.galacticc.module.Module;
 import me.kopamed.galacticc.settings.Setting;
 import me.kopamed.galacticc.utils.debian;
 import me.kopamed.galacticc.utils.mint;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.item.EntityPainting;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemSword;
 import net.minecraft.network.play.client.C02PacketUseEntity;
 import net.minecraft.network.play.client.C03PacketPlayer;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.PlayerEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 import java.util.ArrayList;
@@ -25,10 +21,10 @@ public class Killaura extends Module {
     private long cps, reach;
     private boolean autoBlock;
     public Killaura() {
-        super("Killaura", "Blatantly attacks enemies", true, false, Category.COMBAT);
-        Setting cps = new Setting("CPS", this, 10, 0.1, 30, false);
-        Setting reach = new Setting("Reach", this, 6, 1, 8, false);
-        Setting autoBlock = new Setting("AutoBlock", this, false);
+                super("Beschutzer", "Blatantly attacks enemies", true, false, Category.ANGRIFF);
+        Setting cps = new Setting("KlicksProSek", this, 10, 0.1, 30, false);
+        Setting reach = new Setting("Reichweite", this, 6, 1, 6, false);
+        Setting autoBlock = new Setting("AutoBlockierung", this, false);
 
         Galacticc.instance.settingsManager.rSetting(cps);
         Galacticc.instance.settingsManager.rSetting(reach);

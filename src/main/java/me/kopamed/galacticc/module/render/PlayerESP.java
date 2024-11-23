@@ -7,15 +7,11 @@ import me.kopamed.galacticc.Galacticc;
 import me.kopamed.galacticc.module.Category;
 import me.kopamed.galacticc.module.Module;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
-
-import java.util.List;
 
 public class PlayerESP extends Module {
 
     public PlayerESP() {
-        super("Player ESP", "Renders players in a dif way", false, false, Category.RENDER);
+        super("Player ESP", "Renders players in a dif way", false, false, Category.VISUELLES);
     }
 
     @Override

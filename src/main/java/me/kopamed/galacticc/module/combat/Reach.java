@@ -4,22 +4,16 @@ import me.kopamed.galacticc.Galacticc;
 import me.kopamed.galacticc.module.Category;
 import me.kopamed.galacticc.module.Module;
 import me.kopamed.galacticc.settings.Setting;
-import net.minecraft.client.renderer.entity.RenderLiving;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
-
-import java.awt.*;
-import java.awt.event.MouseEvent;
 
 public class Reach extends Module {
     private double blockReachDistance, minReach, maxReach;
     private float partialTick;
 
     public Reach() {
-        super("Reach", "You have a good gaming chait", true, false, Category.COMBAT);
+            super("Reichweite", "You have a good gaming chait", true, false, Category.ANGRIFF);
 
         Setting minReach = new Setting("Min Reach", this, 3, 3, 12, false);
         Setting maxReach = new Setting("Max Reach", this, 3.2, 3, 12, false);

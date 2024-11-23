@@ -10,7 +10,6 @@ import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
-import org.lwjgl.Sys;
 
 import java.lang.reflect.Field;
 
@@ -20,7 +19,7 @@ public class FastPlace extends Module {
     private Field delayTimer;
 
     public FastPlace() {
-        super("FastPlace", "Places blocks faster", false, false, Category.PLAYER);
+        super("Schnellplatzieren", "Places blocks faster", false, false, Category.SPIELER);
 
         Setting delay = new Setting("Delay", this, 2, 0, 20, true);
         Setting onlyBlocks = new Setting("Only Blocks", this, true);

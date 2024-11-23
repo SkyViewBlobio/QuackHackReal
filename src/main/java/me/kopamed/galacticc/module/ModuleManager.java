@@ -1,18 +1,16 @@
 package me.kopamed.galacticc.module;
 
-import me.kopamed.galacticc.Galacticc;
-import me.kopamed.galacticc.module.combat.*;
-import me.kopamed.galacticc.module.misc.SafeSettings;
-import me.kopamed.galacticc.module.misc.SelfDestruct;
-import me.kopamed.galacticc.module.movement.Fly;
-import me.kopamed.galacticc.module.movement.Speed;
+import me.kopamed.galacticc.module.combat.AutoClicker;
+import me.kopamed.galacticc.module.combat.DelayRemover;
+import me.kopamed.galacticc.module.combat.Killaura;
+import me.kopamed.galacticc.module.combat.Velocity;
 import me.kopamed.galacticc.module.movement.Sprint;
 import me.kopamed.galacticc.module.player.FastPlace;
-import me.kopamed.galacticc.module.player.NoFall;
 import me.kopamed.galacticc.module.render.ClickGUI;
 import me.kopamed.galacticc.module.render.Fullbright;
 import me.kopamed.galacticc.module.render.HUD;
-import me.kopamed.galacticc.module.render.PlayerESP;
+import me.kopamed.galacticc.module.render.Informationen;
+import me.kopamed.galacticc.module.textstuff.Watermark;
 
 import java.util.ArrayList;
 
@@ -26,17 +24,19 @@ public class ModuleManager {
         this.modules.add(new Sprint());
         this.modules.add(new AutoClicker());
         this.modules.add(new Velocity());
-        this.modules.add(new Fly());
-        this.modules.add(new NoFall());
+        this.modules.add(new Watermark());
+        //this.modules.add(new Fly());
+        //this.modules.add(new NoFall());
         this.modules.add(new Fullbright());
         //this.modules.add(new Speed());
-        this.modules.add(new AntiBot());
+        //this.modules.add(new AntiBot());
         this.modules.add(new FastPlace());
-        this.modules.add(new SelfDestruct());
+        //this.modules.add(new SelfDestruct());
         this.modules.add(new DelayRemover());
         //this.modules.add(new Reach());
         //this.modules.add(new PlayerESP());
         this.modules.add(new Killaura());
+        this.modules.add(new Informationen());
     }
 
     public Module getModule(String name) {

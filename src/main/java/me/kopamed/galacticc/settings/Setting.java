@@ -6,13 +6,6 @@ import java.util.ArrayList;
 import me.kopamed.galacticc.Galacticc;
 import me.kopamed.galacticc.module.Module;
 
-/**
- *  Made by HeroCode
- *  it's free to use
- *  but you have to credit him
- *
- *  @author HeroCode
- */
 public class Setting {
 	
 	private String name;

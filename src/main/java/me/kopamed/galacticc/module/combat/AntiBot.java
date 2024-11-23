@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.collect.Ordering;
-import ibxm.Player;
 import me.kopamed.galacticc.Galacticc;
 import me.kopamed.galacticc.module.Category;
 import me.kopamed.galacticc.module.Module;
@@ -14,13 +13,11 @@ import net.minecraft.client.network.NetworkPlayerInfo;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
-
-import java.util.List;
-
+//ist draußen
 public class AntiBot extends Module {
     public static List<EntityPlayer> bots = new ArrayList<EntityPlayer>();
     public AntiBot() {
-        super("AntiBot", "Stops you from hitting bots", false, false, Category.COMBAT);
+        super("AntiBot", "Stops you from hitting bots", false, false, Category.ANGRIFF);
     }
 
     @SubscribeEvent

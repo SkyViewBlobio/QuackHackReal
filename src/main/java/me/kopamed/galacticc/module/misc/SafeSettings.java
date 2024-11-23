@@ -13,7 +13,7 @@ public class SafeSettings extends Module {
     boolean mode;
     boolean allow;
     public SafeSettings() {
-        super("Safe Settings", "Makes sure that you don't enable a setting by accident", false, false, Category.MISC);
+        super("-Sicherheit", "Makes sure that you don't enable a setting by accident", false, false, Category.SONSTIGES);
 
         ArrayList<String> options = new ArrayList<String>();
         options.add("tick = disallow");

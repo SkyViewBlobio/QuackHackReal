@@ -9,10 +9,10 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 import java.util.HashSet;
 import java.util.Set;
-
+//ist draußen
 public class Fly extends Module {
     public Fly(){
-    super("Fly", "nyooom", true, false, Category.MOVEMENT);
+    super("Fly", "nyooom", true, false, Category.BEWEGUNG);
     }
 
     @Override

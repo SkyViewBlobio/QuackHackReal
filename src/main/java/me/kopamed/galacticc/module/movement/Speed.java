@@ -8,12 +8,12 @@ import me.kopamed.galacticc.module.Module;
 import me.kopamed.galacticc.settings.Setting;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
-
+//ist draußen
 public class Speed extends Module {
     private float speed;
     private float defSpeed;
     public Speed() {
-        super("Speed", "Allows you to go fast like lightning McQueen (kachaow)", true, false, Category.MOVEMENT);
+        super("Speed", "Allows you to go fast like lightning McQueen (kachaow)", true, false, Category.BEWEGUNG);
         Galacticc.instance.settingsManager.rSetting(new Setting("Multiplier", this, 1.1, 0.01, 10, false));
     }
 
