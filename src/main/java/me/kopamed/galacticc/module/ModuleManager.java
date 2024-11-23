@@ -9,7 +9,7 @@ import me.kopamed.galacticc.module.player.FastPlace;
 import me.kopamed.galacticc.module.render.ClickGUI;
 import me.kopamed.galacticc.module.render.Fullbright;
 import me.kopamed.galacticc.module.render.HUD;
-import me.kopamed.galacticc.module.render.Informationen;
+import me.kopamed.galacticc.module.textstuff.Informationen;
 import me.kopamed.galacticc.module.textstuff.Watermark;
 
 import java.util.ArrayList;
