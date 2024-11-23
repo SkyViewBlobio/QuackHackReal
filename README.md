@@ -36,7 +36,6 @@ To improve readability, no line of code will exceed 80 characters. For example:
  *      java
  *      boolean showFPS = 
  *          Galacticc.instance.settingsManager.getSettingByName(this, "Zeige FPS").getValBoolean();
- *      ```
  *
  * 4. **Helpers and Reflection:** 
  *    I will leverage helper methods and reflection to access private Minecraft fields, 
