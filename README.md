@@ -18,7 +18,7 @@ To improve readability, no line of code will exceed 80 characters. For example:
  *    When initializing settings or instances, I will break the lines after key assignments 
  *    for better readability. For example:
  *    - Instead of writing the entire line in one go:
- *      ```java
+ *      java
  *      Galacticc.instance.settingsManager.rSetting(new Setting("Y Offset", this, 0, -screenHeight, screenHeight, true));
  *      ```
  *      I will split it after the `new Setting` keyword:
@@ -31,7 +31,7 @@ To improve readability, no line of code will exceed 80 characters. For example:
  * 3. **Booleans Assignment:** 
  *    Booleans will also be split after the `=` operator for clarity. For example:
  *    - Instead of writing:
- *      ```java
+ *      java
  *      boolean showFPS = Galacticc.instance.settingsManager.getSettingByName(this, "Zeige FPS").getValBoolean();
  *      ```
  *      I will structure it as:
