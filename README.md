@@ -1,23 +1,19 @@
 ## QuackHack
 - ein 1.8.9 MC-client für mich und meine freundin.
 
-/*
- * In my Minecraft 1.8.9 Forge client structure, I will adhere to a few key principles 
- * to ensure readability and maintainability:
- *
- * 1. **Line Length Limitation:** 
- *    I will always ensure that no line exceeds 80 characters, making the code easier 
- *    to read. For example:
- *    - Instead of writing long lines like:
- *      ```java
- *      int yOffset = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Y Offset").getValDouble();
- *      ```
- *      I will split them after each significant assignment, such as:
- *      ```java
- *      int yOffset = (int) 
- *          Galacticc.instance.settingsManager.getSettingByName(this, "Y Offset").getValDouble();
- *      ```
- *
+> [!CAUTION]
+> Client Structure Guidelines for Minecraft 1.8.9 Forge
+
+This document outlines the structure and coding practices I follow when developing my Minecraft 1.8.9 Forge client. The goal is to ensure readability, maintainability, and adherence to good coding practices throughout the project.
+
+### 1. Line Length Limitation
+
+To improve readability, no line of code will exceed 80 characters. For example:
+
+- Instead of writing a long line like this:
+  ```java
+  int yOffset = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Y Offset").getValDouble();
+
  * 2. **Settings Initialization:** 
  *    When initializing settings or instances, I will break the lines after key assignments 
  *    for better readability. For example:
