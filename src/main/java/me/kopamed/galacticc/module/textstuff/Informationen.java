@@ -36,7 +36,7 @@ public class Informationen extends Module {
         Galacticc.instance.settingsManager.rSetting(new Setting("SpielTag", this, true));
         Galacticc.instance.settingsManager.rSetting(new Setting("Ping", this, true));
         Galacticc.instance.settingsManager.rSetting(new Setting("Systemdatum", this, true));
-        Galacticc.instance.settingsManager.rSetting(new Setting("Item Info", this, true));
+        Galacticc.instance.settingsManager.rSetting(new Setting("Hand Info", this, true));
         Galacticc.instance.settingsManager.rSetting(new Setting("Traenke", this, true));
 
         Galacticc.instance.settingsManager.rSetting(new Setting("X Offset", this, 0, -500, 500, true));
@@ -127,7 +127,7 @@ public class Informationen extends Module {
             if (heldItem != null) {
                 String itemName = heldItem.getDisplayName();
                 int durability = heldItem.getMaxDamage() - heldItem.getItemDamage();
-                infoList.add(new String[]{"Item", itemName + " (" + durability + " Durability)"});
+                infoList.add(new String[]{"Hand", itemName + " (" + durability + " Durability)"});
             }
         }
         if (showPotions) {

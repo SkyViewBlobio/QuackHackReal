@@ -30,7 +30,7 @@ public class Button extends Component {
 	private ArrayList<Component> subcomponents;
 	public boolean open;
 	private int height;
-	
+
 	public Button(Module mod, Frame parent, int offset) {
 		this.mod = mod;
 		this.parent = parent;
@@ -58,7 +58,7 @@ public class Button extends Component {
 		this.subcomponents.add(new Keybind(this, opY));
 		this.subcomponents.add(new VisibleButton(this, mod, opY));
 	}
-	
+
 	@Override
 	public void setOff(int newOff) {
 		offset = newOff;
@@ -68,7 +68,7 @@ public class Button extends Component {
 			opY += 12;
 		}
 	}
-	
+
 	@Override
 	public void renderComponent() {
 		Gui.drawRect(parent.getX(), this.parent.getY() + this.offset, parent.getX() + parent.getWidth(), this.parent.getY() + 12 + this.offset, this.isHovered ? (this.mod.isToggled() ? new Color(0xFF222222).darker().getRGB() : 0xFF222222) : (this.mod.isToggled() ? new Color(14,14,14).getRGB() : 0xFF111111));
@@ -76,7 +76,7 @@ public class Button extends Component {
 		GL11.glScalef(0.5f,0.5f, 0.5f);
 		Minecraft.getMinecraft().fontRendererObj.drawStringWithShadow(this.mod.getName(), (parent.getX() + 2) * 2, (parent.getY() + offset + 2) * 2 + 4, this.mod.isToggled() ? 0x999999 : -1);
 		if(this.subcomponents.size() > 2)
-		Minecraft.getMinecraft().fontRendererObj.drawStringWithShadow(this.open ? "-" : "+", (parent.getX() + parent.getWidth() - 10) * 2, (parent.getY() + offset + 2) * 2 + 4, -1);
+			Minecraft.getMinecraft().fontRendererObj.drawStringWithShadow(this.open ? "-" : "+", (parent.getX() + parent.getWidth() - 10) * 2, (parent.getY() + offset + 2) * 2 + 4, -1);
 		GL11.glPopMatrix();
 		if(this.open) {
 			if(!this.subcomponents.isEmpty()) {
@@ -87,7 +87,7 @@ public class Button extends Component {
 			}
 		}
 	}
-	
+
 	@Override
 	public int getHeight() {
 		if(this.open) {
@@ -95,7 +95,7 @@ public class Button extends Component {
 		}
 		return 12;
 	}
-	
+
 	@Override
 	public void updateComponent(int mouseX, int mouseY) {
 		this.isHovered = isMouseOnButton(mouseX, mouseY);
@@ -105,7 +105,7 @@ public class Button extends Component {
 			}
 		}
 	}
-	
+
 	@Override
 	public void mouseClicked(int mouseX, int mouseY, int button) {
 		if(isMouseOnButton(mouseX, mouseY) && button == 0) {
@@ -119,21 +119,21 @@ public class Button extends Component {
 			comp.mouseClicked(mouseX, mouseY, button);
 		}
 	}
-	
+
 	@Override
 	public void mouseReleased(int mouseX, int mouseY, int mouseButton) {
 		for(Component comp : this.subcomponents) {
 			comp.mouseReleased(mouseX, mouseY, mouseButton);
 		}
 	}
-	
+
 	@Override
 	public void keyTyped(char typedChar, int key) {
 		for(Component comp : this.subcomponents) {
 			comp.keyTyped(typedChar, key);
 		}
 	}
-	
+
 	public boolean isMouseOnButton(int x, int y) {
 		if(x > parent.getX() && x < parent.getX() + parent.getWidth() && y > this.parent.getY() + this.offset && y < this.parent.getY() + 12 + this.offset) {
 			return true;

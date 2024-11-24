@@ -22,7 +22,7 @@ public class ModeButton extends Component {
 	private Module mod;
 
 	private int modeIndex;
-	
+
 	public ModeButton(Setting set, Button button, Module mod, int offset) {
 		this.set = set;
 		this.parent = button;
@@ -32,12 +32,12 @@ public class ModeButton extends Component {
 		this.offset = offset;
 		this.modeIndex = 0;
 	}
-	
+
 	@Override
 	public void setOff(int newOff) {
 		offset = newOff;
 	}
-	
+
 	@Override
 	public void renderComponent() {
 		Gui.drawRect(parent.parent.getX() + 2, parent.parent.getY() + offset, parent.parent.getX() + (parent.parent.getWidth() * 1), parent.parent.getY() + offset + 12, this.hovered ? 0xFF222222 : 0xFF111111);
@@ -47,14 +47,14 @@ public class ModeButton extends Component {
 		Minecraft.getMinecraft().fontRendererObj.drawStringWithShadow("Mode: " + set.getValString(), (parent.parent.getX() + 7) * 2, (parent.parent.getY() + offset + 2) * 2 + 5, -1);
 		GL11.glPopMatrix();
 	}
-	
+
 	@Override
 	public void updateComponent(int mouseX, int mouseY) {
 		this.hovered = isMouseOnButton(mouseX, mouseY);
 		this.y = parent.parent.getY() + offset;
 		this.x = parent.parent.getX();
 	}
-	
+
 	@Override
 	public void mouseClicked(int mouseX, int mouseY, int button) {
 		if(isMouseOnButton(mouseX, mouseY) && button == 0 && this.parent.open) {
@@ -68,7 +68,7 @@ public class ModeButton extends Component {
 			set.setValString(set.getOptions().get(modeIndex));
 		}
 	}
-	
+
 	public boolean isMouseOnButton(int x, int y) {
 		if(x > this.x && x < this.x + 88 && y > this.y && y < this.y + 12) {
 			return true;

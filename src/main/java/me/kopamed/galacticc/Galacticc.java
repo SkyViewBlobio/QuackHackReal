@@ -7,6 +7,7 @@ import me.kopamed.galacticc.clickgui.ClickGui;
 import me.kopamed.galacticc.module.Module;
 import me.kopamed.galacticc.module.ModuleManager;
 import me.kopamed.galacticc.module.misc.SafeSettings;
+import me.kopamed.galacticc.module.render.ClickGUI;
 import me.kopamed.galacticc.settings.SettingsManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
@@ -28,6 +29,8 @@ public class Galacticc
     public ModuleManager moduleManager;
     public SettingsManager settingsManager;
     public ClickGui clickGui;
+    public ClickGUI clickGUI; // New instance for the ClickGUI module
+
     public SaveLoad saveLoad;
     public CommandManager commandManager;
     public ArrayList<EntityPlayer> bots = new ArrayList<EntityPlayer>();
@@ -43,6 +46,8 @@ public class Galacticc
         moduleManager = new ModuleManager();
         moduleManager.addModule(new SafeSettings());
         saveLoad = new SaveLoad();
+        clickGUI = new ClickGUI(); // Initialize ClickGUI module
+        moduleManager.addModule(clickGUI); // Register ClickGUI with the ModuleManager
         clickGui = new ClickGui();
         commandManager = new CommandManager();
     }
@@ -88,6 +93,7 @@ public class Galacticc
         }
         this.moduleManager = null;
         this.clickGui = null;
+        this.clickGUI = null; // Clean up ClickGUI instance
     }
 
     public ArrayList<EntityPlayer> getBots() {

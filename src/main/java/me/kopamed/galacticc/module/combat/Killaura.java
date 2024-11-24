@@ -7,6 +7,10 @@ import me.kopamed.galacticc.settings.Setting;
 import me.kopamed.galacticc.utils.debian;
 import me.kopamed.galacticc.utils.mint;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.boss.EntityDragon;
+import net.minecraft.entity.boss.EntityWither;
+import net.minecraft.entity.monster.*;
+import net.minecraft.entity.passive.*;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemSword;
 import net.minecraft.network.play.client.C02PacketUseEntity;
@@ -19,57 +23,129 @@ import java.util.List;
 
 public class Killaura extends Module {
     private long cps, reach;
-    private boolean autoBlock;
+    private boolean autoBlock, attackAnimals, attackMonsters, attackPassives, attackPlayers;
+
     public Killaura() {
-                super("Beschutzer", "Blatantly attacks enemies", true, false, Category.ANGRIFF);
+        super("Beschutzer", "Blatantly attacks enemies", true, false, Category.ANGRIFF);
+
         Setting cps = new Setting("KlicksProSek", this, 10, 0.1, 30, false);
         Setting reach = new Setting("Reichweite", this, 6, 1, 6, false);
         Setting autoBlock = new Setting("AutoBlockierung", this, false);
+        Setting animals = new Setting("Angriffe Tiere", this, true);
+        Setting monsters = new Setting("Angriffe Monster", this, true);
+        Setting passives = new Setting("Angriffe Passiv", this, false);
+        Setting players = new Setting("Angriffe Spieler", this, true);
 
         Galacticc.instance.settingsManager.rSetting(cps);
         Galacticc.instance.settingsManager.rSetting(reach);
         Galacticc.instance.settingsManager.rSetting(autoBlock);
+        Galacticc.instance.settingsManager.rSetting(animals);
+        Galacticc.instance.settingsManager.rSetting(monsters);
+        Galacticc.instance.settingsManager.rSetting(passives);
+        Galacticc.instance.settingsManager.rSetting(players);
     }
 
     @SubscribeEvent
     public void onMotion(TickEvent.PlayerTickEvent e) {
         updateVals();
-        if(e.phase != TickEvent.Phase.START || mc.thePlayer.isSpectator()) {
+        if (e.phase != TickEvent.Phase.START || mc.thePlayer.isSpectator()) {
             return;
         }
 
         List<EntityLivingBase> targets = debian.getTargets(reach);
-        targets = debian.sortByRange(targets);
+        List<EntityLivingBase> filteredTargets = new ArrayList<>();
 
-        if (targets.isEmpty()) {
+        for (EntityLivingBase entity : targets) {
+            if (shouldAttack(entity)) {
+                filteredTargets.add(entity);
+            }
+        }
+
+        filteredTargets = debian.sortByRange(filteredTargets);
+
+        if (filteredTargets.isEmpty()) {
             return;
         }
 
-        EntityLivingBase target = targets.get(0);
-        ArrayList<EntityPlayer> players = debian.getPlayers(targets, reach);
+        EntityLivingBase target = filteredTargets.get(0);
 
-        //e.player.setRotationYawHead(debian.getRotations(target)[0]);
+        mc.thePlayer.sendQueue.addToSendQueue(new C03PacketPlayer.C06PacketPlayerPosLook(
+                mc.thePlayer.posX,
+                mc.thePlayer.getEntityBoundingBox().minY,
+                mc.thePlayer.posZ,
+                debian.getRotations(target)[0],
+                debian.getRotations(target)[1],
+                mc.thePlayer.onGround
+        ));
 
-        //e.player.rotationYaw = (debian.getRotations(target)[0]);
-        //e.player.rotationPitch = (debian.getRotations(target)[1]);
-        //mc.thePlayer.sendQueue.addToSendQueue(new C03PacketPlayer.C05PacketPlayerLook(debian.getRotations(target)[0], debian.getRotations(target)[1], mc.thePlayer.onGround));
-                /*
-        mc.thePlayer.rotationYaw = (debian.getRotations(target)[0]);
-        mc.thePlayer.rotationPitch = (debian.getRotations(target)[1]);
-        */
-        mc.thePlayer.sendQueue.addToSendQueue(new C03PacketPlayer.C06PacketPlayerPosLook(mc.thePlayer.posX, mc.thePlayer.getEntityBoundingBox().minY, mc.thePlayer.posZ, debian.getRotations(target)[0], debian.getRotations(target)[1], mc.thePlayer.onGround));
-
-        if(mint.hasTimeElapsed(1000 / cps, true) && !mc.thePlayer.isBlocking()) {
+        if (mint.hasTimeElapsed(1000 / cps, true) && !mc.thePlayer.isBlocking()) {
             mc.thePlayer.swingItem();
-            if(autoBlock && mc.thePlayer.getHeldItem() != null && mc.thePlayer.getHeldItem().getItem() instanceof ItemSword)
+            if (autoBlock && mc.thePlayer.getHeldItem() != null && mc.thePlayer.getHeldItem().getItem() instanceof ItemSword) {
                 mc.thePlayer.getHeldItem().useItemRightClick(mc.theWorld, mc.thePlayer);
+            }
             mc.thePlayer.sendQueue.addToSendQueue(new C02PacketUseEntity(target, C02PacketUseEntity.Action.ATTACK));
         }
     }
 
+    private boolean shouldAttack(EntityLivingBase entity) {
+        // Players
+        if (entity instanceof EntityPlayer && attackPlayers) {
+            return true;
+        }
+
+        // Animals
+        if (attackAnimals && (entity instanceof EntityCow ||
+                entity instanceof EntitySheep ||
+                entity instanceof EntityWolf ||
+                entity instanceof EntityChicken ||
+                entity instanceof EntityVillager ||
+                entity instanceof EntityPig ||
+                entity instanceof EntitySquid ||
+                entity instanceof EntityRabbit ||
+                entity instanceof EntityOcelot ||
+                entity instanceof EntityIronGolem ||
+                entity instanceof EntityGolem ||
+                entity instanceof EntityHorse ))
+        {
+            return true;
+        }
+
+        // Monsters
+        if (attackMonsters && (entity instanceof EntityZombie ||
+                entity instanceof EntityCreeper ||
+                entity instanceof EntitySkeleton ||
+                entity instanceof EntityWitch ||
+                entity instanceof EntityWither ||
+                entity instanceof EntityDragon ||
+                entity instanceof EntityGhast ||
+                entity instanceof EntitySlime ||
+                entity instanceof EntityMagmaCube ||
+                entity instanceof EntityBlaze ||
+                entity instanceof EntitySpider ||
+                entity instanceof EntityCaveSpider ||
+                entity instanceof EntityEndermite ||
+                entity instanceof EntityGuardian ||
+                entity instanceof EntitySilverfish )) {
+
+            return true;
+        }
+
+        // Passives
+        if (attackPassives && (entity instanceof EntityEnderman ||
+                entity instanceof EntityPigZombie)) {
+            return true;
+        }
+
+        return false; // Ignore all other entities
+    }
+
     public void updateVals() {
-        this.cps = (long) Galacticc.instance.settingsManager.getSettingByName(this, "CPS") . getValDouble();
-        this.reach = (long) Galacticc.instance.settingsManager.getSettingByName(this, "Reach") . getValDouble();
-        this.autoBlock = Galacticc.instance.settingsManager.getSettingByName(this, "AutoBlock").getValBoolean();
+        this.cps = (long) Galacticc.instance.settingsManager.getSettingByName(this, "KlicksProSek").getValDouble();
+        this.reach = (long) Galacticc.instance.settingsManager.getSettingByName(this, "Reichweite").getValDouble();
+        this.autoBlock = Galacticc.instance.settingsManager.getSettingByName(this, "AutoBlockierung").getValBoolean();
+        this.attackAnimals = Galacticc.instance.settingsManager.getSettingByName(this, "Angriffe Tiere").getValBoolean();
+        this.attackMonsters = Galacticc.instance.settingsManager.getSettingByName(this, "Angriffe Monster").getValBoolean();
+        this.attackPassives = Galacticc.instance.settingsManager.getSettingByName(this, "Angriffe Passiv").getValBoolean();
+        this.attackPlayers = Galacticc.instance.settingsManager.getSettingByName(this, "Angriffe Spieler").getValBoolean();
     }
 }

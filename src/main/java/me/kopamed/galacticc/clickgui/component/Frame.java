@@ -26,7 +26,7 @@ public class Frame {
 	private boolean isDragging;
 	public int dragX;
 	public int dragY;
-	
+
 	public Frame(Category cat) {
 		this.components = new ArrayList<Component>();
 		this.category = cat;
@@ -38,17 +38,6 @@ public class Frame {
 		this.open = false;
 		this.isDragging = false;
 		int tY = this.barHeight;
-		
-		/**
-		 * 		public ArrayList<Module> getModulesInCategory(Category categoryIn){
-		 * 			ArrayList<Module> mods = new ArrayList<Module>();
-		 * 			for(Module m : this.modules){
-		 * 				if(m.getCategory() == categoryIn)
-		 * 					mods.add(m);
-		 * 			}
-		 * 			return mods;
-		 * 		}
-		 */
 
 		for(Module mod : Galacticc.instance.moduleManager.getModulesInCategory(category)) {
 			Button modButton = new Button(mod, this, tY);
@@ -56,31 +45,40 @@ public class Frame {
 			tY += 12;
 		}
 	}
-	
+
 	public ArrayList<Component> getComponents() {
 		return components;
 	}
-	
+
+	// Added methods
+	public void setDragX(int dragX) {
+		this.dragX = dragX;
+	}
+
+	public void setDragY(int dragY) {
+		this.dragY = dragY;
+	}
+
 	public void setX(int newX) {
 		this.x = newX;
 	}
-	
+
 	public void setY(int newY) {
 		this.y = newY;
 	}
-	
+
 	public void setDrag(boolean drag) {
 		this.isDragging = drag;
 	}
-	
+
 	public boolean isOpen() {
 		return open;
 	}
-	
+
 	public void setOpen(boolean open) {
 		this.open = open;
 	}
-	
+
 	public void renderFrame(FontRenderer fontRenderer) {
 		Gui.drawRect(this.x, this.y, this.x + this.width, this.y + this.barHeight, ClickGui.color);
 		GL11.glPushMatrix();
@@ -99,7 +97,7 @@ public class Frame {
 			}
 		}
 	}
-	
+
 	public void refresh() {
 		int off = this.barHeight;
 		for(Component comp : components) {
@@ -107,31 +105,31 @@ public class Frame {
 			off += comp.getHeight();
 		}
 	}
-	
+
 	public int getX() {
 		return x;
 	}
-	
+
 	public int getY() {
 		return y;
 	}
-	
+
 	public int getWidth() {
 		return width;
 	}
-	
+
 	public void updatePosition(int mouseX, int mouseY) {
 		if(this.isDragging) {
 			this.setX(mouseX - dragX);
 			this.setY(mouseY - dragY);
 		}
 	}
-	
+
 	public boolean isWithinHeader(int x, int y) {
 		if(x >= this.x && x <= this.x + this.width && y >= this.y && y <= this.y + this.barHeight) {
 			return true;
 		}
 		return false;
 	}
-	
+
 }
