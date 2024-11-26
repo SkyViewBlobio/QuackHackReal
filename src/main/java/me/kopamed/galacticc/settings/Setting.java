@@ -81,7 +81,7 @@ public class Setting {
 			Galacticc.instance.saveLoad.save();
 		}
 	}
-	
+
 	public double getValDouble(){
 		if(this.onlyint){
 			this.dval = (int)dval;

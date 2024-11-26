@@ -1,5 +1,6 @@
 package me.kopamed.galacticc.clickgui.component.components.sub;
 
+import me.kopamed.galacticc.Galacticc;
 import org.lwjgl.opengl.GL11;
 
 import net.minecraft.client.Minecraft;
@@ -9,6 +10,8 @@ import net.minecraft.client.gui.Gui;
 import me.kopamed.galacticc.clickgui.component.Component;
 import me.kopamed.galacticc.clickgui.component.components.Button;
 import me.kopamed.galacticc.module.Module;
+
+import java.awt.*;
 
 public class VisibleButton extends Component {
 
@@ -34,13 +37,28 @@ public class VisibleButton extends Component {
 
 	@Override
 	public void renderComponent() {
-		Gui.drawRect(parent.parent.getX() + 2, parent.parent.getY() + offset, parent.parent.getX() + (parent.parent.getWidth() * 1), parent.parent.getY() + offset + 12, this.hovered ? 0xFF222222 : 0xFF111111);
+		Module clickGuiModule = Galacticc.instance.moduleManager.getModule("Menu");
+
+		// Header background colors
+		int headerRed = (int) Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Header Rot").getValDouble();
+		int headerGreen = (int) Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Header Green").getValDouble();
+		int headerBlue = (int) Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Header Blau").getValDouble();
+		int headerAlpha = (int) Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Header Alpha").getValDouble();
+
+		int bgColor = new Color(headerRed, headerGreen, headerBlue, headerAlpha).getRGB();
+
+		// Background for hovered or non-hovered state
+		int rectColor = this.hovered ? bgColor : 0xFF111111;
+
+		Gui.drawRect(parent.parent.getX() + 2, parent.parent.getY() + offset, parent.parent.getX() + (parent.parent.getWidth()), parent.parent.getY() + offset + 12, rectColor);
 		Gui.drawRect(parent.parent.getX(), parent.parent.getY() + offset, parent.parent.getX() + 2, parent.parent.getY() + offset + 12, 0xFF111111);
+
 		GL11.glPushMatrix();
-		GL11.glScalef(0.5f,0.5f, 0.5f);
+		GL11.glScalef(0.5f, 0.5f, 0.5f);
 		Minecraft.getMinecraft().fontRendererObj.drawStringWithShadow("Visible: " + mod.visible, (parent.parent.getX() + 7) * 2, (parent.parent.getY() + offset + 2) * 2 + 5, -1);
-		GL11.glPopMatrix(); //													    mod.visible is a public boolean variable in the Module.java class. If it's == false, the mod won't show up in the ArrayList
+		GL11.glPopMatrix();
 	}
+
 
 	@Override
 	public void updateComponent(int mouseX, int mouseY) {

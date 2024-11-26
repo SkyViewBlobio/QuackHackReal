@@ -1,5 +1,6 @@
 package me.kopamed.galacticc.module.combat;
 
+import com.mojang.realmsclient.gui.ChatFormatting;
 import me.kopamed.galacticc.Galacticc;
 import me.kopamed.galacticc.module.Category;
 import me.kopamed.galacticc.module.Module;
@@ -25,9 +26,19 @@ public class Killaura extends Module {
     private long cps, reach;
     private boolean autoBlock, attackAnimals, attackMonsters, attackPassives, attackPlayers;
 
+    //*******************Information Calculation********************
+    private EntityLivingBase lastHitEntity = null;
+    private long lastHitTime = 0;
+    private double damageDealt = 0;
+    private int swingCount = 0;
+    private double lastDamageDealt = 0;
+    private long lastDamageTime = 0;
+    //*************************************************************
+
     public Killaura() {
         super("Beschutzer", "Blatantly attacks enemies", true, false, Category.ANGRIFF);
 
+        // Settings initialization
         Setting cps = new Setting("KlicksProSek", this, 10, 0.1, 30, false);
         Setting reach = new Setting("Reichweite", this, 6, 1, 6, false);
         Setting autoBlock = new Setting("AutoBlockierung", this, false);
@@ -52,6 +63,7 @@ public class Killaura extends Module {
             return;
         }
 
+        // Gather and filter targets
         List<EntityLivingBase> targets = debian.getTargets(reach);
         List<EntityLivingBase> filteredTargets = new ArrayList<>();
 
@@ -69,6 +81,7 @@ public class Killaura extends Module {
 
         EntityLivingBase target = filteredTargets.get(0);
 
+        // Update player rotation
         mc.thePlayer.sendQueue.addToSendQueue(new C03PacketPlayer.C06PacketPlayerPosLook(
                 mc.thePlayer.posX,
                 mc.thePlayer.getEntityBoundingBox().minY,
@@ -78,22 +91,40 @@ public class Killaura extends Module {
                 mc.thePlayer.onGround
         ));
 
+        // Perform attack logic
         if (mint.hasTimeElapsed(1000 / cps, true) && !mc.thePlayer.isBlocking()) {
             mc.thePlayer.swingItem();
             if (autoBlock && mc.thePlayer.getHeldItem() != null && mc.thePlayer.getHeldItem().getItem() instanceof ItemSword) {
                 mc.thePlayer.getHeldItem().useItemRightClick(mc.theWorld, mc.thePlayer);
             }
             mc.thePlayer.sendQueue.addToSendQueue(new C02PacketUseEntity(target, C02PacketUseEntity.Action.ATTACK));
+
+            // Check for different mob types and reset if necessary
+            if (lastHitEntity == null || !lastHitEntity.getClass().equals(target.getClass())) {
+                resetHitInfo();
+            }
+
+            // Update hit details
+            lastHitEntity = target;
+            lastHitTime = System.currentTimeMillis();
+            lastDamageDealt = target.getMaxHealth() - target.getHealth(); // Approximation of damage
+            lastDamageTime = System.currentTimeMillis(); // Track when the damage was calculated
+            swingCount++;
         }
     }
 
+    private void resetHitInfo() {
+        damageDealt = 0;
+        swingCount = 0;
+        lastHitEntity = null;
+        lastHitTime = 0;
+        // Note: lastDamageDealt is not reset here as it handles its own timing.
+    }
+
     private boolean shouldAttack(EntityLivingBase entity) {
-        // Players
         if (entity instanceof EntityPlayer && attackPlayers) {
             return true;
         }
-
-        // Animals
         if (attackAnimals && (entity instanceof EntityCow ||
                 entity instanceof EntitySheep ||
                 entity instanceof EntityWolf ||
@@ -105,12 +136,9 @@ public class Killaura extends Module {
                 entity instanceof EntityOcelot ||
                 entity instanceof EntityIronGolem ||
                 entity instanceof EntityGolem ||
-                entity instanceof EntityHorse ))
-        {
+                entity instanceof EntityHorse)) {
             return true;
         }
-
-        // Monsters
         if (attackMonsters && (entity instanceof EntityZombie ||
                 entity instanceof EntityCreeper ||
                 entity instanceof EntitySkeleton ||
@@ -125,27 +153,53 @@ public class Killaura extends Module {
                 entity instanceof EntityCaveSpider ||
                 entity instanceof EntityEndermite ||
                 entity instanceof EntityGuardian ||
-                entity instanceof EntitySilverfish )) {
-
+                entity instanceof EntitySilverfish)) {
             return true;
         }
-
-        // Passives
         if (attackPassives && (entity instanceof EntityEnderman ||
                 entity instanceof EntityPigZombie)) {
             return true;
         }
-
-        return false; // Ignore all other entities
+        return false;
     }
 
     public void updateVals() {
-        this.cps = (long) Galacticc.instance.settingsManager.getSettingByName(this, "KlicksProSek").getValDouble();
-        this.reach = (long) Galacticc.instance.settingsManager.getSettingByName(this, "Reichweite").getValDouble();
-        this.autoBlock = Galacticc.instance.settingsManager.getSettingByName(this, "AutoBlockierung").getValBoolean();
-        this.attackAnimals = Galacticc.instance.settingsManager.getSettingByName(this, "Angriffe Tiere").getValBoolean();
-        this.attackMonsters = Galacticc.instance.settingsManager.getSettingByName(this, "Angriffe Monster").getValBoolean();
-        this.attackPassives = Galacticc.instance.settingsManager.getSettingByName(this, "Angriffe Passiv").getValBoolean();
-        this.attackPlayers = Galacticc.instance.settingsManager.getSettingByName(this, "Angriffe Spieler").getValBoolean();
+        this.cps = (long) Galacticc.instance.settingsManager.getSettingByName
+                (this, "KlicksProSek").getValDouble();
+        this.reach = (long) Galacticc.instance.settingsManager.getSettingByName
+                (this, "Reichweite").getValDouble();
+        this.autoBlock = Galacticc.instance.settingsManager.getSettingByName
+                (this, "AutoBlockierung").getValBoolean();
+        this.attackAnimals = Galacticc.instance.settingsManager.getSettingByName
+                (this, "Angriffe Tiere").getValBoolean();
+        this.attackMonsters = Galacticc.instance.settingsManager.getSettingByName
+                (this, "Angriffe Monster").getValBoolean();
+        this.attackPassives = Galacticc.instance.settingsManager.getSettingByName
+                (this, "Angriffe Passiv").getValBoolean();
+        this.attackPlayers = Galacticc.instance.settingsManager.getSettingByName
+                (this, "Angriffe Spieler").getValBoolean();
     }
+
+    //*******************HUD INFO********************
+    @Override
+    public String getHUDInfo() {
+        // Reset swing and entity info if inactive for more than 3 seconds
+        if (System.currentTimeMillis() - lastHitTime > 3000) {
+            resetHitInfo();
+        }
+
+        // Reset damage per hit info if inactive for more than 1 second
+        if (System.currentTimeMillis() - lastDamageTime > 1000) {
+            lastDamageDealt = 0;
+        }
+
+        String entityName = lastHitEntity != null ? lastHitEntity.getName() : "N/A";
+        String damageFormatted = String.format("%.1f", lastDamageDealt); // Show damage for the last hit
+
+        return ChatFormatting.GRAY + "[L-T " +
+                entityName + ChatFormatting.GRAY +
+                ",  " + damageFormatted + ChatFormatting.GRAY +
+                ",  " + swingCount + ChatFormatting.GRAY + "]";
+    }
+    //*************************************************************
 }

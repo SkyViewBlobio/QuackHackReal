@@ -29,9 +29,6 @@ public class ClickGui extends GuiScreen {
 	@Override
 	public void onGuiClosed() {
 		super.onGuiClosed();
-
-		// Use the getter to retrieve the previous FPS cap
-		Minecraft.getMinecraft().gameSettings.limitFramerate = Galacticc.instance.clickGUI.getPreviousFpsCap();
 	}
 
 	@Override

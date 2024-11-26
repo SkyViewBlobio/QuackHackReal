@@ -125,9 +125,8 @@ public class Watermark extends Module {
                 Galacticc.instance.settingsManager.getSettingByName(this, "Hintergrund Dichte").getValDouble();
 
         // Convert RGB and alpha to ARGB format
-        int backgroundColor = (bgAlpha << 24) | (bgRed << 16) | (bgGreen << 8) | bgBlue; // Use alpha for transparency
-        int textColor = (0xFF << 24) | (textRed << 16) | (textGreen << 8) | textBlue; // Opaque text
-
+        int backgroundColor = (bgAlpha << 24) | (bgRed << 16) | (bgGreen << 8) | bgBlue;
+        int textColor = (0xFF << 24) | (textRed << 16) | (textGreen << 8) | textBlue;
         // Draw background and text
         Gui.drawRect(xPos - 2, yPos - 2, xPos + fr.getStringWidth(watermarkText)
                 + 2, yPos + fr.FONT_HEIGHT + 2, backgroundColor);

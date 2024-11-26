@@ -1,5 +1,7 @@
 package me.kopamed.galacticc.clickgui.component.components.sub;
 
+import me.kopamed.galacticc.Galacticc;
+import me.kopamed.galacticc.module.Module;
 import org.lwjgl.opengl.GL11;
 
 import net.minecraft.client.Minecraft;
@@ -9,6 +11,8 @@ import net.minecraft.client.gui.Gui;
 import me.kopamed.galacticc.clickgui.component.Component;
 import me.kopamed.galacticc.clickgui.component.components.Button;
 import me.kopamed.galacticc.settings.Setting;
+
+import java.awt.*;
 
 public class Checkbox extends Component {
 
@@ -26,19 +30,41 @@ public class Checkbox extends Component {
 		this.y = button.parent.getY() + button.offset;
 		this.offset = offset;
 	}
-	// schau mal nach den kack farben alda was soll das junge
+
 	@Override
 	public void renderComponent() {
-		Gui.drawRect(parent.parent.getX() + 2, parent.parent.getY() + offset, parent.parent.getX() + (parent.parent.getWidth() * 1), parent.parent.getY() + offset + 12, this.hovered ? 0xFF222222 : 0xFF111111);
-		Gui.drawRect(parent.parent.getX(), parent.parent.getY() + offset, parent.parent.getX() + 2, parent.parent.getY() + offset + 12, 0xFF111111);
+		// Retrieve colors
+		Module clickGuiModule = Galacticc.instance.moduleManager.getModule("Menu");
+
+		int headerRed = (int) Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Header Rot").getValDouble();
+		int headerGreen = (int) Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Header Green").getValDouble();
+		int headerBlue = (int) Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Header Blau").getValDouble();
+		int headerAlpha = (int) Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Header Alpha").getValDouble();
+
+		int backgroundColor = new Color(headerRed, headerGreen, headerBlue, headerAlpha).getRGB();
+
+		// Draw background
+		Gui.drawRect(parent.parent.getX() + 2, parent.parent.getY() + offset,
+				parent.parent.getX() + parent.parent.getWidth(),
+				parent.parent.getY() + offset + 12,
+				this.hovered ? backgroundColor : 0xFF222222);
+
 		GL11.glPushMatrix();
-		GL11.glScalef(0.5f,0.5f, 0.5f);
-		Minecraft.getMinecraft().fontRendererObj.drawStringWithShadow(this.op.getName(), (parent.parent.getX() + 10 + 4) * 2 + 5, (parent.parent.getY() + offset + 2) * 2 + 4, -1);
+		GL11.glScalef(0.5f, 0.5f, 0.5f);
+		Minecraft.getMinecraft().fontRendererObj.drawStringWithShadow(
+				this.op.getName(),
+				(parent.parent.getX() + 10 + 4) * 2 + 5,
+				(parent.parent.getY() + offset + 2) * 2 + 4,
+				0xFFFFFFFF);
 		GL11.glPopMatrix();
-		Gui.drawRect(parent.parent.getX() + 3 + 4, parent.parent.getY() + offset + 3, parent.parent.getX() + 9 + 4, parent.parent.getY() + offset + 9, 0xFF999999);
-		if(this.op.getValBoolean())
-			Gui.drawRect(parent.parent.getX() + 4 + 4, parent.parent.getY() + offset + 4, parent.parent.getX() + 8 + 4, parent.parent.getY() + offset + 8, 0xFF666666);
+
+		// Render checkbox
+		int boxColor = this.op.getValBoolean() ? 0xFF666666 : 0xFF999999;
+		Gui.drawRect(parent.parent.getX() + 3 + 4, parent.parent.getY() + offset + 3,
+				parent.parent.getX() + 9 + 4, parent.parent.getY() + offset + 9,
+				boxColor);
 	}
+
 
 	@Override
 	public void setOff(int newOff) {

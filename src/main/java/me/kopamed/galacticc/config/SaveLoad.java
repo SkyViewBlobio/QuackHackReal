@@ -141,7 +141,12 @@ public class SaveLoad {
                             set.setValString(args[3]);
                         }
                         if (set.isSlider()) {
-                            set.setValDouble(Double.parseDouble(args[3]));
+                            try {
+                                double value = Double.parseDouble(args[3]);
+                                set.setValDouble(value);
+                            } catch (NumberFormatException e) {
+                                System.err.println("Invalid slider value for setting: " + set.getName());
+                            }
                         }
                     } else {System.out.println("s is null fuck line 91");}
                 }else {System.out.println("m is null fuck line 89");}
@@ -182,35 +187,4 @@ public class SaveLoad {
         }
         return results;
     }
-
-    /*
-    public void saveDefault() {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(getClass().getResourceAsStream("/resources/assets/configs/default.galaxy")));
-        ArrayList<String> lines = new ArrayList<String>();
-        // gettting the default cfg
-        String line = null;
-        try {
-            line = reader.readLine();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        while (line != null) {
-            lines.add(line);
-            try {
-                line = reader.readLine();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-        try {
-            PrintWriter printWriter = new PrintWriter(this.dataFile);
-            for (String str : lines) {
-                printWriter.println(str);
-            }
-            printWriter.close();
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-    }*/
 }

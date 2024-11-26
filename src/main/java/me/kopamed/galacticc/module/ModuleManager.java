@@ -6,9 +6,7 @@ import me.kopamed.galacticc.module.combat.Killaura;
 import me.kopamed.galacticc.module.combat.Velocity;
 import me.kopamed.galacticc.module.movement.Sprint;
 import me.kopamed.galacticc.module.player.FastPlace;
-import me.kopamed.galacticc.module.render.ClickGUI;
-import me.kopamed.galacticc.module.render.Fullbright;
-import me.kopamed.galacticc.module.render.HUD;
+import me.kopamed.galacticc.module.render.*;
 import me.kopamed.galacticc.module.textstuff.Informationen;
 import me.kopamed.galacticc.module.textstuff.Watermark;
 
@@ -21,6 +19,8 @@ public class ModuleManager {
         (modules = new ArrayList<Module>()).clear();
         this.modules.add(new ClickGUI());
         this.modules.add(new HUD());
+        this.modules.add(new EnchantModifier());
+        this.modules.add(new ArmorDisplay());
         this.modules.add(new Sprint());
         this.modules.add(new AutoClicker());
         this.modules.add(new Velocity());
@@ -37,6 +37,7 @@ public class ModuleManager {
         //this.modules.add(new PlayerESP());
         this.modules.add(new Killaura());
         this.modules.add(new Informationen());
+        this.modules.add(new CustomSkyColorAndFog());
     }
 
     public Module getModule(String name) {

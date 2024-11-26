@@ -52,7 +52,7 @@ public class Module {
     public void setToggled(boolean toggled) {
         this.toggled = toggled;
 
-        if (this.toggled){
+        if (this.toggled) {
             this.onEnabled();
         } else {
             this.onDisabled();
@@ -71,10 +71,10 @@ public class Module {
         return category;
     }
 
-    public void toggle(){
+    public void toggle() {
         this.toggled = !this.toggled;
 
-        if (this.toggled){
+        if (this.toggled) {
             this.onEnabled();
         } else {
             this.onDisabled();
@@ -85,14 +85,24 @@ public class Module {
         }
     }
 
-    public void onEnabled(){
+    public void onEnabled() {
         System.out.println("Enabled " + this.name);
         MinecraftForge.EVENT_BUS.register(this);
     }
 
-    public void onDisabled(){
+    public void onDisabled() {
         System.out.println("Disabled" + this.name);
         MinecraftForge.EVENT_BUS.unregister(this);
+    }
+
+    /**
+     * Provides extra HUD information for modules that implement it.
+     * Override this method in modules to return specific HUD information.
+     *
+     * @return A string representing additional HUD info, or null if no extra info.
+     */
+    public String getHUDInfo() {
+        return null;
     }
 
     @Override

@@ -1,8 +1,11 @@
 package me.kopamed.galacticc.clickgui.component.components.sub;
 
+import java.awt.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
+import me.kopamed.galacticc.Galacticc;
+import me.kopamed.galacticc.module.Module;
 import org.lwjgl.opengl.GL11;
 
 import net.minecraft.client.Minecraft;
@@ -36,14 +39,42 @@ public class Slider extends Component {
 
 	@Override
 	public void renderComponent() {
-		Gui.drawRect(parent.parent.getX() + 2, parent.parent.getY() + offset, parent.parent.getX() + parent.parent.getWidth(), parent.parent.getY() + offset + 12, this.hovered ? 0xFF222222 : 0xFF111111);
-		final int drag = (int)(this.set.getValDouble() / this.set.getMax() * this.parent.parent.getWidth());
-		Gui.drawRect(parent.parent.getX() + 2, parent.parent.getY() + offset, parent.parent.getX() + (int) renderWidth, parent.parent.getY() + offset + 12,hovered ? 0xFF555555 : 0xFF444444);
-		Gui.drawRect(parent.parent.getX(), parent.parent.getY() + offset, parent.parent.getX() + 2, parent.parent.getY() + offset + 12, 0xFF111111);
-		GL11.glPushMatrix();
-		GL11.glScalef(0.5f,0.5f, 0.5f);
-		Minecraft.getMinecraft().fontRendererObj.drawStringWithShadow(this.set.getName() + ": " + this.set.getValDouble() , (parent.parent.getX()* 2 + 15), (parent.parent.getY() + offset + 2) * 2 + 5, -1);
+		// Retrieve the theme colors for the background
+		Module clickGuiModule = Galacticc.instance.moduleManager.getModule("Menu");
 
+		int headerRed = (int) Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Header Rot").getValDouble();
+		int headerGreen = (int) Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Header Green").getValDouble();
+		int headerBlue = (int) Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Header Blau").getValDouble();
+		int headerAlpha = (int) Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Header Alpha").getValDouble();
+
+		int backgroundColor = new Color(headerRed, headerGreen, headerBlue, headerAlpha).getRGB();
+		int sliderColor = new Color(headerRed / 2, headerGreen / 2, headerBlue / 2, headerAlpha).getRGB(); // Darker for slider bar
+
+		// Render the slider background
+		Gui.drawRect(parent.parent.getX() + 2, parent.parent.getY() + offset,
+				parent.parent.getX() + parent.parent.getWidth(),
+				parent.parent.getY() + offset + 12,
+				this.hovered ? backgroundColor : 0xFF222222);
+
+		// Render the slider's current value bar
+		Gui.drawRect(parent.parent.getX() + 2, parent.parent.getY() + offset,
+				parent.parent.getX() + (int) renderWidth,
+				parent.parent.getY() + offset + 12,
+				sliderColor);
+
+		// Ensure OpenGL state is correct for text rendering
+		GL11.glEnable(GL11.GL_TEXTURE_2D);
+		GL11.glEnable(GL11.GL_BLEND);
+		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+
+		// Render the slider text
+		GL11.glPushMatrix();
+		GL11.glScalef(0.5f, 0.5f, 0.5f);
+		Minecraft.getMinecraft().fontRendererObj.drawStringWithShadow(
+				this.set.getName() + ": " + this.set.getValDouble(),
+				(parent.parent.getX() + 7) * 2,
+				(parent.parent.getY() + offset + 2) * 2 + 5,
+				0xFFFFFFFF);
 		GL11.glPopMatrix();
 	}
 

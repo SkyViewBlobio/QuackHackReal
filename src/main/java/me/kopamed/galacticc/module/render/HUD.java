@@ -108,23 +108,28 @@ public class HUD extends Module {
 
     private void renderModules(ScaledResolution sr) {
         FontRenderer fr = Minecraft.getMinecraft().fontRendererObj;
+
         for (Module mod : modList) {
             if (mod.visible && mod.isToggled()) {
+                String hudInfo = mod.getHUDInfo(); // Fetch extra HUD info if available
+                String displayText = mod.getName() + (hudInfo != null ? " " + hudInfo : ""); // Append HUD info to the module name
+
                 if (background) {
-                    Gui.drawRect(sr.getScaledWidth() - fr.getStringWidth(mod.getName()) - margin * 2 - rightOffSet,
+                    Gui.drawRect(sr.getScaledWidth() - fr.getStringWidth(displayText) - margin * 2 - rightOffSet,
                             topOffSet, sr.getScaledWidth() - rightOffSet,
                             topOffSet + margin * 2 + fr.FONT_HEIGHT, 0x90000000);
-                    Gui.drawRect(sr.getScaledWidth() - fr.getStringWidth(mod.getName()) - margin * 2 - rightOffSet - miniboxWidth,
-                            topOffSet, sr.getScaledWidth() - fr.getStringWidth(mod.getName()) - margin * 2 - rightOffSet,
+                    Gui.drawRect(sr.getScaledWidth() - fr.getStringWidth(displayText) - margin * 2 - rightOffSet - miniboxWidth,
+                            topOffSet, sr.getScaledWidth() - fr.getStringWidth(displayText) - margin * 2 - rightOffSet,
                             topOffSet + margin * 2 + fr.FONT_HEIGHT, 0xffff4500);
                 }
+
                 if (textShadow) {
-                    fr.drawStringWithShadow(mod.getName(),
-                            sr.getScaledWidth() - fr.getStringWidth(mod.getName()) - rightOffSet - margin,
+                    fr.drawStringWithShadow(displayText,
+                            sr.getScaledWidth() - fr.getStringWidth(displayText) - rightOffSet - margin,
                             topOffSet + margin, modColor);
                 } else {
-                    fr.drawString(mod.getName(),
-                            sr.getScaledWidth() - fr.getStringWidth(mod.getName()) - rightOffSet - margin,
+                    fr.drawString(displayText,
+                            sr.getScaledWidth() - fr.getStringWidth(displayText) - rightOffSet - margin,
                             topOffSet + margin, modColor);
                 }
 

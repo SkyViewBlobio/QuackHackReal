@@ -71,19 +71,44 @@ public class Button extends Component {
 
 	@Override
 	public void renderComponent() {
-		Gui.drawRect(parent.getX(), this.parent.getY() + this.offset, parent.getX() + parent.getWidth(), this.parent.getY() + 12 + this.offset, this.isHovered ? (this.mod.isToggled() ? new Color(0xFF222222).darker().getRGB() : 0xFF222222) : (this.mod.isToggled() ? new Color(14,14,14).getRGB() : 0xFF111111));
+		// Retrieve colors
+		Module clickGuiModule = Galacticc.instance.moduleManager.getModule("Menu");
+
+		int headerRed = (int) Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Header Rot").getValDouble();
+		int headerGreen = (int) Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Header Green").getValDouble();
+		int headerBlue = (int) Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Header Blau").getValDouble();
+		int headerAlpha = (int) Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Header Alpha").getValDouble();
+
+		int backgroundColor = new Color(headerRed, headerGreen, headerBlue, headerAlpha).getRGB();
+
+		// Draw background
+		Gui.drawRect(parent.getX(), parent.getY() + offset,
+				parent.getX() + parent.getWidth(),
+				parent.getY() + offset + 12,
+				this.isHovered ? backgroundColor : 0xFF222222);
+
 		GL11.glPushMatrix();
-		GL11.glScalef(0.5f,0.5f, 0.5f);
-		Minecraft.getMinecraft().fontRendererObj.drawStringWithShadow(this.mod.getName(), (parent.getX() + 2) * 2, (parent.getY() + offset + 2) * 2 + 4, this.mod.isToggled() ? 0x999999 : -1);
-		if(this.subcomponents.size() > 2)
-			Minecraft.getMinecraft().fontRendererObj.drawStringWithShadow(this.open ? "-" : "+", (parent.getX() + parent.getWidth() - 10) * 2, (parent.getY() + offset + 2) * 2 + 4, -1);
+		GL11.glScalef(0.5f, 0.5f, 0.5f);
+		Minecraft.getMinecraft().fontRendererObj.drawStringWithShadow(
+				this.mod.getName(),
+				(parent.getX() + 2) * 2,
+				(parent.getY() + offset + 2) * 2 + 4,
+				0xFFFFFFFF);
+
+		// Toggle indicator
+		if (this.subcomponents.size() > 2) {
+			Minecraft.getMinecraft().fontRendererObj.drawStringWithShadow(
+					this.open ? "-" : "+",
+					(parent.getX() + parent.getWidth() - 10) * 2,
+					(parent.getY() + offset + 2) * 2 + 4,
+					0xFFFFFFFF);
+		}
 		GL11.glPopMatrix();
-		if(this.open) {
-			if(!this.subcomponents.isEmpty()) {
-				for(Component comp : this.subcomponents) {
-					comp.renderComponent();
-				}
-				Gui.drawRect(parent.getX() + 2, parent.getY() + this.offset + 12, parent.getX() + 3, parent.getY() + this.offset + ((this.subcomponents.size() + 1) * 12), ClickGui.color);
+
+		// Render subcomponents
+		if (this.open) {
+			for (Component comp : subcomponents) {
+				comp.renderComponent();
 			}
 		}
 	}
