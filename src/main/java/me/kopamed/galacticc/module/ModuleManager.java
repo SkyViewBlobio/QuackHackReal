@@ -1,5 +1,6 @@
 package me.kopamed.galacticc.module;
 
+import jdk.nashorn.internal.ir.Block;
 import me.kopamed.galacticc.module.combat.AutoClicker;
 import me.kopamed.galacticc.module.combat.DelayRemover;
 import me.kopamed.galacticc.module.combat.Killaura;
@@ -25,6 +26,7 @@ public class ModuleManager {
         this.modules.add(new AutoClicker());
         this.modules.add(new Velocity());
         this.modules.add(new Watermark());
+        this.modules.add(new BlockHighlight());
         //this.modules.add(new Fly());
         //this.modules.add(new NoFall());
         this.modules.add(new Fullbright());
