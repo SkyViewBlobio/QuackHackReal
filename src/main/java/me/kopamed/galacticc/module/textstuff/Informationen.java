@@ -65,6 +65,10 @@ public class Informationen extends Module {
             return;
         }
 
+        if (mc == null || mc.theWorld == null || mc.thePlayer == null) {
+            return; // Ensure Minecraft and player/world objects are valid
+        }
+
         FontRenderer fr = mc.fontRendererObj;
 
         // Fetch offsets
@@ -118,23 +122,24 @@ public class Informationen extends Module {
         if (showMinecraftDay) infoList.add(new String[]{"SpielTag", String.valueOf(mc.theWorld.getWorldTime() / 24000)});
         if (showPing) {
             EntityPlayerSP player = mc.thePlayer;
-            int ping = player != null && mc.getNetHandler() != null ? mc.getNetHandler().getPlayerInfo(player.getUniqueID()).getResponseTime() : -1;
+            int ping = player != null && mc.getNetHandler() != null && mc.getNetHandler().getPlayerInfo(player.getUniqueID()) != null
+                    ? mc.getNetHandler().getPlayerInfo(player.getUniqueID()).getResponseTime() : -1;
             infoList.add(new String[]{"Ping", ping == -1 ? "N/A" : ping + " ms"});
         }
         if (showDate) infoList.add(new String[]{"Datum", new SimpleDateFormat("dd-MM-yyyy").format(new Date())});
-        if (showItemInfo) {
+        if (showItemInfo && mc.thePlayer.getHeldItem() != null) {
             ItemStack heldItem = mc.thePlayer.getHeldItem();
-            if (heldItem != null) {
-                String itemName = heldItem.getDisplayName();
-                int durability = heldItem.getMaxDamage() - heldItem.getItemDamage();
-                infoList.add(new String[]{"Hand", itemName + " (" + durability + " Durability)"});
-            }
+            String itemName = heldItem.getDisplayName();
+            int durability = heldItem.getMaxDamage() - heldItem.getItemDamage();
+            infoList.add(new String[]{"Hand", itemName + " (" + durability + " Durability)"});
         }
         if (showPotions) {
             for (PotionEffect effect : mc.thePlayer.getActivePotionEffects()) {
-                String potionName = EnumChatFormatting.getTextWithoutFormattingCodes(effect.getEffectName());
-                int duration = effect.getDuration() / 20; // Convert ticks to seconds
-                infoList.add(new String[]{"Traenke", potionName + " (" + duration + "s)"});
+                if (effect != null) {
+                    String potionName = EnumChatFormatting.getTextWithoutFormattingCodes(effect.getEffectName());
+                    int duration = effect.getDuration() / 20; // Convert ticks to seconds
+                    infoList.add(new String[]{"Traenke", potionName + " (" + duration + "s)"});
+                }
             }
         }
 
