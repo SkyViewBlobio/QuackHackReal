@@ -18,14 +18,14 @@ import java.util.ArrayList;
 public class ArmorDisplay extends Module {
 
     public ArmorDisplay() {
-        super("ArmorDisplay", "Displays equipped armor with durability, customizable position and modes", false, false, Category.VISUELLES);
+        super("Rustung Zeiger", "Displays equipped armor with durability, customizable position and modes", false, false, Category.VISUELLES);
 
         // Add position settings
         Galacticc.instance.settingsManager.rSetting(new Setting("X Offset", this, 0, -500, 500, true));
         Galacticc.instance.settingsManager.rSetting(new Setting("Y Offset", this, 0, -500, 500, true));
 
         // Add layout setting (horizontal/vertical)
-        Galacticc.instance.settingsManager.rSetting(new Setting("Vertical Layout", this, false));
+        Galacticc.instance.settingsManager.rSetting(new Setting("Verticales Layout", this, false));
 
         // Add mode settings
         ArrayList<String> durabilityModes = new ArrayList<>();
@@ -34,9 +34,9 @@ public class ArmorDisplay extends Module {
         Galacticc.instance.settingsManager.rSetting(new Setting("Durability Mode", this, "Nummern", durabilityModes));
 
         // Add RGB settings for durability text (Nummern mode)
-        Galacticc.instance.settingsManager.rSetting(new Setting("Text Red", this, 255, 0, 255, true));
+        Galacticc.instance.settingsManager.rSetting(new Setting("Text Rot", this, 255, 0, 255, true));
         Galacticc.instance.settingsManager.rSetting(new Setting("Text Green", this, 255, 0, 255, true));
-        Galacticc.instance.settingsManager.rSetting(new Setting("Text Blue", this, 255, 0, 255, true));
+        Galacticc.instance.settingsManager.rSetting(new Setting("Text Blau", this, 255, 0, 255, true));
     }
 
     @Override
@@ -65,13 +65,13 @@ public class ArmorDisplay extends Module {
         // Fetch settings
         int xOffset = (int) Galacticc.instance.settingsManager.getSettingByName(this, "X Offset").getValDouble();
         int yOffset = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Y Offset").getValDouble();
-        boolean vertical = Galacticc.instance.settingsManager.getSettingByName(this, "Vertical Layout").getValBoolean();
+        boolean vertical = Galacticc.instance.settingsManager.getSettingByName(this, "Verticales Layout").getValBoolean();
         String mode = Galacticc.instance.settingsManager.getSettingByName(this, "Durability Mode").getValString();
 
         // RGB for text (Nummern mode)
-        int red = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Text Red").getValDouble();
+        int red = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Text Rot").getValDouble();
         int green = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Text Green").getValDouble();
-        int blue = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Text Blue").getValDouble();
+        int blue = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Text Blau").getValDouble();
         int textColor = (0xFF << 24) | (red << 16) | (green << 8) | blue;
 
         // Get armor inventory in correct order

@@ -29,27 +29,27 @@ public class BlockHighlight extends Module {
 
         Galacticc.instance.settingsManager.rSetting(new Setting("Block-Typ", this, true));
         Galacticc.instance.settingsManager.rSetting(new Setting("Block Coordinaten", this, true));
-        Galacticc.instance.settingsManager.rSetting(new Setting("Show Colors", this, true)); // Overlay colors
+        Galacticc.instance.settingsManager.rSetting(new Setting("Zeige Farben", this, true)); // Overlay colors
 
         //************************RGB Sliders for Normal Colors**************************//
 
         Galacticc.instance.settingsManager.rSetting(new Setting("Rot", this, 255, 0, 255, true));
         Galacticc.instance.settingsManager.rSetting(new Setting("Green", this, 255, 0, 255, true));
-        Galacticc.instance.settingsManager.rSetting(new Setting("Blue", this, 255, 0, 255, true));
+        Galacticc.instance.settingsManager.rSetting(new Setting("Blau", this, 255, 0, 255, true));
         Galacticc.instance.settingsManager.rSetting(new Setting("Alpha", this, 0.3F, 0.0F, 1.0F, false));
 
         //************************RGB Sliders for Outline Colors**************************//
 
-        Galacticc.instance.settingsManager.rSetting(new Setting("Outline Rot", this, 255, 0, 255, true));
-        Galacticc.instance.settingsManager.rSetting(new Setting("Outline Green", this, 255, 0, 255, true));
-        Galacticc.instance.settingsManager.rSetting(new Setting("Outline Blue", this, 255, 0, 255, true));
-        Galacticc.instance.settingsManager.rSetting(new Setting("Outline Alpha", this, 1.0F, 0.0F, 1.0F, false));
+        Galacticc.instance.settingsManager.rSetting(new Setting("Linie Rot", this, 255, 0, 255, true));
+        Galacticc.instance.settingsManager.rSetting(new Setting("Linie Green", this, 255, 0, 255, true));
+        Galacticc.instance.settingsManager.rSetting(new Setting("Linie Blau", this, 255, 0, 255, true));
+        Galacticc.instance.settingsManager.rSetting(new Setting("Linie Alpha", this, 1.0F, 0.0F, 1.0F, false));
 
         //************************RGB Sliders for Gradient Colors**************************//
         Galacticc.instance.settingsManager.rSetting(new Setting("Show Gradient Colors", this, false));
         Galacticc.instance.settingsManager.rSetting(new Setting("Gradient Rot", this, 255, 0, 255, true));
         Galacticc.instance.settingsManager.rSetting(new Setting("Gradient Green", this, 0, 0, 255, true));
-        Galacticc.instance.settingsManager.rSetting(new Setting("Gradient Blue", this, 255, 0, 255, true));
+        Galacticc.instance.settingsManager.rSetting(new Setting("Gradient Blau", this, 255, 0, 255, true));
         Galacticc.instance.settingsManager.rSetting(new Setting("Gradient Alpha", this, 0.5F, 0.0F, 1.0F, false));
     }
 
@@ -114,7 +114,7 @@ public class BlockHighlight extends Module {
             return;
         }
 
-        boolean showColors = Galacticc.instance.settingsManager.getSettingByName(this, "Show Colors").getValBoolean();
+        boolean showColors = Galacticc.instance.settingsManager.getSettingByName(this, "Zeige Farben").getValBoolean();
         boolean showGradientColors = Galacticc.instance.settingsManager.getSettingByName(this, "Show Gradient Colors").getValBoolean();
 
         if (!showColors && !showGradientColors) {
@@ -125,18 +125,18 @@ public class BlockHighlight extends Module {
 
         int red = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Rot").getValDouble();
         int green = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Green").getValDouble();
-        int blue = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Blue").getValDouble();
+        int blue = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Blau").getValDouble();
         float alpha = (float) Galacticc.instance.settingsManager.getSettingByName(this, "Alpha").getValDouble();
 
         int gradRed = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Gradient Rot").getValDouble();
         int gradGreen = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Gradient Green").getValDouble();
-        int gradBlue = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Gradient Blue").getValDouble();
+        int gradBlue = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Gradient Blau").getValDouble();
         float gradAlpha = (float) Galacticc.instance.settingsManager.getSettingByName(this, "Gradient Alpha").getValDouble();
 
-        int outlineRed = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Outline Rot").getValDouble();
-        int outlineGreen = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Outline Green").getValDouble();
-        int outlineBlue = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Outline Blue").getValDouble();
-        float outlineAlpha = (float) Galacticc.instance.settingsManager.getSettingByName(this, "Outline Alpha").getValDouble();
+        int outlineRed = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Linie Rot").getValDouble();
+        int outlineGreen = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Linie Green").getValDouble();
+        int outlineBlue = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Linie Blau").getValDouble();
+        float outlineAlpha = (float) Galacticc.instance.settingsManager.getSettingByName(this, "Linie Alpha").getValDouble();
 
         //************************Bounding Box Calculation**************************//
 
