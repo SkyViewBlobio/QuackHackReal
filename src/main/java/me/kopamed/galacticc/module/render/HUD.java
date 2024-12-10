@@ -26,7 +26,8 @@ public class HUD extends Module {
     public List<Module> modList;
 
     public HUD() {
-        super("Bildschirmzeugs", "Draws the module list on your screen", false, false, Category.VISUELLES);
+        super("Bildschirmzeugs", "@Hauptinformationen: " +
+                "Zeigt dir den Modnamen, die aktiven Module, laesst dich die Farben von den benannten Dingen aendern", false, false, Category.VISUELLES);
 
         ArrayList<String> sort = new ArrayList<>();
         sort.add("Lang bis > kurz");

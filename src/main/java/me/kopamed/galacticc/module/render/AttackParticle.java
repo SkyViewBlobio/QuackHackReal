@@ -22,8 +22,14 @@ public class AttackParticle extends Module {
     private final Map<EntityZombie, Float> zombieHealthMap = new HashMap<>();
 
     public AttackParticle() {
-        super("Angriff Partikel", "Replaces critical hit particles with custom particles on zombies", false, false, Category.VISUELLES);
-
+        super("Angriff Partikel", "@Hauptinformation: " +
+                "Laesst dich viele Partikel bei schlagen eines Monsters (tiere, spieler usw.) anzeigen. || " +
+                "@Optionen: " +
+                "- C und N Schlaege laesst dich entscheiden wann ein Partikel-Typ angezeigt wird c-schlag (abgeleitet vom Englischen c fuer ~critical~ = Kritisch) zeigt nur bei Kritischen schlaegen die Partikel an. " +
+                "Minecraft hat ein Kritischer-Schlag System, das heisst also das du manchmal z.B. beim springen eine erhoete Chance hast einen kritischen Schlag zu landen als wenn du nicht springst. kritische Schlaege machen mehr schaden. " +
+                " n-schlag steht fuer normaler Schlag und wird dir deshalb die Partikel bei jedem Schlag einzeigen egal ob Kritisch oder nicht, c-schlag macht also das Gegenteil. || " +
+                "- Herz, Flamme, usw. sind die Partikel welche du erscheinen lassen kannst, du kannst mehrere Partikel zusammen anzeigen lassen aber sei gewarnt viele Partikel = mehr Arbeit fuer den PC.", false, false, Category.VISUELLES);
+//todo make this not only for zombies lol
         //************************Particle Mode Settings**************************
         ArrayList<String> modes = new ArrayList<>();
         modes.add("C-Schlag");

@@ -25,14 +25,6 @@ public class Module {
         this.category = category;
     }
 
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
     public int getKey() {
         return key;
     }
@@ -52,6 +44,9 @@ public class Module {
         return toggled;
     }
 
+    public void onLoad() {
+    }
+
     public void setToggled(boolean toggled) {
         this.toggled = toggled;
 
@@ -64,6 +59,10 @@ public class Module {
         if (Galacticc.instance.saveLoad != null) {
             Galacticc.instance.saveLoad.save();
         }
+    }
+
+    public String getDescription() {
+        return description;
     }
 
     public String getName() {

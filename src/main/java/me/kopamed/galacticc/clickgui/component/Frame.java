@@ -1,18 +1,15 @@
 package me.kopamed.galacticc.clickgui.component;
 
-import java.awt.*;
-import java.util.ArrayList;
-
 import me.kopamed.galacticc.Galacticc;
-import org.lwjgl.opengl.GL11;
-
-import net.minecraft.client.gui.FontRenderer;
-import net.minecraft.client.gui.Gui;
-
-import me.kopamed.galacticc.clickgui.ClickGui;
 import me.kopamed.galacticc.clickgui.component.components.Button;
 import me.kopamed.galacticc.module.Category;
 import me.kopamed.galacticc.module.Module;
+import net.minecraft.client.gui.FontRenderer;
+import net.minecraft.client.gui.Gui;
+import org.lwjgl.opengl.GL11;
+
+import java.awt.*;
+import java.util.ArrayList;
 
 public class Frame {
 
@@ -48,6 +45,10 @@ public class Frame {
 
 	public ArrayList<Component> getComponents() {
 		return components;
+	}
+
+	public Category getCategory() { //needed since its part of not closing gui
+		return category;
 	}
 
 	public void setDragX(int dragX) {
@@ -198,23 +199,31 @@ public class Frame {
 
 	// Utility method to draw a gradient rectangle
 	public void drawGradientRect(int left, int top, int right, int bottom, int startColor, int endColor) {
-		float startAlpha = (float) (startColor >> 24 & 255) / 255.0F;
-		float startRed = (float) (startColor >> 16 & 255) / 255.0F;
-		float startGreen = (float) (startColor >> 8 & 255) / 255.0F;
-		float startBlue = (float) (startColor & 255) / 255.0F;
+		// Save current OpenGL states
+		boolean wasTextureEnabled = GL11.glIsEnabled(GL11.GL_TEXTURE_2D);
+		boolean wasBlendEnabled = GL11.glIsEnabled(GL11.GL_BLEND);
+		boolean wasAlphaEnabled = GL11.glIsEnabled(GL11.GL_ALPHA_TEST);
 
-		float endAlpha = (float) (endColor >> 24 & 255) / 255.0F;
-		float endRed = (float) (endColor >> 16 & 255) / 255.0F;
-		float endGreen = (float) (endColor >> 8 & 255) / 255.0F;
-		float endBlue = (float) (endColor & 255) / 255.0F;
-
+		// Prepare for gradient rendering
 		GL11.glDisable(GL11.GL_TEXTURE_2D);
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glDisable(GL11.GL_ALPHA_TEST);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 		GL11.glShadeModel(GL11.GL_SMOOTH);
-		GL11.glBegin(GL11.GL_QUADS);
 
+		GL11.glBegin(GL11.GL_QUADS);
+		// Gradient colors
+		float startAlpha = (startColor >> 24 & 255) / 255.0F;
+		float startRed = (startColor >> 16 & 255) / 255.0F;
+		float startGreen = (startColor >> 8 & 255) / 255.0F;
+		float startBlue = (startColor & 255) / 255.0F;
+
+		float endAlpha = (endColor >> 24 & 255) / 255.0F;
+		float endRed = (endColor >> 16 & 255) / 255.0F;
+		float endGreen = (endColor >> 8 & 255) / 255.0F;
+		float endBlue = (endColor & 255) / 255.0F;
+
+		// Apply colors to gradient
 		GL11.glColor4f(startRed, startGreen, startBlue, startAlpha);
 		GL11.glVertex2f(left, top);
 		GL11.glVertex2f(left, bottom);
@@ -224,8 +233,16 @@ public class Frame {
 		GL11.glVertex2f(right, top);
 
 		GL11.glEnd();
+
+		// Restore OpenGL state
 		GL11.glShadeModel(GL11.GL_FLAT);
-		GL11.glDisable(GL11.GL_BLEND);
-		GL11.glEnable(GL11.GL_TEXTURE_2D);
+		if (wasAlphaEnabled) GL11.glEnable(GL11.GL_ALPHA_TEST);
+		else GL11.glDisable(GL11.GL_ALPHA_TEST);
+
+		if (wasBlendEnabled) GL11.glEnable(GL11.GL_BLEND);
+		else GL11.glDisable(GL11.GL_BLEND);
+
+		if (wasTextureEnabled) GL11.glEnable(GL11.GL_TEXTURE_2D);
+		else GL11.glDisable(GL11.GL_TEXTURE_2D);
 	}
 }

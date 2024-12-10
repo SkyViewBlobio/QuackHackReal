@@ -11,7 +11,8 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 public class CustomSkyColorAndFog extends Module {
 
     public CustomSkyColorAndFog() {
-        super("NebelFarbe", "Lässt dich die Nebelfarbe ändern", false, false, Category.VISUELLES);
+        super("NebelFarbe", "@Hauptinformationen: " +
+                "laesst dich die Farbe des Nebels aendern.", false, false, Category.VISUELLES);
 
         Galacticc.instance.settingsManager.rSetting(new Setting("Nebel Farbe", this, true));
         Galacticc.instance.settingsManager.rSetting(new Setting("Nebel Rot", this, 0, 0, 255, true));

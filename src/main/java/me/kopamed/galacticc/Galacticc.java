@@ -22,7 +22,7 @@ import java.util.List;
 public class Galacticc
 {
     public static final String MODID = "QuackHack";
-    public static final String VERSION = " v1.3.5";
+    public static final String VERSION = " v1.4.9";
     public static String prefix = ".";
 
     public static Galacticc instance;
@@ -47,6 +47,7 @@ public class Galacticc
         saveLoad = new SaveLoad();
         clickGui = new ClickGui();
         commandManager = new CommandManager();
+        moduleManager.getModulesList().get(0).setToggled(true); // Toggle the first module
     }
 
     @SubscribeEvent

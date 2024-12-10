@@ -19,7 +19,7 @@ public class EnchantModifier extends Module {
     private RenderItem renderItem;
 
     public EnchantModifier() {
-        super("Enchant Color", "Customize enchantment glint color", false, false, Category.VISUELLES);
+        super("Enchant Color", "IN ARBEIT; NICHT FUNKTIONSTUECHTIG!", false, false, Category.VISUELLES);
 
         // Add RGB settings
         Galacticc.instance.settingsManager.rSetting(new Setting("Red Value", this, 255, 0, 255, true));

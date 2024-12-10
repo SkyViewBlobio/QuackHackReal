@@ -15,7 +15,11 @@ public class SelfParticle extends Module {
     private long lastParticleTime;
 
     public SelfParticle() {
-        super("Selbst Partikel", "Generates particles around the player", false, false, Category.VISUELLES);
+        super("Selbst Partikel", "@Hauptinformationen: " +
+                "Zeigt Partikel um deinen Charakter an und laesst dich diese aendern. " +
+                "@Optionen: " +
+                "- Auszeit gibt vor, wie lange es dauert bis der gewuenschte Partikeleffekt erscheint. Warnung: kure Partikelauszeit = mehr Pc Arbeit. || " +
+                "- Partikelanzahl gibt vor, wie viele Partikel angezeigt werden. Warnung: mehr Partikel = mehr Pc Arbeit.", false, false, Category.VISUELLES);
 
         // Delay slider for particle generation
         Galacticc.instance.settingsManager.rSetting(new Setting("Auszeit", this, 3, 1, 10, false)); // Delay in seconds

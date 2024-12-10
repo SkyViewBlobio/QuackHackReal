@@ -23,7 +23,14 @@ public class BlockHighlight extends Module {
     private final Minecraft mc = Minecraft.getMinecraft();
 
     public BlockHighlight() {
-        super("BlockInfo", "Shows valid information of the block you're looking at", false, false, Category.VISUELLES);
+        super("BlockInfo", "@Hauptinformation: " +
+                "Laesst dich Bloecke hervorheben und zeigt dir nuetzliche Informationen ueber den Block den du anschausst. " +
+                "@Optionen: " +
+                        "- Block-Typ zeigt dir den Blocknamen. || " +
+                        "- Blockcoordinaten zeigt dir die Coordinaten, lol. || " +
+                        "- Zeige Farben leasst dich rot, gruen, blau, dichte verandern. Ist diese Option nicht an, kannst du keine farben sehen. || " +
+                        "- Show gradient Colors mixt die Farben."
+                , false, false, Category.VISUELLES);
 
         //************************Standard Settings**************************//
 

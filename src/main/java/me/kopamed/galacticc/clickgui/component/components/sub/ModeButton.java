@@ -1,6 +1,7 @@
 package me.kopamed.galacticc.clickgui.component.components.sub;
 
 import me.kopamed.galacticc.Galacticc;
+import me.kopamed.galacticc.module.mod.cKontrolle;
 import org.lwjgl.opengl.GL11;
 
 import net.minecraft.client.Minecraft;
@@ -43,7 +44,6 @@ public class ModeButton extends Component {
 
 	@Override
 	public void renderComponent() {
-		// Retrieve colors
 		Module clickGuiModule = Galacticc.instance.moduleManager.getModule("Menu");
 
 		int headerRed = (int) Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Header Rot").getValDouble();
@@ -53,7 +53,6 @@ public class ModeButton extends Component {
 
 		int backgroundColor = new Color(headerRed, headerGreen, headerBlue, headerAlpha).getRGB();
 
-		// Draw background
 		Gui.drawRect(parent.parent.getX() + 2, parent.parent.getY() + offset,
 				parent.parent.getX() + parent.parent.getWidth(),
 				parent.parent.getY() + offset + 12,
@@ -78,15 +77,22 @@ public class ModeButton extends Component {
 
 	@Override
 	public void mouseClicked(int mouseX, int mouseY, int button) {
-		if(isMouseOnButton(mouseX, mouseY) && button == 0 && this.parent.open) {
+		if (isMouseOnButton(mouseX, mouseY) && button == 0 && this.parent.open) {
 			int maxIndex = set.getOptions().size() - 1;
 
-			if(modeIndex + 1 > maxIndex)
+			if (modeIndex + 1 > maxIndex)
 				modeIndex = 0;
 			else
 				modeIndex++;
 
+			// Update the setting value in real time since some global modules require it.
 			set.setValString(set.getOptions().get(modeIndex));
+
+			// Get the cKontrolle instance and update its mode
+			Module kontrolleModule = Galacticc.instance.moduleManager.getModule("C-Kontrolle");
+			if (kontrolleModule instanceof cKontrolle) {
+				((cKontrolle) kontrolleModule).updateMode();
+			}
 		}
 	}
 

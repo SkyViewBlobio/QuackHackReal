@@ -11,7 +11,7 @@ import net.minecraft.entity.player.EntityPlayer;
 public class PlayerESP extends Module {
 
     public PlayerESP() {
-        super("Player ESP", "Renders players in a dif way", false, false, Category.VISUELLES);
+        super("Player ESP", "IN ARBEIT; NICHT FUNKTIONSTUECHTIG!", false, false, Category.VISUELLES);
     }
 
     @Override

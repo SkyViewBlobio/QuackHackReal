@@ -159,14 +159,30 @@ public class Informationen extends Module {
             int durability = heldItem.getMaxDamage() - heldItem.getItemDamage();
             infoList.add(new String[]{"Hand", itemName + " (" + durability + " Durability)"});
         }
+        int adjustedYPos = yPos;
+
         if (showPotions) {
+            int potionCount = 0;
+
             for (PotionEffect effect : mc.thePlayer.getActivePotionEffects()) {
                 if (effect != null) {
-                    String potionName = EnumChatFormatting.getTextWithoutFormattingCodes(effect.getEffectName());
-                    int duration = effect.getDuration() / 20; // Convert ticks to seconds
-                    infoList.add(new String[]{"Traenke", potionName + " (" + duration + "s)"});
+                    potionCount++;
+
+                    String potionName = net.minecraft.potion.Potion.potionTypes[effect.getPotionID()].getName();
+                    potionName = potionName.substring(potionName.lastIndexOf(".") + 1);
+
+                    potionName = Character.toUpperCase(potionName.charAt(0)) + potionName.substring(1);
+
+                    int level = effect.getAmplifier() + 1;
+
+                    int duration = effect.getDuration() / 20;
+
+                    infoList.add(new String[]{"Traenke", potionName + " | Level " + level + " | (" + duration + "s)"});
                 }
             }
+
+            int potionOffsetY = potionCount * 12;
+            adjustedYPos = yPos - potionOffsetY;
         }
 
         int moduleIndex = 0;
@@ -184,11 +200,11 @@ public class Informationen extends Module {
                 labelRenderColor = (labelAlpha << 24) | (labelRed << 16) | (labelGreen << 8) | labelBlue;
                 valueRenderColor = (valueAlpha << 24) | (valueRed << 16) | (valueGreen << 8) | valueBlue;
             }
-//todo rewrite this alpha value bs, bit messy, only sets back at 5 %-
-            renderText(fr, label, xPos, yPos, backgroundColor, labelRenderColor);
-            renderText(fr, value, xPos + fr.getStringWidth(label), yPos, 0, valueRenderColor);
 
-            yPos += 12;
+            renderText(fr, label, xPos, adjustedYPos, backgroundColor, labelRenderColor);
+            renderText(fr, value, xPos + fr.getStringWidth(label), adjustedYPos, 0, valueRenderColor);
+
+            adjustedYPos += 12;
             moduleIndex++;
         }
     }
@@ -220,7 +236,7 @@ public class Informationen extends Module {
         }
         fr.drawStringWithShadow(text, x, y, textColor);
     }
-
+    //todo rewrite this alpha value bs, bit messy, only sets back at 5 %-
     @Override
     public void onEnabled() {
         super.onEnabled();

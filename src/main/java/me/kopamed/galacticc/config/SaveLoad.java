@@ -1,6 +1,8 @@
 package me.kopamed.galacticc.config;
 
 import me.kopamed.galacticc.Galacticc;
+import me.kopamed.galacticc.clickgui.component.Frame;
+import me.kopamed.galacticc.module.Category;
 import me.kopamed.galacticc.module.Module;
 import me.kopamed.galacticc.settings.Setting;
 import net.minecraft.client.Minecraft;
@@ -35,7 +37,7 @@ public class SaveLoad {
         if (Galacticc.instance.destructed) {
             return;
         }
-        ArrayList<String> toSave = new ArrayList<String>();
+        ArrayList<String> toSave = new ArrayList<>();
 
         for (Module mod : Galacticc.instance.moduleManager.getModulesList()) {
             toSave.add(Galacticc.MODID + "MOD:" + mod.getName() + ":" + mod.isToggled() + ":" + mod.visible + ":" + mod.getKey());
@@ -51,6 +53,10 @@ public class SaveLoad {
             if (set.isSlider()) {
                 toSave.add(Galacticc.MODID + "SET:" + set.getName() + ":" + set.getParentMod().getName() + ":" + set.getValDouble());
             }
+        }
+
+        for (Frame frame : Galacticc.instance.clickGui.getFrames()) {
+            toSave.add(Galacticc.MODID + "FRAME:" + frame.getCategory().name() + ":" + frame.isOpen());
         }
 
         try {
@@ -102,59 +108,81 @@ public class SaveLoad {
             return;
         }
 
-        ArrayList<String> lines = new ArrayList<String>();
+        ArrayList<String> lines = new ArrayList<>();
 
-        try {
-            BufferedReader reader = new BufferedReader(new FileReader(this.dataFile));
-            String line = reader.readLine();
-            while (line != null) {
+        // Read the file safely
+        try (BufferedReader reader = new BufferedReader(new FileReader(this.dataFile))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
                 lines.add(line);
-                line = reader.readLine();
             }
-            reader.close();
         } catch (Exception e) {
             e.printStackTrace();
+            return; // Exit early if reading the file fails
         }
-        if (lines.size() == 0) {
+
+        if (lines.isEmpty()) {
             return;
         }
 
         for (String s : lines) {
             String[] args = s.split(":");
-            if (s.toLowerCase().startsWith(Galacticc.MODID.toLowerCase() + "mod:")) {
-
-                Module m = Galacticc.instance.moduleManager.getModule(args[1]);
-                if (m != null) {
-                    m.setToggled(Boolean.parseBoolean(args[2]));
-                    m.visible = Boolean.parseBoolean(args[3]);
-                    m.setKey(Integer.parseInt(args[4]));
-                } else {System.out.println("m is null fuck line 82");}
-            } else if (s.toLowerCase().startsWith(Galacticc.MODID.toLowerCase() + "set:")) {
-                Module m = Galacticc.instance.moduleManager.getModule(args[2]);
-                if (m != null) {
-                    Setting set = Galacticc.instance.settingsManager.getSettingByName(m, args[1]);
-                    if (set != null) {
-                        if (set.isCheck()) {
-                            set.setValBoolean(Boolean.parseBoolean(args[3]));
-                        }
-                        if (set.isCombo()) {
-                            set.setValString(args[3]);
-                        }
-                        if (set.isSlider()) {
-                            try {
-                                double value = Double.parseDouble(args[3]);
-                                set.setValDouble(value);
-                            } catch (NumberFormatException e) {
-                                System.err.println("Invalid slider value for setting: " + set.getName());
+            try {
+                if (s.toLowerCase().startsWith(Galacticc.MODID.toLowerCase() + "mod:")) {
+                    // Handle module settings
+                    Module m = Galacticc.instance.moduleManager.getModule(args[1]);
+                    if (m != null) {
+                        m.setToggled(Boolean.parseBoolean(args[2]));
+                        m.visible = Boolean.parseBoolean(args[3]);
+                        m.setKey(Integer.parseInt(args[4]));
+                    }
+                } else if (s.toLowerCase().startsWith(Galacticc.MODID.toLowerCase() + "set:")) {
+                    // Handle individual settings
+                    Module m = Galacticc.instance.moduleManager.getModule(args[2]);
+                    if (m != null) {
+                        Setting set = Galacticc.instance.settingsManager.getSettingByName(m, args[1]);
+                        if (set != null) {
+                            if (set.isCheck()) {
+                                set.setValBoolean(Boolean.parseBoolean(args[3]));
+                            }
+                            if (set.isCombo()) {
+                                set.setValString(args[3]);
+                            }
+                            if (set.isSlider()) {
+                                try {
+                                    double value = Double.parseDouble(args[3]);
+                                    set.setValDouble(value);
+                                } catch (NumberFormatException e) {
+                                    System.err.println("Invalid slider value for setting: " + set.getName());
+                                }
                             }
                         }
-                    } else {System.out.println("s is null fuck line 91");}
-                }else {System.out.println("m is null fuck line 89");}
-            } else {
-                System.out.println("idfk how to read");
+                    }
+                } else if (s.toLowerCase().startsWith(Galacticc.MODID.toLowerCase() + "frame:")) {
+                    // Handle frame settings (line 159 fix)
+                    if (args.length > 2) { // Ensure sufficient arguments are present
+                        try {
+                            Category category = Category.valueOf(args[1].toUpperCase()); // Handle case insensitivity
+                            Frame frame = Galacticc.instance.clickGui.getFrameByCategory(category);
+                            if (frame != null) {
+                                frame.setOpen(Boolean.parseBoolean(args[2]));
+                            } else {
+                                System.err.println("Frame not found for category: " + category);
+                            }
+                        } catch (IllegalArgumentException e) {
+                            System.err.println("Invalid category in frame line: " + args[1]);
+                        }
+                    } else {
+                        System.err.println("Insufficient arguments for frame: " + s);
+                    }
+                }
+            } catch (Exception e) {
+                System.err.println("Error processing line: " + s);
+                e.printStackTrace();
             }
         }
     }
+
 
     public String getExtension() {
         return extension;

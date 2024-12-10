@@ -1,10 +1,6 @@
 package me.kopamed.galacticc.module;
 
-import jdk.nashorn.internal.ir.Block;
-import me.kopamed.galacticc.module.combat.AutoClicker;
-import me.kopamed.galacticc.module.combat.DelayRemover;
-import me.kopamed.galacticc.module.combat.Killaura;
-import me.kopamed.galacticc.module.combat.Velocity;
+import me.kopamed.galacticc.module.combat.*;
 import me.kopamed.galacticc.module.misc.AntiAFK;
 import me.kopamed.galacticc.module.misc.AutoFish;
 import me.kopamed.galacticc.module.mod.cKontrolle;
@@ -15,11 +11,14 @@ import me.kopamed.galacticc.module.textstuff.Informationen;
 import me.kopamed.galacticc.module.textstuff.Watermark;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ModuleManager {
     public ArrayList<Module> modules;
+    private final Map<Module, Boolean> moduleOpenStates = new HashMap<>();
 
-    public ModuleManager(){
+    public ModuleManager() {
         (modules = new ArrayList<Module>()).clear();
 
         //************************COMBAT**************************//
@@ -28,6 +27,7 @@ public class ModuleManager {
         this.modules.add(new Velocity());
         this.modules.add(new DelayRemover());
         this.modules.add(new Killaura());
+        this.modules.add(new Reach());
 
         //************************Mod**************************//
         this.modules.add(new cKontrolle());
@@ -68,35 +68,65 @@ public class ModuleManager {
         //this.modules.add(new Speed());
         //this.modules.add(new AntiBot());
         //this.modules.add(new SelfDestruct());
-        //this.modules.add(new Reach());
-        //this.modules.add(new PlayerESP());
+        this.modules.add(new PlayerESP());
 
-    }
 
-    public Module getModule(String name) {
-        for (Module m : this.modules) {
-            if (m.getName().equalsIgnoreCase(name)) {
-                return m;
-            }
+        // Initialize open states
+        for (Module module : modules) {
+            moduleOpenStates.put(module, false); // Default to folded
         }
-        return null;
-    }
 
-    public ArrayList<Module> getModulesList() {
-        return this.modules;
-    }
-
-    public ArrayList<Module> getModulesInCategory(Category c) {
-        ArrayList<Module> mods = new ArrayList<Module>();
-        for (Module m : this.modules) {
-            if(m.getCategory() == c){
-                mods.add(m);
-            }
+        // Call onLoad for each module
+        for (Module module : modules) {
+            module.onLoad(); // Trigger module-specific initialization logic
         }
-        return mods;
     }
 
-    public void addModule(Module m){
-        this.modules.add(m);
+/**
+ * Retrieve the open state of a module.
+ *
+ * @param module The module to check.
+ * @return true if the module is open, false if folded.
+ */
+public boolean isModuleOpen(Module module) {
+    return moduleOpenStates.getOrDefault(module, false); // Default to folded
+}
+
+/**
+ * Set the open state of a module.
+ *
+ * @param module The module to update.
+ * @param isOpen The new state: true for open, false for folded.
+ */
+public void setModuleOpen(Module module, boolean isOpen) {
+    moduleOpenStates.put(module, isOpen);
+}
+
+public Module getModule(String name) {
+    for (Module m : this.modules) {
+        if (m.getName().equalsIgnoreCase(name)) {
+            return m;
+        }
     }
+    return null;
+}
+
+public ArrayList<Module> getModulesList() {
+    return this.modules;
+}
+
+public ArrayList<Module> getModulesInCategory(Category c) {
+    ArrayList<Module> mods = new ArrayList<Module>();
+    for (Module m : this.modules) {
+        if (m.getCategory() == c) {
+            mods.add(m);
+        }
+    }
+    return mods;
+}
+
+public void addModule(Module m) {
+    this.modules.add(m);
+    moduleOpenStates.put(m, false); // Initialize with default folded state
+}
 }

@@ -6,7 +6,8 @@ import me.kopamed.galacticc.module.Module;
 public class Fullbright extends Module {
     private float defGamma;
     public Fullbright() {
-        super("Helligkeit", "Allows you to see in the dark", false, false, Category.VISUELLES);
+        super("Helligkeit", "Hauptinformationen: " +
+                "Macht das licht an ;^)", false, false, Category.VISUELLES);
     }
 
     @Override
