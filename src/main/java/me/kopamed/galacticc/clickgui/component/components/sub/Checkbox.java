@@ -33,22 +33,22 @@ public class Checkbox extends Component {
 
 	@Override
 	public void renderComponent() {
-		// Retrieve colors
+		// Retrieve checkbox colors
 		Module clickGuiModule = Galacticc.instance.moduleManager.getModule("Menu");
 
-		int headerRed = (int) Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Header Rot").getValDouble();
-		int headerGreen = (int) Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Header Green").getValDouble();
-		int headerBlue = (int) Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Header Blau").getValDouble();
-		int headerAlpha = (int) Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Header Alpha").getValDouble();
+		int checkboxRed = (int) Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Option Rot").getValDouble();
+		int checkboxGreen = (int) Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Option Green").getValDouble();
+		int checkboxBlue = (int) Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Option Blau").getValDouble();
 
-		int backgroundColor = new Color(headerRed, headerGreen, headerBlue, headerAlpha).getRGB();
+		int backgroundColor = new Color(checkboxRed, checkboxGreen, checkboxBlue).getRGB();
 
-		// Draw background
+		// Draw checkbox container background
 		Gui.drawRect(parent.parent.getX() + 2, parent.parent.getY() + offset,
 				parent.parent.getX() + parent.parent.getWidth(),
 				parent.parent.getY() + offset + 12,
 				this.hovered ? backgroundColor : 0xFF222222);
 
+		// Draw text
 		GL11.glPushMatrix();
 		GL11.glScalef(0.5f, 0.5f, 0.5f);
 		Minecraft.getMinecraft().fontRendererObj.drawStringWithShadow(
@@ -58,7 +58,7 @@ public class Checkbox extends Component {
 				0xFFFFFFFF);
 		GL11.glPopMatrix();
 
-		// Render checkbox
+		// Render the checkbox
 		int boxColor = this.op.getValBoolean() ? 0xFF666666 : 0xFF999999;
 		Gui.drawRect(parent.parent.getX() + 3 + 4, parent.parent.getY() + offset + 3,
 				parent.parent.getX() + 9 + 4, parent.parent.getY() + offset + 9,

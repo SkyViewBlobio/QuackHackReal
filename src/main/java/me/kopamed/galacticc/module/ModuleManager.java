@@ -5,6 +5,9 @@ import me.kopamed.galacticc.module.combat.AutoClicker;
 import me.kopamed.galacticc.module.combat.DelayRemover;
 import me.kopamed.galacticc.module.combat.Killaura;
 import me.kopamed.galacticc.module.combat.Velocity;
+import me.kopamed.galacticc.module.misc.AntiAFK;
+import me.kopamed.galacticc.module.misc.AutoFish;
+import me.kopamed.galacticc.module.mod.cKontrolle;
 import me.kopamed.galacticc.module.movement.Sprint;
 import me.kopamed.galacticc.module.player.FastPlace;
 import me.kopamed.galacticc.module.render.*;
@@ -18,28 +21,56 @@ public class ModuleManager {
 
     public ModuleManager(){
         (modules = new ArrayList<Module>()).clear();
-        this.modules.add(new ClickGUI());
-        this.modules.add(new HUD());
-        this.modules.add(new EnchantModifier());
-        this.modules.add(new ArmorDisplay());
-        this.modules.add(new Sprint());
+
+        //************************COMBAT**************************//
+
         this.modules.add(new AutoClicker());
         this.modules.add(new Velocity());
-        this.modules.add(new Watermark());
+        this.modules.add(new DelayRemover());
+        this.modules.add(new Killaura());
+
+        //************************Mod**************************//
+        this.modules.add(new cKontrolle());
+
+        //************************MISC**************************//
+        this.modules.add(new AutoFish());
+        this.modules.add(new AntiAFK());
+
+        //************************MOVEMENT**************************//
+
+        this.modules.add(new Sprint());
+
+        //************************PLAYER**************************//
+
+        this.modules.add(new FastPlace());
+
+        //************************RENDER**************************//
+
+        this.modules.add(new ClickGUI());
+        this.modules.add(new EnchantModifier());
+        this.modules.add(new HUD());
+        this.modules.add(new ArmorDisplay());
         this.modules.add(new BlockHighlight());
+        this.modules.add(new Fullbright());
+        this.modules.add(new CustomSkyColorAndFog());
+        this.modules.add(new SelfParticle());
+        this.modules.add(new AttackParticle());
+
+        //************************TEXT STUFF**************************//
+
+        this.modules.add(new Watermark());
+        this.modules.add(new Informationen());
+
+        //************************ BS **************************//
+
         //this.modules.add(new Fly());
         //this.modules.add(new NoFall());
-        this.modules.add(new Fullbright());
         //this.modules.add(new Speed());
         //this.modules.add(new AntiBot());
-        this.modules.add(new FastPlace());
         //this.modules.add(new SelfDestruct());
-        this.modules.add(new DelayRemover());
         //this.modules.add(new Reach());
         //this.modules.add(new PlayerESP());
-        this.modules.add(new Killaura());
-        this.modules.add(new Informationen());
-        this.modules.add(new CustomSkyColorAndFog());
+
     }
 
     public Module getModule(String name) {

@@ -13,6 +13,9 @@ public class Module {
     public Category category;
     public boolean visible = true;
 
+    // Global flag to control HUD info visibility
+    public static boolean hideHUDInfo = false;
+
     public Module(String name, String description, boolean detectable, boolean toggled, Category category) {
         this.name = name;
         this.description = description;
@@ -97,12 +100,15 @@ public class Module {
 
     /**
      * Provides extra HUD information for modules that implement it.
-     * Override this method in modules to return specific HUD information.
+     * Automatically hides HUD info if `hideHUDInfo` is enabled globally.
      *
-     * @return A string representing additional HUD info, or null if no extra info.
+     * @return A string representing additional HUD info, or null if no extra info or hidden.
      */
     public String getHUDInfo() {
-        return null;
+        if (hideHUDInfo) {
+            return null; // Return null if HUD info is globally hidden
+        }
+        return null; // Override in individual modules as needed
     }
 
     @Override

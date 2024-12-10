@@ -1,9 +1,11 @@
 package me.kopamed.galacticc.clickgui;
 
+import java.awt.*;
 import java.io.IOException;
 import java.util.ArrayList;
 
 import me.kopamed.galacticc.Galacticc;
+import me.kopamed.galacticc.module.Module;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiScreen;
 import me.kopamed.galacticc.clickgui.component.Component;
@@ -17,12 +19,12 @@ public class ClickGui extends GuiScreen {
 
 	public ClickGui() {
 		this.frames = new ArrayList<>();
-		int frameX = 5;
+		int frameX = 100;// center stuff
 		for (Category category : Category.values()) {
 			Frame frame = new Frame(category);
 			frame.setX(frameX);
 			frames.add(frame);
-			frameX += frame.getWidth() + 1;
+			frameX += frame.getWidth() + 5;
 		}
 	}
 
@@ -38,7 +40,18 @@ public class ClickGui extends GuiScreen {
 
 	@Override
 	public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-		this.drawDefaultBackground();
+		Module clickGuiModule = Galacticc.instance.moduleManager.getModule("Menu");
+		//todo: check if top color looks better?
+		int red = (int) Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Hintergrund2 Rot").getValDouble();
+		int green = (int) Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Hintergrund2 Green").getValDouble();
+		int blue = (int) Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Hintergrund2 Blau").getValDouble();
+		int alpha = (int) Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Hintergrund2 Alpha").getValDouble();
+
+		// Draw a gradient background (opaque at the bottom, transparent at the top)
+		drawGradientRect(0, 0, this.width, this.height,
+				new Color(red, green, blue, 0).getRGB(),
+				new Color(red, green, blue, alpha).getRGB());
+
 		for (Frame frame : frames) {
 			frame.renderFrame(this.fontRendererObj);
 			frame.updatePosition(mouseX, mouseY);
@@ -99,6 +112,6 @@ public class ClickGui extends GuiScreen {
 
 	@Override
 	public boolean doesGuiPauseGame() {
-		return true;
-	}
+		return false;
+	}//was true before, test in MP.
 }

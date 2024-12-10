@@ -1,5 +1,5 @@
 package me.kopamed.galacticc.module;
 
 public enum Category {
-    ANGRIFF, VISUELLES, BEWEGUNG, SPIELER, SONSTIGES, TEXTSTUFF;
+    ANGRIFF, VISUELLES, BEWEGUNG, SPIELER, SONSTIGES, TEXTSTUFF, MOD;
 }

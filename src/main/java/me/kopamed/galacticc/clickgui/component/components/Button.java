@@ -71,41 +71,82 @@ public class Button extends Component {
 
 	@Override
 	public void renderComponent() {
-		// Retrieve colors
+		// Retrieve the ClickGui module for settings
 		Module clickGuiModule = Galacticc.instance.moduleManager.getModule("Menu");
+		if (clickGuiModule == null) return; // Ensure the module exists
 
-		int headerRed = (int) Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Header Rot").getValDouble();
-		int headerGreen = (int) Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Header Green").getValDouble();
-		int headerBlue = (int) Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Header Blau").getValDouble();
-		int headerAlpha = (int) Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Header Alpha").getValDouble();
+		// Safely retrieve header colors
+		Setting headerRotSetting = Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Header Rot");
+		Setting headerGreenSetting = Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Header Green");
+		Setting headerBlueSetting = Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Header Blau");
+		Setting headerAlphaSetting = Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Header Alpha");
 
-		int backgroundColor = new Color(headerRed, headerGreen, headerBlue, headerAlpha).getRGB();
+		// Check for null and assign default values if necessary
+		int headerRed = headerRotSetting != null ? (int) headerRotSetting.getValDouble() : 255;
+		int headerGreen = headerGreenSetting != null ? (int) headerGreenSetting.getValDouble() : 255;
+		int headerBlue = headerBlueSetting != null ? (int) headerBlueSetting.getValDouble() : 255;
+		int headerAlpha = headerAlphaSetting != null ? (int) headerAlphaSetting.getValDouble() : 255;
 
-		// Draw background
-		Gui.drawRect(parent.getX(), parent.getY() + offset,
+		// Safely retrieve background colors
+		Setting backgroundRedSetting = Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Modul Rot");
+		Setting backgroundGreenSetting = Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Modul Green");
+		Setting backgroundBlueSetting = Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Modul Blau");
+		Setting backgroundAlphaSetting = Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Modul Alpha");
+
+		int backgroundRed = backgroundRedSetting != null ? (int) backgroundRedSetting.getValDouble() : 0;
+		int backgroundGreen = backgroundGreenSetting != null ? (int) backgroundGreenSetting.getValDouble() : 0;
+		int backgroundBlue = backgroundBlueSetting != null ? (int) backgroundBlueSetting.getValDouble() : 0;
+		int backgroundAlpha = backgroundAlphaSetting != null ? (int) backgroundAlphaSetting.getValDouble() : 255;
+
+		// Safely retrieve button colors
+		Setting buttonRedSetting = Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Modul-Hover Rot");
+		Setting buttonGreenSetting = Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Modul-Hover Green");
+		Setting buttonBlueSetting = Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Modul-Hover Blau");
+		Setting buttonAlphaSetting = Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Modul-Hover Alpha");
+
+		int buttonRed = buttonRedSetting != null ? (int) buttonRedSetting.getValDouble() : 100;
+		int buttonGreen = buttonGreenSetting != null ? (int) buttonGreenSetting.getValDouble() : 100;
+		int buttonBlue = buttonBlueSetting != null ? (int) buttonBlueSetting.getValDouble() : 100;
+		int buttonAlpha = buttonAlphaSetting != null ? (int) buttonAlphaSetting.getValDouble() : 255;
+
+		// Convert slider values to Color objects
+		int backgroundColor = new Color(backgroundRed, backgroundGreen, backgroundBlue, backgroundAlpha).getRGB();
+		int buttonColor = new Color(buttonRed, buttonGreen, buttonBlue, buttonAlpha).getRGB();
+
+		// Determine the button's background color based on hover state
+		int drawColor = this.isHovered ? buttonColor : backgroundColor;
+
+		// Draw the button's background
+		Gui.drawRect(
+				parent.getX(),
+				parent.getY() + offset,
 				parent.getX() + parent.getWidth(),
 				parent.getY() + offset + 12,
-				this.isHovered ? backgroundColor : 0xFF222222);
+				drawColor
+		);
 
+		// Render the text for the module name
 		GL11.glPushMatrix();
 		GL11.glScalef(0.5f, 0.5f, 0.5f);
 		Minecraft.getMinecraft().fontRendererObj.drawStringWithShadow(
 				this.mod.getName(),
 				(parent.getX() + 2) * 2,
 				(parent.getY() + offset + 2) * 2 + 4,
-				0xFFFFFFFF);
+				0xFFFFFFFF // Text color (sliders for text color can be added here if needed)
+		);
 
-		// Toggle indicator
+		// Render the toggle indicator
 		if (this.subcomponents.size() > 2) {
 			Minecraft.getMinecraft().fontRendererObj.drawStringWithShadow(
 					this.open ? "-" : "+",
 					(parent.getX() + parent.getWidth() - 10) * 2,
 					(parent.getY() + offset + 2) * 2 + 4,
-					0xFFFFFFFF);
+					0xFFFFFFFF
+			);
 		}
 		GL11.glPopMatrix();
 
-		// Render subcomponents
+		// Render subcomponents if the button is open
 		if (this.open) {
 			for (Component comp : subcomponents) {
 				comp.renderComponent();
@@ -166,3 +207,4 @@ public class Button extends Component {
 		return false;
 	}
 }
+
