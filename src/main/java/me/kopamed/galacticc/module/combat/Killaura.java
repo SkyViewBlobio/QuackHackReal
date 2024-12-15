@@ -43,10 +43,17 @@ public class Killaura extends Module {
     // Map to store entities with fading hitboxes
     private final Map<EntityLivingBase, FadingHitbox> fadingHitboxes = new HashMap<>();
     //*************************************************************
-    //todo reset gethudinfo
+    //todo reset gethudinfo every 3s and add neutral mobs.
 
     public Killaura() {
-        super("Beschutzer", "Blatantly attacks enemies", true, false, Category.ANGRIFF);
+        super("Beschutzer", "@Hauptinformation: " +
+                "Schlaegt ausgewaehlte Tiere/Monster/Spieler in einen festgelegten Umkreis." +
+                "@Optionen: " +
+                "- KlicksProSek gibt an wie viele Klicks pro Sekunde der Beschutzer schlaegt. || " +
+                "- Reichweite gibt die Reichweite in Bloecken an. || " +
+                "- Autoblockierung blockt eintreffenden Schaden Automatisch. || " +
+                "- Hitbox anzeigen zeigt markiert was du gerade geschlagen hast. || " +
+                "- Fade-out zeigt einen schoenen Effekt wenn du aufhoerst mit schlagen." , true, false, Category.ANGRIFF);
 
         // Settings initialization
         Setting cps = new Setting("KlicksProSek", this, 10, 0.1, 30, false);

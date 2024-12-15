@@ -16,7 +16,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import org.lwjgl.opengl.GL11;
 
 import java.awt.*;
-//todo make a gradient mode for the block edges.
+//todo make a gradient mode for the block lines.
 //************************Module Initialization**************************//
 
 public class BlockHighlight extends Module {

@@ -5,6 +5,8 @@ import me.kopamed.galacticc.module.misc.AntiAFK;
 import me.kopamed.galacticc.module.misc.AutoFish;
 import me.kopamed.galacticc.module.mod.cKontrolle;
 import me.kopamed.galacticc.module.movement.Sprint;
+import me.kopamed.galacticc.module.movement.Step;
+import me.kopamed.galacticc.module.movement.GlideJump;
 import me.kopamed.galacticc.module.player.FastPlace;
 import me.kopamed.galacticc.module.render.*;
 import me.kopamed.galacticc.module.textstuff.Informationen;
@@ -39,6 +41,8 @@ public class ModuleManager {
         //************************MOVEMENT**************************//
 
         this.modules.add(new Sprint());
+        this.modules.add(new Step());
+        this.modules.add(new GlideJump());
 
         //************************PLAYER**************************//
 
@@ -55,6 +59,9 @@ public class ModuleManager {
         this.modules.add(new CustomSkyColorAndFog());
         this.modules.add(new SelfParticle());
         this.modules.add(new AttackParticle());
+        this.modules.add(new InventoryDisplay());
+        this.modules.add(new CompassMap());
+        this.modules.add(new FadeWalker());
 
         //************************TEXT STUFF**************************//
 

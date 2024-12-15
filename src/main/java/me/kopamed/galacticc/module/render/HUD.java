@@ -15,7 +15,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
-//todo: cleanup?
+//todo: cleanup? and fix the funny hunger / heart / armor icon coloring.
 public class HUD extends Module {
     private boolean watermark, background, textShadow, active;
     private int margin;

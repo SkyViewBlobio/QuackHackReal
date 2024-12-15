@@ -35,7 +35,16 @@ public class AutoClicker extends Module {
 
     public AutoClicker() {
         //Setting module attributes
-        super("AutoKlicker", "Clicks for you", false, false, Category.ANGRIFF);
+        super("AutoKlicker", "@Hauptinformation: " +
+                "Laesst dich sehr schnell klicken. " +
+                "@Optionen " +
+                "- left Click klickt automatisch links. || " +
+                "- left minCPS gibt das minimum an linksclicks an. || " +
+                "- left maxCPS gibt das maximum an linksclicks an. || " +
+                "- right click macht genau das selbe wie left click nur fuer rechtsclicks. || " +
+                "- break blocks wird das zerstoeren von Bloecken verschnellern. || " +
+                "- can eat laesst dich schneller essen. || " +
+                "- can bow verwandelt dein Bogen in eine Kalaschnikow.", false, false, Category.ANGRIFF);
 
         //Creating left click settings
         Setting leftActive = new Setting("Left Click", this, true);
@@ -67,7 +76,7 @@ public class AutoClicker extends Module {
 
         this.ravenBreakWtf = false;
     }
-
+//todo cleanup?
     @SubscribeEvent
     public void onTick(TickEvent.RenderTickEvent e) {
         if (Galacticc.instance.destructed) {return;}
@@ -80,8 +89,6 @@ public class AutoClicker extends Module {
             return;
         }
 
-
-        // Uhh left click only, mate
         if (Mouse.isButtonDown(0) && leftActive) {
             if(breakBlocks) {
                 BlockPos lookingBlock = mc.objectMouseOver.getBlockPos();

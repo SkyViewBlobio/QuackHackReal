@@ -9,15 +9,14 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 import java.lang.reflect.Field;
 
-// copied from raven b3
-// @author Blowsy
 public class DelayRemover extends Module {
     private boolean leftDisable, rightDisable;
     private Field leftCap = null;
     private Field rightCap = null;
 
     public DelayRemover() {
-        super("-Umgeher", "Does not cap cps", false, false, Category.ANGRIFF);
+        super("-Umgeher", "@Hauptinformation: " +
+                "Laesst dich die Verzoegerung von rechts/links Klicks ausschalten.", false, false, Category.ANGRIFF);
 
         Setting leftDisable = new Setting("Remove LeftClick Delay", this, true);
         Setting rightDisable = new Setting("Remove RightClick Delay", this, true);
@@ -40,7 +39,7 @@ public class DelayRemover extends Module {
             }
 
             if (this.leftCap != null) {
-                System.out.println("Made left accessibvel");
+                System.out.println("Made left accessible");
                 this.leftCap.setAccessible(true);
             } else {
                 this.toggle();
@@ -55,7 +54,7 @@ public class DelayRemover extends Module {
 
 
             if (this.rightCap != null) {
-                System.out.println("Made right accessibvel");
+                System.out.println("Made right accessible");
                 this.rightCap.setAccessible(true);
             } else {
                 this.toggle();
