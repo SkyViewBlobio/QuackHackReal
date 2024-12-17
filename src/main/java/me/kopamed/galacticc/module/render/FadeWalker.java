@@ -85,17 +85,19 @@ public class FadeWalker extends Module {
         float fadeDecrement = 1.0F / (duration * 40.0F);
         Vec3 playerPos = mc.thePlayer.getPositionVector();
 
+        // Calculate the dynamic FOV threshold using the player's current FOV setting
+        float playerFOV = mc.gameSettings.fovSetting; // Current FOV (default ~70-90)
+        double threshold = Math.cos(Math.toRadians(playerFOV / 2)); // Convert FOV to a cosine value
+
         for (Entity entity : mc.theWorld.loadedEntityList) {
             if (shouldConsiderEntity(entity)) {
-                Vec3 playerLookVec = mc.thePlayer.getLookVec().normalize(); // Get the player's normalized direction vector
+                Vec3 playerLookVec = mc.thePlayer.getLookVec().normalize();
                 Vec3 entityVec = new Vec3(entity.posX - mc.thePlayer.posX,
                         entity.posY - mc.thePlayer.posY,
                         entity.posZ - mc.thePlayer.posZ).normalize();
 
-                // Adjust the threshold to a range, e.g., dotProduct > cos(60°)
-                double threshold = 0.5; // Cosine of ~60° FOV
                 double dotProduct = playerLookVec.dotProduct(entityVec);
-                if (dotProduct < threshold) continue; // Skip entities not within FOV
+                if (dotProduct < threshold) continue; // Skip entities outside FOV
 
                 BlockPos entityPos = new BlockPos(entity.posX, entity.posY - 1, entity.posZ);
                 if (playerPos.distanceTo(new Vec3(entityPos.getX() + 0.5,
@@ -106,6 +108,7 @@ public class FadeWalker extends Module {
             }
         }
 
+        // Render and fade logic for blocks
         Iterator<Map.Entry<BlockPos, Float>> iterator = blockFadeMap.entrySet().iterator();
         while (iterator.hasNext()) {
             Map.Entry<BlockPos, Float> entry = iterator.next();

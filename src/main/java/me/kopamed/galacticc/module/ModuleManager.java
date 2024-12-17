@@ -62,6 +62,7 @@ public class ModuleManager {
         this.modules.add(new InventoryDisplay());
         this.modules.add(new CompassMap());
         this.modules.add(new FadeWalker());
+        this.modules.add(new StorageESP());
 
         //************************TEXT STUFF**************************//
 
