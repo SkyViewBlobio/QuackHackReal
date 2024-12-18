@@ -22,7 +22,7 @@ import org.lwjgl.opengl.GL11;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-
+//todo add gradient aaaaaaaaaaaa and maybe find other way than fov
 public class StorageESP extends Module {
     private final Minecraft mc = Minecraft.getMinecraft();
     private final Map<BlockPos, Float> blockFadeMap = new HashMap<>();
@@ -82,7 +82,7 @@ public class StorageESP extends Module {
 
         // Adding sliders for Fade Speed, RGBA values, and Range
         Galacticc.instance.settingsManager.rSetting(new Setting("Duration", this, 5.0F, 1.0F, 40.0F, false));
-        Galacticc.instance.settingsManager.rSetting(new Setting("Range", this, 10.0F, 3.0F, 64.0F, false));
+        Galacticc.instance.settingsManager.rSetting(new Setting("Range", this, 10.0F, 3.0F, 15.0F, false));
     }
 
     @SubscribeEvent
@@ -323,15 +323,9 @@ public class StorageESP extends Module {
         GlStateManager.disableDepth();
         GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 
-        GlStateManager.color(red
-                / 255.0f, green
-                / 255.0f, blue
-                / 255.0f, alpha);
+        GlStateManager.color(red / 255.0f, green / 255.0f, blue / 255.0f, alpha);
         drawFilledBox(box);
-        drawOutline(box, red
-                / 255.0f, green
-                / 255.0f, blue
-                / 255.0f, alpha);
+        drawOutline(box, red / 255.0f, green / 255.0f, blue / 255.0f, alpha);
 
         GlStateManager.enableTexture2D();
         GlStateManager.enableDepth();

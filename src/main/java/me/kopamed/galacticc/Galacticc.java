@@ -8,10 +8,13 @@ import me.kopamed.galacticc.module.Module;
 import me.kopamed.galacticc.module.ModuleManager;
 import me.kopamed.galacticc.module.misc.SafeSettings;
 import me.kopamed.galacticc.module.render.ClickGUI;
+import me.kopamed.galacticc.module.render.FakePlayer;
 import me.kopamed.galacticc.settings.SettingsManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
 import org.lwjgl.input.Keyboard;
@@ -22,7 +25,7 @@ import java.util.List;
 public class Galacticc
 {
     public static final String MODID = "QuackHack";
-    public static final String VERSION = " v1.6.0";
+    public static final String VERSION = " v1.6.6";
     public static String prefix = ".";
 
     public static Galacticc instance;
@@ -76,6 +79,11 @@ public class Galacticc
         } catch (Exception q) {
             q.printStackTrace();
         }
+    }
+
+    @Mod.EventHandler
+    public void init(FMLInitializationEvent event) {
+        MinecraftForge.EVENT_BUS.register(new FakePlayer());
     }
 
     public void onDestruct() {

@@ -4,9 +4,7 @@ import me.kopamed.galacticc.module.combat.*;
 import me.kopamed.galacticc.module.misc.AntiAFK;
 import me.kopamed.galacticc.module.misc.AutoFish;
 import me.kopamed.galacticc.module.mod.cKontrolle;
-import me.kopamed.galacticc.module.movement.Sprint;
-import me.kopamed.galacticc.module.movement.Step;
-import me.kopamed.galacticc.module.movement.GlideJump;
+import me.kopamed.galacticc.module.movement.*;
 import me.kopamed.galacticc.module.player.FastPlace;
 import me.kopamed.galacticc.module.render.*;
 import me.kopamed.galacticc.module.textstuff.Informationen;
@@ -30,6 +28,7 @@ public class ModuleManager {
         this.modules.add(new DelayRemover());
         this.modules.add(new Killaura());
         this.modules.add(new Reach());
+        this.modules.add(new Criticals());
 
         //************************Mod**************************//
         this.modules.add(new cKontrolle());
@@ -43,6 +42,8 @@ public class ModuleManager {
         this.modules.add(new Sprint());
         this.modules.add(new Step());
         this.modules.add(new GlideJump());
+        this.modules.add(new NoFall());
+        this.modules.add(new InventoryMovementBypass());
 
         //************************PLAYER**************************//
 
@@ -63,6 +64,7 @@ public class ModuleManager {
         this.modules.add(new CompassMap());
         this.modules.add(new FadeWalker());
         this.modules.add(new StorageESP());
+        this.modules.add(new FakePlayer());
 
         //************************TEXT STUFF**************************//
 
