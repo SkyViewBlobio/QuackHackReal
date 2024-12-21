@@ -15,10 +15,10 @@ import net.minecraft.entity.boss.EntityWither;
 import net.minecraft.entity.monster.*;
 import net.minecraft.entity.passive.*;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemSword;
-import net.minecraft.network.play.client.C02PacketUseEntity;
-import net.minecraft.network.play.client.C03PacketPlayer;
-import net.minecraft.util.AxisAlignedBB;
+import net.minecraft.network.play.client.CPacketPlayer;
+import net.minecraft.network.play.client.CPacketUseEntity;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -26,8 +26,8 @@ import org.lwjgl.opengl.GL11;
 
 import java.awt.*;
 import java.lang.reflect.Field;
-import java.util.*;
 import java.util.List;
+import java.util.*;
 
 public class Killaura extends Module {
     private long cps, reach;
@@ -43,7 +43,7 @@ public class Killaura extends Module {
     // Map to store entities with fading hitboxes
     private final Map<EntityLivingBase, FadingHitbox> fadingHitboxes = new HashMap<>();
     //*************************************************************
-    //todo reset gethudinfo every 3s and add neutral mobs.
+    //todo reset gethudinfo every 3s and add neutral mobs. also ADD HIT DELAY FOR 1.12.2
 
     public Killaura() {
         super("Beschutzer", "@Hauptinformation: " +
@@ -87,7 +87,7 @@ public class Killaura extends Module {
     @SubscribeEvent
     public void onMotion(TickEvent.PlayerTickEvent event) {
         updateVals();
-        if (event.phase != TickEvent.Phase.START || mc.thePlayer.isSpectator()) {
+        if (event.phase != TickEvent.Phase.START || mc.player.isSpectator()) {
             return;
         }
 
@@ -108,22 +108,19 @@ public class Killaura extends Module {
 
         EntityLivingBase target = filteredTargets.get(0);
 
-        // Update rotation and perform attack
-        mc.thePlayer.sendQueue.addToSendQueue(new C03PacketPlayer.C06PacketPlayerPosLook(
-                mc.thePlayer.posX,
-                mc.thePlayer.getEntityBoundingBox().minY,
-                mc.thePlayer.posZ,
+// Update rotation and perform attack
+        mc.player.connection.sendPacket(new CPacketPlayer.PositionRotation(
+                mc.player.posX,
+                mc.player.getEntityBoundingBox().minY,
+                mc.player.posZ,
                 debian.getRotations(target)[0],
                 debian.getRotations(target)[1],
-                mc.thePlayer.onGround
+                mc.player.onGround
         ));
 
-        if (mint.hasTimeElapsed(1000 / cps, true) && !mc.thePlayer.isBlocking()) {
-            mc.thePlayer.swingItem();
-            if (autoBlock && mc.thePlayer.getHeldItem() != null && mc.thePlayer.getHeldItem().getItem() instanceof ItemSword) {
-                mc.thePlayer.getHeldItem().useItemRightClick(mc.theWorld, mc.thePlayer);
-            }
-            mc.thePlayer.sendQueue.addToSendQueue(new C02PacketUseEntity(target, C02PacketUseEntity.Action.ATTACK));
+        if (mint.hasTimeElapsed(1000 / cps, true)) {
+            mc.player.swingArm(EnumHand.MAIN_HAND);
+            mc.player.connection.sendPacket(new CPacketUseEntity(target, EnumHand.MAIN_HAND));
             lastHitEntity = target;
             lastHitTime = System.currentTimeMillis();
             lastDamageDealt = target.getMaxHealth() - target.getHealth();
@@ -131,7 +128,6 @@ public class Killaura extends Module {
             swingCount++;
         }
     }
-
 
     @SubscribeEvent
     public void onRenderWorld(RenderWorldLastEvent event) {
@@ -355,11 +351,11 @@ public class Killaura extends Module {
 
     private float getPartialTicks() {
         try {
-            Field timerField = Minecraft.class.getDeclaredField("timer");
+            Field timerField = Minecraft.class.getDeclaredField("timer"); // Verify this field name
             timerField.setAccessible(true);
             Object timer = timerField.get(mc);
 
-            Field renderPartialTicksField = timer.getClass().getDeclaredField("renderPartialTicks");
+            Field renderPartialTicksField = timer.getClass().getDeclaredField("renderPartialTicks"); // Verify this field name
             renderPartialTicksField.setAccessible(true);
 
             return renderPartialTicksField.getFloat(timer);

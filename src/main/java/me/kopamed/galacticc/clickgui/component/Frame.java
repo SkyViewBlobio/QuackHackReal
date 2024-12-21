@@ -101,6 +101,7 @@ public class Frame {
 		int lineGreen = (int) Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Linie Green").getValDouble();
 		int lineBlue = (int) Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Linie Blau").getValDouble();
 		int lineAlpha = (int) Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Linie Alpha").getValDouble();
+		Color lineColor = new Color(lineRed, lineGreen, lineBlue, lineAlpha);
 
 		// Header and gradient values (no change)
 		int headerRed = (int) Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Header Rot").getValDouble();
@@ -114,7 +115,15 @@ public class Frame {
 
 		boolean enableGradientHeader = Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Enable Gradient Header").getValBoolean();
 
-		// Render the header (no change)
+		// Render header with a border
+		Gui.drawRect(this.x, this.y, this.x + this.width, this.y + this.barHeight, new Color(headerRed, headerGreen, headerBlue, headerAlpha).getRGB());
+		Gui.drawRect(this.x - 1, this.y - 1, this.x + this.width + 1, this.y + this.barHeight + 1, lineColor.getRGB()); // Header outline
+		// Draw the header border
+		Gui.drawRect(this.x, this.y - 1, this.x + this.width, this.y, lineColor.getRGB()); // Top border
+		Gui.drawRect(this.x, this.y + this.barHeight, this.x + this.width, this.y + this.barHeight + 1, lineColor.getRGB()); // Bottom border
+		Gui.drawRect(this.x - 1, this.y, this.x, this.y + this.barHeight, lineColor.getRGB()); // Left border
+		Gui.drawRect(this.x + this.width, this.y, this.x + this.width + 1, this.y + this.barHeight, lineColor.getRGB()); // Right border
+
 		if (enableGradientHeader) {
 			drawGradientRect(this.x, this.y, this.x + this.width, this.y + this.barHeight,
 					new Color(headerRed, headerGreen, headerBlue, headerAlpha).getRGB(),
@@ -123,46 +132,49 @@ public class Frame {
 			Gui.drawRect(this.x, this.y, this.x + this.width, this.y + this.barHeight,
 					new Color(headerRed, headerGreen, headerBlue, headerAlpha).getRGB());
 		}
-
 		// Render container background
 		int containerTop = this.y + this.barHeight; // Below header
 		int containerBottom = containerTop + this.getContainerHeight(); // Extends to container height
 		Gui.drawRect(this.x, containerTop, this.x + this.width, containerBottom,
 				new Color(containerRed, containerGreen, containerBlue, containerAlpha).getRGB());
 
-		// Render the side and enclosing lines (no change)
-		Color lineColor = new Color(lineRed, lineGreen, lineBlue, lineAlpha);
-		int bottomY = this.y + this.barHeight + this.getContainerHeight();
-
-		// Top line (above header)
-		Gui.drawRect(this.x - 1, this.y - 1, this.x + this.width + 1, this.y, lineColor.getRGB());
-		// Left line
-		Gui.drawRect(this.x - 1, this.y - 1, this.x, bottomY + 1, lineColor.getRGB());
-		// Right line
-		Gui.drawRect(this.x + this.width, this.y - 1, this.x + this.width + 1, bottomY + 1, lineColor.getRGB());
-		// Bottom line (after last module)
-		Gui.drawRect(this.x - 1, bottomY, this.x + this.width + 1, bottomY + 1, lineColor.getRGB());
-
-		// Reset OpenGL state before drawing text
-		GL11.glEnable(GL11.GL_TEXTURE_2D); // Ensure textures are enabled for text rendering
-		GL11.glEnable(GL11.GL_BLEND);
-		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
-
-		// Draw the category name and toggle indicator (no change)
-		GL11.glPushMatrix();
-		GL11.glScalef(0.5f, 0.5f, 0.5f);
-		fontRenderer.drawStringWithShadow(this.category.name(), (this.x + 2) * 2 + 5, (this.y + 2.5f) * 2 + 5, 0xFFFFFFFF);
-		fontRenderer.drawStringWithShadow(this.open ? "-" : "+", (this.x + this.width - 10) * 2 + 5, (this.y + 2.5f) * 2 + 5, -1);
-		GL11.glPopMatrix();
-
-		// Render components if open (no change)
+		// Draw each module with lines and vertical borders
 		if (this.open) {
+			int currentY = this.y + this.barHeight;
+
 			for (Component component : components) {
+				int compX = this.x;
+				int compY = currentY;
+				int compWidth = this.width;
+				int compHeight = component.getHeight();
+
+				// Render the component itself
 				component.renderComponent();
+
+				// Draw horizontal line below each module
+				Gui.drawRect(compX, compY + compHeight, compX + compWidth, compY + compHeight + 1, lineColor.getRGB());
+
+				// Draw vertical borders for each module
+				Gui.drawRect(compX - 1, compY, compX, compY + compHeight, lineColor.getRGB()); // Left border
+				Gui.drawRect(compX + compWidth, compY, compX + compWidth + 1, compY + compHeight, lineColor.getRGB()); // Right border
+
+				// Update currentY for the next component
+				currentY += compHeight;
 			}
+
+			// Draw bottom border for the entire module area
+			Gui.drawRect(this.x - 1, currentY, this.x + this.width + 1, currentY + 1, lineColor.getRGB());
 		}
 
-		// Restore OpenGL state (no change)
+		// Draw category name and toggle indicator
+		GL11.glEnable(GL11.GL_TEXTURE_2D);
+		GL11.glEnable(GL11.GL_BLEND);
+		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+		GL11.glPushMatrix();
+		GL11.glScalef(0.5f, 0.5f, 0.5f);
+		fontRenderer.drawStringWithShadow(this.category.name(), (this.x + 2) * 2, (this.y + 2.5f) * 2, 0xFFFFFFFF);
+		fontRenderer.drawStringWithShadow(this.open ? "-" : "+", (this.x + this.width - 10) * 2, (this.y + 2.5f) * 2, -1);
+		GL11.glPopMatrix();
 		GL11.glDisable(GL11.GL_BLEND);
 	}
 

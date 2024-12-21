@@ -44,14 +44,14 @@ public class Step extends Module {
     @Override
     public void onDisabled() {
         super.onDisabled();
-        if (mc.thePlayer != null) {
-            mc.thePlayer.stepHeight = 0.6F;
+        if (mc.player != null) {
+            mc.player.stepHeight = 0.6F;
         }
     }
 
     @SubscribeEvent
     public void onPlayerTick(TickEvent.PlayerTickEvent event) {
-        if (mc.thePlayer == null || mc.theWorld == null) return;
+        if (mc.player == null || mc.world == null) return;
 
         String mode = Galacticc.instance.settingsManager.getSettingByName
                 (this, "Step Mode").getValString();
@@ -63,31 +63,31 @@ public class Step extends Module {
         switch (mode) {
             case "Step":
                 // Perform standard step logic
-                if (!mc.thePlayer.isInWater() && !mc.thePlayer.isInLava() && !mc.thePlayer.isSneaking()) {
-                    mc.thePlayer.stepHeight = (float) stepHeight;
+                if (!mc.player.isInWater() && !mc.player.isInLava() && !mc.player.isSneaking()) {
+                    mc.player.stepHeight = (float) stepHeight;
                 } else {
-                    mc.thePlayer.stepHeight = 0.6F;
+                    mc.player.stepHeight = 0.6F;
                 }
                 break;
 
             case "ReverseStep":
                 // Perform reverse step logic (faster stepping down)
-                if (mc.thePlayer.onGround && mc.thePlayer.motionY < 0) {
-                    mc.thePlayer.motionY -= reverseSpeed;
+                if (mc.player.onGround && mc.player.motionY < 0) {
+                    mc.player.motionY -= reverseSpeed;
                 }
-                mc.thePlayer.stepHeight = 0.6F;
+                mc.player.stepHeight = 0.6F;
                 break;
 
             case "Both":
                 // Perform both step and reverse step logic
-                if (!mc.thePlayer.isInWater() && !mc.thePlayer.isInLava() && !mc.thePlayer.isSneaking()) {
-                    mc.thePlayer.stepHeight = (float) stepHeight;
+                if (!mc.player.isInWater() && !mc.player.isInLava() && !mc.player.isSneaking()) {
+                    mc.player.stepHeight = (float) stepHeight;
                 } else {
-                    mc.thePlayer.stepHeight = 0.6F;
+                    mc.player.stepHeight = 0.6F;
                 }
 
-                if (mc.thePlayer.onGround && mc.thePlayer.motionY < 0) {
-                    mc.thePlayer.motionY -= reverseSpeed;
+                if (mc.player.onGround && mc.player.motionY < 0) {
+                    mc.player.motionY -= reverseSpeed;
                 }
                 break;
         }
@@ -100,10 +100,10 @@ public class Step extends Module {
     }
 
     private void updateStepHeight() {
-        if (mc.thePlayer != null) {
+        if (mc.player != null) {
             double stepHeight = Galacticc.instance.settingsManager.getSettingByName
                     (this, "Steig-Hoehe").getValDouble();
-            mc.thePlayer.stepHeight = (float) stepHeight;
+            mc.player.stepHeight = (float) stepHeight;
         }
     }
 }

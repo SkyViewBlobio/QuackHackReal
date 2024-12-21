@@ -2,13 +2,22 @@ package me.kopamed.galacticc.clickgui.component;
 
 public class Component {
 
-	// Placeholder methods
+	private int off; // Field to store the offset
+
 	public void renderComponent() {}
 	public void updateComponent(int mouseX, int mouseY) {}
 	public void mouseClicked(int mouseX, int mouseY, int button) {}
 	public void mouseReleased(int mouseX, int mouseY, int mouseButton) {}
 	public int getParentHeight() { return 0; }
 	public void keyTyped(char typedChar, int key) {}
-	public void setOff(int newOff) {}
+
+	public void setOff(int newOff) {
+		this.off = newOff;
+	}
+
+	public int getOff() {
+		return this.off;
+	}
+
 	public int getHeight() { return 0; }
 }

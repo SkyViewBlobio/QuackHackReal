@@ -55,7 +55,7 @@ public class Keybind extends Component {
 
 		GL11.glPushMatrix();
 		GL11.glScalef(0.5f, 0.5f, 0.5f);
-		Minecraft.getMinecraft().fontRendererObj.drawStringWithShadow(
+		Minecraft.getMinecraft().fontRenderer.drawStringWithShadow(
 				binding ? "Press a key..." : ("Key: " + Keyboard.getKeyName(this.parent.mod.getKey())),
 				(parent.parent.getX() + 7) * 2,
 				(parent.parent.getY() + offset + 2) * 2 + 5,

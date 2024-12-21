@@ -7,6 +7,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.EnumHand;
 import net.minecraftforge.client.event.sound.PlaySoundEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
@@ -29,7 +30,7 @@ public class AutoFish extends Module {
     }
 
     //************************Initialization and Toggle State Management**************************//
-
+//todo comment cleanup
     @Override
     public void onEnabled() {
         super.onEnabled();
@@ -49,13 +50,14 @@ public class AutoFish extends Module {
 
     @SubscribeEvent
     public void onTick(TickEvent.PlayerTickEvent event) {
-        if (!this.isToggled() || mc.thePlayer == null || mc.theWorld == null) {
+        if (!this.isToggled() || mc.player == null || mc.world == null) {
             return; // Exit if the module is disabled or the player/world is null
         }
 
         // Check if the player is holding a fishing rod
-        ItemStack heldItem = mc.thePlayer.getHeldItem();
-        boolean holdingFishingRod = heldItem != null && heldItem.getItem() == Items.fishing_rod;
+        //todo check if these two lines broke the module?
+        ItemStack heldItem = mc.player.getHeldItem(EnumHand.MAIN_HAND);
+        boolean holdingFishingRod = !heldItem.isEmpty() && heldItem.getItem() == Items.FISHING_ROD;
 
         if (!holdingFishingRod) {
             isWaitingForFish = false; // Reset waiting state if no rod is held
@@ -64,7 +66,7 @@ public class AutoFish extends Module {
         }
 
         // Cast the rod if not already cast
-        if (mc.thePlayer.fishEntity == null) {
+        if (mc.player.fishEntity == null) {
             if (!isWaitingForFish && System.currentTimeMillis() - lastCastTime > 1000) {
                 performRightClick(); // Cast the rod
                 isWaitingForFish = true; // Mark as waiting for fish
@@ -79,12 +81,12 @@ public class AutoFish extends Module {
 
     @SubscribeEvent
     public void onPlaySound(PlaySoundEvent event) {
-        if (!this.isToggled() || mc.thePlayer == null || mc.theWorld == null) {
+        if (!this.isToggled() || mc.player == null || mc.world == null) {
             return; // Exit if the module is disabled or the player/world is null
         }
 
         // Check if the sound is "random.splash" and the player is fishing
-        if (event.name.equals("random.splash") && mc.thePlayer.fishEntity != null) {
+        if (event.getName().equals("random.splash") && mc.player.fishEntity != null) {
             performRightClick(); // Reel in the fish
             isWaitingForFish = false; // Reset waiting state
         }

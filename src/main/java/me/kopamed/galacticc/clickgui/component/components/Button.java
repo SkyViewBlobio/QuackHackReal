@@ -31,34 +31,34 @@ public class Button extends Component {
 	public boolean open;
 	private int height;
 
-public Button(Module mod, Frame parent, int offset) {
-			this.mod = mod;
-			this.parent = parent;
-			this.offset = offset;
-			this.subcomponents = new ArrayList<Component>();
-			this.open = Galacticc.instance.moduleManager.isModuleOpen(mod); // Retrieve persisted state
-			height = 12;
+	public Button(Module mod, Frame parent, int offset) {
+		this.mod = mod;
+		this.parent = parent;
+		this.offset = offset;
+		this.subcomponents = new ArrayList<Component>();
+		this.open = Galacticc.instance.moduleManager.isModuleOpen(mod); // Retrieve persisted state
+		height = 12;
 
-			int opY = offset + 12;
-			if (Galacticc.instance.settingsManager.getSettingsByMod(mod) != null) {
-				for (Setting s : Galacticc.instance.settingsManager.getSettingsByMod(mod)) {
-					if (s.isCombo()) {
-						this.subcomponents.add(new ModeButton(s, this, mod, opY));
-						opY += 12;
-					}
-					if (s.isSlider()) {
-						this.subcomponents.add(new Slider(s, this, opY));
-						opY += 12;
-					}
-					if (s.isCheck()) {
-						this.subcomponents.add(new Checkbox(s, this, opY));
-						opY += 12;
-					}
+		int opY = offset + 12;
+		if (Galacticc.instance.settingsManager.getSettingsByMod(mod) != null) {
+			for (Setting s : Galacticc.instance.settingsManager.getSettingsByMod(mod)) {
+				if (s.isCombo()) {
+					this.subcomponents.add(new ModeButton(s, this, mod, opY));
+					opY += 12;
+				}
+				if (s.isSlider()) {
+					this.subcomponents.add(new Slider(s, this, opY));
+					opY += 12;
+				}
+				if (s.isCheck()) {
+					this.subcomponents.add(new Checkbox(s, this, opY));
+					opY += 12;
 				}
 			}
-			this.subcomponents.add(new Keybind(this, opY));
-			this.subcomponents.add(new VisibleButton(this, mod, opY));
 		}
+		this.subcomponents.add(new Keybind(this, opY));
+		this.subcomponents.add(new VisibleButton(this, mod, opY));
+	}
 
 	@Override
 	public void setOff(int newOff) {
@@ -82,6 +82,12 @@ public Button(Module mod, Frame parent, int offset) {
 		Setting headerBlueSetting = Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Header Blau");
 		Setting headerAlphaSetting = Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Header Alpha");
 
+		// Safely retrieve header and module highlight settings
+		Setting highlightRedSetting = Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "ModulHighlight Rot");
+		Setting highlightGreenSetting = Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "ModulHighlight Green");
+		Setting highlightBlueSetting = Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "ModulHighlight Blau");
+		Setting highlightAlphaSetting = Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "ModulHighlight Alpha");
+
 		// Safely retrieve background and gradient settings
 		Setting backgroundRedSetting = Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Modul Rot");
 		Setting backgroundGreenSetting = Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Modul Green");
@@ -99,83 +105,81 @@ public Button(Module mod, Frame parent, int offset) {
 		Setting buttonBlueSetting = Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Modul-Hover Blau");
 		Setting buttonAlphaSetting = Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Modul-Hover Alpha");
 
-		int modulebackgroundRed = backgroundRedSetting != null ? (int) backgroundRedSetting.getValDouble() : 0;
-		int modulebackgroundGreen = backgroundGreenSetting != null ? (int) backgroundGreenSetting.getValDouble() : 0;
-		int modulebackgroundBlue = backgroundBlueSetting != null ? (int) backgroundBlueSetting.getValDouble() : 0;
-		int modulebackgroundAlpha = backgroundAlphaSetting != null ? (int) backgroundAlphaSetting.getValDouble() : 255;
-
-		int gradientRed = gradientRedSetting != null ? (int) gradientRedSetting.getValDouble() : 255;
-		int gradientGreen = gradientGreenSetting != null ? (int) gradientGreenSetting.getValDouble() : 255;
-		int gradientBlue = gradientBlueSetting != null ? (int) gradientBlueSetting.getValDouble() : 255;
-		int gradientAlpha = gradientAlphaSetting != null ? (int) gradientAlphaSetting.getValDouble() : 255;
-
-		// Check for null and assign default values if necessary
-		int headerRed = headerRotSetting != null ? (int) headerRotSetting.getValDouble() : 255;
-		int headerGreen = headerGreenSetting != null ? (int) headerGreenSetting.getValDouble() : 255;
-		int headerBlue = headerBlueSetting != null ? (int) headerBlueSetting.getValDouble() : 255;
-		int headerAlpha = headerAlphaSetting != null ? (int) headerAlphaSetting.getValDouble() : 255;
-
-		int buttonRed = buttonRedSetting != null ? (int) buttonRedSetting.getValDouble() : 100;
-		int buttonGreen = buttonGreenSetting != null ? (int) buttonGreenSetting.getValDouble() : 100;
-		int buttonBlue = buttonBlueSetting != null ? (int) buttonBlueSetting.getValDouble() : 100;
-		int buttonAlpha = buttonAlphaSetting != null ? (int) buttonAlphaSetting.getValDouble() : 255;
-
 		boolean enableGradient = Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Enable Gradient Modul").getValBoolean();
+		// Check for null and assign default values if necessary
+        if (headerRotSetting != null) {
+            headerRotSetting.getValDouble();
+        }
+        if (headerGreenSetting != null) {
+            headerGreenSetting.getValDouble();
+        }
+        if (headerBlueSetting != null) {
+            headerBlueSetting.getValDouble();
+        }
+        int headerAlpha = headerAlphaSetting != null ? (int) headerAlphaSetting.getValDouble() : 255;
 
-		// Colors for background and gradient
-		int backgroundColor = new Color(modulebackgroundRed, modulebackgroundGreen, modulebackgroundBlue, modulebackgroundAlpha).getRGB();
-		int gradientColor = new Color(gradientRed, gradientGreen, gradientBlue, gradientAlpha).getRGB();
+		// Compute color values
+		int backgroundColor = new Color(
+				(int) (backgroundRedSetting != null ? backgroundRedSetting.getValDouble() : 0),
+				(int) (backgroundGreenSetting != null ? backgroundGreenSetting.getValDouble() : 0),
+				(int) (backgroundBlueSetting != null ? backgroundBlueSetting.getValDouble() : 0),
+				(int) (backgroundAlphaSetting != null ? backgroundAlphaSetting.getValDouble() : 255)
+		).getRGB();
 
-		// Hover color
-		int hoverColor = new Color(buttonRed, buttonGreen, buttonBlue, buttonAlpha).getRGB();
+		int gradientColor = new Color(
+				(int) (gradientRedSetting != null ? gradientRedSetting.getValDouble() : 255),
+				(int) (gradientGreenSetting != null ? gradientGreenSetting.getValDouble() : 255),
+				(int) (gradientBlueSetting != null ? gradientBlueSetting.getValDouble() : 255),
+				(int) (gradientAlphaSetting != null ? gradientAlphaSetting.getValDouble() : 255)
+		).getRGB();
 
-		// Check hover state
-		boolean isHovered = this.isHovered;
+		int highlightColor = new Color(
+				(int) (highlightRedSetting != null ? highlightRedSetting.getValDouble() : 100),
+				(int) (highlightGreenSetting != null ? highlightGreenSetting.getValDouble() : 100),
+				(int) (highlightBlueSetting != null ? highlightBlueSetting.getValDouble() : 100),
+				(int) (highlightAlphaSetting != null ? highlightAlphaSetting.getValDouble() : 255)
+		).getRGB();
 
-		// Determine drawing logic
+		int hoverColor = new Color(
+				(int) (buttonRedSetting != null ? buttonRedSetting.getValDouble() : 100),
+				(int) (buttonGreenSetting != null ? buttonGreenSetting.getValDouble() : 100),
+				(int) (buttonBlueSetting != null ? buttonBlueSetting.getValDouble() : 100),
+				(int) (buttonAlphaSetting != null ? buttonAlphaSetting.getValDouble() : 255)
+		).getRGB();
+
+		boolean isActive = this.mod.isToggled();
+		int colorToDraw = isActive ? highlightColor : (isHovered ? hoverColor : backgroundColor);
+
 		if (enableGradient) {
 			if (isHovered) {
-				Gui.drawRect(
-						parent.getX(),
-						parent.getY() + offset,
-						parent.getX() + parent.getWidth(),
-						parent.getY() + offset + 12,
-						hoverColor
-				);
+				Gui.drawRect(parent.getX(), parent.getY() + offset, parent.getX() + parent.getWidth(),
+						parent.getY() + offset + 12, hoverColor);
 			} else {
-				drawGradientRect(
-						parent.getX(),
-						parent.getY() + offset,
-						parent.getX() + parent.getWidth(),
-						parent.getY() + offset + 12,
-						backgroundColor,
-						gradientColor
-				);
+				drawGradientRect(parent.getX(), parent.getY() + offset, parent.getX() + parent.getWidth(),
+						parent.getY() + offset + 12, backgroundColor, gradientColor);
 			}
 		} else {
-			int colorToDraw = isHovered ? hoverColor : backgroundColor;
-			Gui.drawRect(
-					parent.getX(),
-					parent.getY() + offset,
-					parent.getX() + parent.getWidth(),
-					parent.getY() + offset + 12,
-					colorToDraw
-			);
+			Gui.drawRect(parent.getX(), parent.getY() + offset, parent.getX() + parent.getWidth(),
+					parent.getY() + offset + 12, colorToDraw);
 		}
 
-		// Render the text for the module name
+		if (isActive) {
+			Gui.drawRect(parent.getX(), parent.getY() + offset, parent.getX() + parent.getWidth(),
+					parent.getY() + offset + 12, highlightColor);
+		}
+
+		// Render text and indicators
 		GL11.glPushMatrix();
 		GL11.glScalef(0.5f, 0.5f, 0.5f);
-		Minecraft.getMinecraft().fontRendererObj.drawStringWithShadow(
+		Minecraft.getMinecraft().fontRenderer.drawStringWithShadow(
 				this.mod.getName(),
 				(parent.getX() + 2) * 2,
 				(parent.getY() + offset + 2) * 2 + 4,
-				0xFFFFFFFF // Text color (sliders for text color can be added here if needed)
+				0xFFFFFFFF
 		);
 
-		// Render the toggle indicator
 		if (this.subcomponents.size() > 2) {
-			Minecraft.getMinecraft().fontRendererObj.drawStringWithShadow(
+			Minecraft.getMinecraft().fontRenderer.drawStringWithShadow(
 					this.open ? "-" : "+",
 					(parent.getX() + parent.getWidth() - 10) * 2,
 					(parent.getY() + offset + 2) * 2 + 4,
@@ -184,7 +188,7 @@ public Button(Module mod, Frame parent, int offset) {
 		}
 		GL11.glPopMatrix();
 
-		// Render subcomponents if the button is open
+		// Render subcomponents if open
 		if (this.open) {
 			for (Component comp : subcomponents) {
 				comp.renderComponent();

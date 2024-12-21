@@ -24,13 +24,13 @@ public class GlideJump extends Module {
 
     @SubscribeEvent
     public void onPlayerTick(TickEvent.PlayerTickEvent event) {
-        if (mc.thePlayer == null || mc.theWorld == null) return;
+        if (mc.player == null || mc.world == null) return;
 
         // Retrieve the strafe speed from the slider
         double strafeSpeed = Galacticc.instance.settingsManager.getSettingByName(this, "Schnelligkeit").getValDouble();
 
         // Adjust movement on ground or in air
-        applyStrafe(mc.thePlayer, strafeSpeed);
+        applyStrafe(mc.player, strafeSpeed);
     }
 
     private void applyStrafe(EntityPlayerSP player, double speed) {

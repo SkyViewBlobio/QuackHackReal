@@ -1,13 +1,11 @@
 package me.kopamed.galacticc;
 
-
+import me.kopamed.galacticc.clickgui.ClickGui;
 import me.kopamed.galacticc.command.CommandManager;
 import me.kopamed.galacticc.config.SaveLoad;
-import me.kopamed.galacticc.clickgui.ClickGui;
 import me.kopamed.galacticc.module.Module;
 import me.kopamed.galacticc.module.ModuleManager;
 import me.kopamed.galacticc.module.misc.SafeSettings;
-import me.kopamed.galacticc.module.render.ClickGUI;
 import me.kopamed.galacticc.module.render.FakePlayer;
 import me.kopamed.galacticc.settings.SettingsManager;
 import net.minecraft.client.Minecraft;
@@ -22,10 +20,9 @@ import org.lwjgl.input.Keyboard;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Galacticc
-{
+public class Galacticc {
     public static final String MODID = "QuackHack";
-    public static final String VERSION = " v1.6.6";
+    public static final String VERSION = "v1.6.8";
     public static String prefix = ".";
 
     public static Galacticc instance;
@@ -57,7 +54,7 @@ public class Galacticc
     public void key(InputEvent.KeyInputEvent e) {
         Minecraft mc = Minecraft.getMinecraft();
         //make sure that we are in a game
-        if (mc.theWorld == null || mc.thePlayer == null)
+        if (mc.world == null || mc.player == null)
             return;
 
         //Basically get the key id, go through the list of modules
@@ -87,8 +84,8 @@ public class Galacticc
     }
 
     public void onDestruct() {
-        if (Minecraft.getMinecraft().currentScreen != null && Minecraft.getMinecraft().thePlayer != null) {
-            Minecraft.getMinecraft().thePlayer.closeScreen();
+        if (Minecraft.getMinecraft().currentScreen != null && Minecraft.getMinecraft().player != null) {
+            Minecraft.getMinecraft().player.closeScreen();
         }
         destructed = true;
         MinecraftForge.EVENT_BUS.unregister(this);

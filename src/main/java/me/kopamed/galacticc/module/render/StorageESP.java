@@ -12,9 +12,9 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityMinecartChest;
 import net.minecraft.entity.item.EntityMinecartFurnace;
 import net.minecraft.init.Blocks;
-import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.Vec3;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import org.lwjgl.opengl.GL11;
@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 //todo add gradient aaaaaaaaaaaa and maybe find other way than fov
+//todo cleanup
 public class StorageESP extends Module {
     private final Minecraft mc = Minecraft.getMinecraft();
     private final Map<BlockPos, Float> blockFadeMap = new HashMap<>();
@@ -87,14 +88,14 @@ public class StorageESP extends Module {
 
     @SubscribeEvent
     public void onRenderWorldLast(RenderWorldLastEvent event) {
-        if (mc.theWorld == null || mc.thePlayer == null) return;
+        if (mc.world == null || mc.player == null) return;
 
         float duration = getSettingValue("Duration", 1.0f);
         float range = getSettingValue("Range", 10.0f);
         float fadeDecrement = 1.0F / (duration * 40.0F);
 
-        Vec3 playerPos = mc.thePlayer.getPositionVector();
-        Vec3 playerLookVec = mc.thePlayer.getLookVec().normalize();
+        Vec3d playerPos = mc.player.getPositionVector();
+        Vec3d playerLookVec = mc.player.getLookVec().normalize();
 
         // Compute threshold for FOV cone dynamically
         double fov = mc.gameSettings.fovSetting;
@@ -102,23 +103,23 @@ public class StorageESP extends Module {
         double threshold = Math.cos(halfFovRadians);
 
         for (BlockPos blockPos : BlockPos.getAllInBox(
-                new BlockPos(playerPos.xCoord - range, playerPos.yCoord - range, playerPos.zCoord - range),
-                new BlockPos(playerPos.xCoord + range, playerPos.yCoord + range, playerPos.zCoord + range))) {
+                new BlockPos(playerPos.x - range, playerPos.y - range, playerPos.z - range),
+                new BlockPos(playerPos.x + range, playerPos.y + range, playerPos.z + range))) {
 
-            IBlockState blockState = mc.theWorld.getBlockState(blockPos);
+            IBlockState blockState = mc.world.getBlockState(blockPos);
             if (blockState == null) continue;
 
             Block block = blockState.getBlock();
             if (block == null || !isStorageBlock(block, blockPos)) continue;
 
             // Check if block is within the player's view
-            Vec3 blockVec = new Vec3(blockPos.getX() - mc.thePlayer.posX,
-                    blockPos.getY() - mc.thePlayer.posY,
-                    blockPos.getZ() - mc.thePlayer.posZ).normalize();
+            Vec3d blockVec = new Vec3d(blockPos.getX() - mc.player.posX,
+                    blockPos.getY() - mc.player.posY,
+                    blockPos.getZ() - mc.player.posZ).normalize();
 
             if (playerLookVec.dotProduct(blockVec) < threshold) continue; // Skip blocks outside FOV
 
-            if (playerPos.distanceTo(new Vec3(blockPos.getX() + 0.5, blockPos.getY() + 0.5, blockPos.getZ() + 0.5)) <= range) {
+            if (playerPos.distanceTo(new Vec3d(blockPos.getX() + 0.5, blockPos.getY() + 0.5, blockPos.getZ() + 0.5)) <= range) {
                 blockFadeMap.put(blockPos, 1.0f);
             }
         }
@@ -130,7 +131,7 @@ public class StorageESP extends Module {
             BlockPos blockPos = entry.getKey();
             float currentAlpha = entry.getValue();
 
-            IBlockState blockState = mc.theWorld.getBlockState(blockPos);
+            IBlockState blockState = mc.world.getBlockState(blockPos);
             if (blockState == null) {
                 blockIterator.remove();
                 continue;
@@ -143,7 +144,7 @@ public class StorageESP extends Module {
             }
 
             if (block instanceof BlockChest) {
-                boolean isTrapped = block == Blocks.trapped_chest;
+                boolean isTrapped = block == Blocks.TRAPPED_CHEST;
                 if (isTrapped && getSettingBoolean("TrappedChest")) {
                     renderBlockFade(blockPos, currentAlpha,
                             getColorValue("TrappedRed"),
@@ -185,11 +186,11 @@ public class StorageESP extends Module {
             }
         }
 
-        for (Entity entity : mc.theWorld.loadedEntityList) {
+        for (Entity entity : mc.world.loadedEntityList) {
             if (!(entity instanceof EntityMinecartChest || entity instanceof EntityMinecartFurnace)) continue;
 
-            Vec3 entityPos = new Vec3(entity.posX, entity.posY + entity.height / 2.0, entity.posZ);
-            Vec3 toEntityVec = entityPos.subtract(playerPos).normalize();
+            Vec3d entityPos = new Vec3d(entity.posX, entity.posY + entity.height / 2.0, entity.posZ);
+            Vec3d toEntityVec = entityPos.subtract(playerPos).normalize();
 
             // FOV check: dot product to determine if entity is in the player's view
             double dotProduct = playerLookVec.dotProduct(toEntityVec);
@@ -217,8 +218,8 @@ public class StorageESP extends Module {
                 continue;
             }
 
-            Vec3 entityPos = new Vec3(entity.posX, entity.posY + entity.height / 2.0, entity.posZ);
-            Vec3 toEntityVec = entityPos.subtract(playerPos).normalize();
+            Vec3d entityPos = new Vec3d(entity.posX, entity.posY + entity.height / 2.0, entity.posZ);
+            Vec3d toEntityVec = entityPos.subtract(playerPos).normalize();
             double dotProduct = playerLookVec.dotProduct(toEntityVec);
 
             if (playerPos.distanceTo(entityPos) > range || dotProduct < threshold) {
@@ -333,10 +334,10 @@ public class StorageESP extends Module {
         GlStateManager.popMatrix();
     }
 
-    private void renderBlockFade
-            (BlockPos blockPos, float fadeAlpha, int red, int green, int blue, float alphaMultiplier) {
-        AxisAlignedBB boundingBox = mc.theWorld.getBlockState(blockPos).getBlock()
-                .getSelectedBoundingBox(mc.theWorld, blockPos)
+    private void renderBlockFade(BlockPos blockPos, float fadeAlpha, int red, int green, int blue, float alphaMultiplier) {
+        IBlockState blockState = mc.world.getBlockState(blockPos);
+        AxisAlignedBB boundingBox = blockState.getBlock()
+                .getSelectedBoundingBox(blockState, mc.world, blockPos) // Updated to include `blockState`
                 .offset(-mc.getRenderManager().viewerPosX,
                         -mc.getRenderManager().viewerPosY,
                         -mc.getRenderManager().viewerPosZ);
@@ -347,16 +348,10 @@ public class StorageESP extends Module {
         GlStateManager.disableDepth();
         GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
 
-        GlStateManager.color(red
-                / 255.0f, green
-                / 255.0f, blue
-                / 255.0f, fadeAlpha * alphaMultiplier);
+        GlStateManager.color(red / 255.0f, green / 255.0f, blue / 255.0f, fadeAlpha * alphaMultiplier);
         drawFilledBox(boundingBox);
 
-        drawOutline(boundingBox, red
-                / 255.0f, green
-                / 255.0f, blue
-                / 255.0f, fadeAlpha * alphaMultiplier);
+        drawOutline(boundingBox, red / 255.0f, green / 255.0f, blue / 255.0f, fadeAlpha * alphaMultiplier);
 
         GlStateManager.enableTexture2D();
         GlStateManager.enableDepth();

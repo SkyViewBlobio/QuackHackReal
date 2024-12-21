@@ -3,6 +3,7 @@ package me.kopamed.galacticc.clickgui;
 import me.kopamed.galacticc.Galacticc;
 import me.kopamed.galacticc.clickgui.component.Component;
 import me.kopamed.galacticc.clickgui.component.Frame;
+import me.kopamed.galacticc.clickgui.component.components.Button;
 import me.kopamed.galacticc.module.Category;
 import me.kopamed.galacticc.module.Module;
 import net.minecraft.client.gui.Gui;
@@ -81,7 +82,7 @@ public class ClickGui extends GuiScreen {
 
 		// Draw Frames
 		for (Frame frame : frames) {
-			frame.renderFrame(this.fontRendererObj);
+			frame.renderFrame(this.fontRenderer);
 			frame.updatePosition(mouseX, mouseY);
 			if (frame.isOpen()) {
 				frame.getComponents().forEach(c -> c.updateComponent(mouseX, mouseY));
@@ -121,9 +122,9 @@ public class ClickGui extends GuiScreen {
 		Module hoveredModule = null;
 		for (Frame frame : frames) {
 			for (Component component : frame.getComponents()) {
-				if (component instanceof me.kopamed.galacticc.clickgui.component.components.Button) {
-					me.kopamed.galacticc.clickgui.component.components.Button button =
-							(me.kopamed.galacticc.clickgui.component.components.Button) component;
+				if (component instanceof Button) {
+					Button button =
+							(Button) component;
 					if (button.isMouseOnButton(mouseX, mouseY)) {
 						hoveredModule = button.mod;
 						break;
@@ -135,7 +136,7 @@ public class ClickGui extends GuiScreen {
 		// Default message when no module is hovered
 		String description = (hoveredModule != null)
 				? hoveredModule.getDescription()
-				: "Halte deinen Mauszeiger über ein Modul um zu wissen was es tut.";
+				: "Halte deinen Mauszeiger ueber ein Modul um zu wissen was es tut.";
 
 		// Dimensions
 		int containerWidth = 250;
@@ -144,7 +145,7 @@ public class ClickGui extends GuiScreen {
 		// Render "Beschreibung" header with slider-defined colors
 		Gui.drawRect(descBoxX, descBoxY, descBoxX + containerWidth, descBoxY + headerHeight,
 				new Color(headerRed, headerGreen, headerBlue, headerAlpha).getRGB());
-		this.fontRendererObj.drawStringWithShadow("Beschreibung", descBoxX + 5, descBoxY + 5, 0xFFFFFF);
+		this.fontRenderer.drawStringWithShadow("Beschreibung", descBoxX + 5, descBoxY + 5, 0xFFFFFF);
 
 		// Render description
 		int descriptionY = descBoxY + headerHeight + 5;
@@ -156,7 +157,7 @@ public class ClickGui extends GuiScreen {
 				new Color(containerRed, containerGreen, containerBlue, containerAlpha).getRGB());
 
 		for (String line : lines) {
-			this.fontRendererObj.drawStringWithShadow(line, descBoxX + 5, descriptionY, 0xFFFFFF);
+			this.fontRenderer.drawStringWithShadow(line, descBoxX + 5, descriptionY, 0xFFFFFF);
 			descriptionY += 10; // Line height
 		}
 
@@ -173,7 +174,7 @@ public class ClickGui extends GuiScreen {
 		ArrayList<String> lines = new ArrayList<>();
 		StringBuilder currentLine = new StringBuilder();
 		for (String word : text.split(" ")) {
-			if (this.fontRendererObj.getStringWidth(currentLine + word) > maxWidth) {
+			if (this.fontRenderer.getStringWidth(currentLine + word) > maxWidth) {
 				lines.add(currentLine.toString());
 				currentLine = new StringBuilder();
 			}
@@ -258,4 +259,3 @@ public class ClickGui extends GuiScreen {
 		return false;
 	}//was true before, test in MP.
 }
-

@@ -8,51 +8,43 @@ import me.kopamed.galacticc.settings.Setting;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
-import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.RayTraceResult;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import org.lwjgl.opengl.GL11;
 
 import java.awt.*;
-//todo make a gradient mode for the block lines.
+//todo make a gradient mode for the block lines. and do cleanup
 //************************Module Initialization**************************//
 
 public class BlockHighlight extends Module {
-    private final Minecraft mc = Minecraft.getMinecraft();
+
+    private static final Minecraft mc = Minecraft.getMinecraft();
 
     public BlockHighlight() {
         super("BlockInfo", "@Hauptinformation: " +
-                "Laesst dich Bloecke hervorheben und zeigt dir nuetzliche Informationen ueber den Block den du anschausst. " +
-                "@Optionen: " +
+                        "Laesst dich Bloecke hervorheben und zeigt dir nuetzliche Informationen ueber den Block den du anschausst. " +
+                        "@Optionen: " +
                         "- Block-Typ zeigt dir den Blocknamen. || " +
                         "- Blockcoordinaten zeigt dir die Coordinaten, lol. || " +
                         "- Zeige Farben leasst dich rot, gruen, blau, dichte verandern. Ist diese Option nicht an, kannst du keine farben sehen. || " +
-                        "- Show gradient Colors mixt die Farben."
-                , false, false, Category.VISUELLES);
+                        "- Show gradient Colors mixt die Farben.",
+                false, false, Category.VISUELLES);
 
-        //************************Standard Settings**************************//
-
+        // Initialize settings
         Galacticc.instance.settingsManager.rSetting(new Setting("Block-Typ", this, true));
         Galacticc.instance.settingsManager.rSetting(new Setting("Block Coordinaten", this, true));
         Galacticc.instance.settingsManager.rSetting(new Setting("Zeige Farben", this, true)); // Overlay colors
-
-        //************************RGB Sliders for Normal Colors**************************//
-
         Galacticc.instance.settingsManager.rSetting(new Setting("Rot", this, 255, 0, 255, true));
         Galacticc.instance.settingsManager.rSetting(new Setting("Green", this, 255, 0, 255, true));
         Galacticc.instance.settingsManager.rSetting(new Setting("Blau", this, 255, 0, 255, true));
         Galacticc.instance.settingsManager.rSetting(new Setting("Alpha", this, 0.3F, 0.0F, 1.0F, false));
-
-        //************************RGB Sliders for Outline Colors**************************//
-
         Galacticc.instance.settingsManager.rSetting(new Setting("Linie Rot", this, 255, 0, 255, true));
         Galacticc.instance.settingsManager.rSetting(new Setting("Linie Green", this, 255, 0, 255, true));
         Galacticc.instance.settingsManager.rSetting(new Setting("Linie Blau", this, 255, 0, 255, true));
         Galacticc.instance.settingsManager.rSetting(new Setting("Linie Alpha", this, 1.0F, 0.0F, 1.0F, false));
-
-        //************************RGB Sliders for Gradient Colors**************************//
         Galacticc.instance.settingsManager.rSetting(new Setting("Show Gradient Colors", this, false));
         Galacticc.instance.settingsManager.rSetting(new Setting("Gradient Rot", this, 255, 0, 255, true));
         Galacticc.instance.settingsManager.rSetting(new Setting("Gradient Green", this, 0, 0, 255, true));
@@ -60,33 +52,26 @@ public class BlockHighlight extends Module {
         Galacticc.instance.settingsManager.rSetting(new Setting("Gradient Alpha", this, 0.5F, 0.0F, 1.0F, false));
     }
 
-    //************************HUD Information**************************//
-
     @Override
     public String getHUDInfo() {
-        boolean showBlockType = Galacticc.instance.settingsManager
-                .getSettingByName(this, "Block-Typ").getValBoolean();
-        boolean showBlockCoordinates = Galacticc.instance.settingsManager
-                .getSettingByName(this, "Block Coordinaten").getValBoolean();
+        boolean showBlockType = Galacticc.instance.settingsManager.getSettingByName(this, "Block-Typ").getValBoolean();
+        boolean showBlockCoordinates = Galacticc.instance.settingsManager.getSettingByName(this, "Block Coordinaten").getValBoolean();
 
-        MovingObjectPosition rayTraceResult = mc.objectMouseOver;
+        RayTraceResult rayTraceResult = mc.objectMouseOver;
 
-        if (rayTraceResult == null || rayTraceResult.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK) {
+        if (rayTraceResult == null || rayTraceResult.typeOfHit != RayTraceResult.Type.BLOCK) {
             return ChatFormatting.GRAY + "[N/B]";
         }
 
         BlockPos blockPos = rayTraceResult.getBlockPos();
-        Block block = mc.theWorld.getBlockState(blockPos).getBlock();
+        Block block = mc.world.getBlockState(blockPos).getBlock();
 
-        String fullBlockName = Block.blockRegistry.getNameForObject(block).toString();
-        String blockName = fullBlockName.contains(":") ? fullBlockName.split(":")[1] : fullBlockName;
+        String blockName = block.getRegistryName() != null ? block.getRegistryName().toString() : "Unknown";
 
         StringBuilder hudInfo = new StringBuilder(ChatFormatting.GRAY + "[B/I: ");
-
         if (showBlockType) {
             hudInfo.append("T: ").append(ChatFormatting.GRAY).append(blockName).append(ChatFormatting.GRAY);
         }
-
         if (showBlockCoordinates) {
             if (showBlockType) {
                 hudInfo.append(", ");
@@ -96,23 +81,18 @@ public class BlockHighlight extends Module {
                     .append(blockPos.getY()).append(", ")
                     .append(blockPos.getZ()).append(ChatFormatting.GRAY);
         }
-
         hudInfo.append("]");
         return hudInfo.toString();
     }
 
-    //************************Render World Last Event**************************//
-
     @SubscribeEvent
     public void onRenderWorldLast(RenderWorldLastEvent event) {
-        // Ensure Minecraft and world objects are valid
-        if (mc == null || mc.theWorld == null || mc.thePlayer == null) {
+        if (mc.world == null || mc.player == null) {
             return;
         }
 
-        MovingObjectPosition rayTraceResult = mc.objectMouseOver;
-
-        if (rayTraceResult == null || rayTraceResult.typeOfHit != MovingObjectPosition.MovingObjectType.BLOCK) {
+        RayTraceResult rayTraceResult = mc.objectMouseOver;
+        if (rayTraceResult == null || rayTraceResult.typeOfHit != RayTraceResult.Type.BLOCK) {
             return;
         }
 
@@ -127,8 +107,6 @@ public class BlockHighlight extends Module {
         if (!showColors && !showGradientColors) {
             return;
         }
-
-        //************************Fetch Color Settings**************************//
 
         int red = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Rot").getValDouble();
         int green = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Green").getValDouble();
@@ -145,12 +123,8 @@ public class BlockHighlight extends Module {
         int outlineBlue = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Linie Blau").getValDouble();
         float outlineAlpha = (float) Galacticc.instance.settingsManager.getSettingByName(this, "Linie Alpha").getValDouble();
 
-        //************************Bounding Box Calculation**************************//
-
-        AxisAlignedBB boundingBox = mc.theWorld.getBlockState(blockPos).getBlock().getSelectedBoundingBox(mc.theWorld, blockPos)
+        AxisAlignedBB boundingBox = mc.world.getBlockState(blockPos).getBoundingBox(mc.world, blockPos)
                 .offset(-mc.getRenderManager().viewerPosX, -mc.getRenderManager().viewerPosY, -mc.getRenderManager().viewerPosZ);
-
-        //************************Start Rendering**************************//
 
         GlStateManager.pushMatrix();
         GlStateManager.disableTexture2D();
@@ -161,7 +135,6 @@ public class BlockHighlight extends Module {
         if (showGradientColors) {
             int startColor = new Color(red, green, blue, (int) (alpha * 255)).getRGB();
             int endColor = new Color(gradRed, gradGreen, gradBlue, (int) (gradAlpha * 255)).getRGB();
-
             drawGradientBox(boundingBox, startColor, endColor);
         } else if (showColors) {
             GlStateManager.color(red / 255.0F, green / 255.0F, blue / 255.0F, alpha);
@@ -169,8 +142,6 @@ public class BlockHighlight extends Module {
         }
 
         drawOutline(boundingBox, outlineRed / 255.0F, outlineGreen / 255.0F, outlineBlue / 255.0F, outlineAlpha);
-
-        //************************Reset OpenGL State**************************//
 
         GlStateManager.enableTexture2D();
         GlStateManager.enableDepth();

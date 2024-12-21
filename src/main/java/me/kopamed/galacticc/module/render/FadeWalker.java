@@ -4,14 +4,15 @@ import me.kopamed.galacticc.Galacticc;
 import me.kopamed.galacticc.module.Category;
 import me.kopamed.galacticc.module.Module;
 import me.kopamed.galacticc.settings.Setting;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.monster.*;
 import net.minecraft.entity.passive.*;
-import net.minecraft.util.AxisAlignedBB;
-import net.minecraft.util.BlockPos;
-import net.minecraft.util.Vec3;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import org.lwjgl.opengl.GL11;
@@ -19,11 +20,11 @@ import org.lwjgl.opengl.GL11;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-//todo add Box/top face mode.
+//todo add Box/top face mode. and do for players
 public class FadeWalker extends Module {
     public FadeWalker() {
         super("FadeWalker", "@Hauptinformation: " +
-                "Zeigt Farben auf Bloecken auf den sich das ausgewaehlte Tier/Monster befindet an. " + "Optionen: " +
+                        "Zeigt Farben auf Bloecken auf den sich das ausgewaehlte Tier/Monster befindet an. " + "Optionen: " +
                         "- Duration gibt die Verblassungszeit an. || " +
                         "- Alpha gibt die Staerke der Farbe an. || " +
                         "- Range gibt die Reichweite an indem Tier/Monster angezeigt werden."
@@ -72,7 +73,7 @@ public class FadeWalker extends Module {
 
     @SubscribeEvent
     public void onRenderWorldLast(RenderWorldLastEvent event) {
-        if (mc.theWorld == null || mc.thePlayer == null) return;
+        if (mc.world == null || mc.player == null) return;
 
         // Retrieve slider values
         float duration = (float) Galacticc.instance.settingsManager.getSettingByName(this, "Duration").getValDouble();
@@ -83,24 +84,24 @@ public class FadeWalker extends Module {
         float range = (float) Galacticc.instance.settingsManager.getSettingByName(this, "Range").getValDouble();
 
         float fadeDecrement = 1.0F / (duration * 40.0F);
-        Vec3 playerPos = mc.thePlayer.getPositionVector();
+        Vec3d playerPos = mc.player.getPositionVector();
 
         // Calculate the dynamic FOV threshold using the player's current FOV setting
         float playerFOV = mc.gameSettings.fovSetting; // Current FOV (default ~70-90)
         double threshold = Math.cos(Math.toRadians(playerFOV / 2)); // Convert FOV to a cosine value
 
-        for (Entity entity : mc.theWorld.loadedEntityList) {
+        for (Entity entity : mc.world.loadedEntityList) {
             if (shouldConsiderEntity(entity)) {
-                Vec3 playerLookVec = mc.thePlayer.getLookVec().normalize();
-                Vec3 entityVec = new Vec3(entity.posX - mc.thePlayer.posX,
-                        entity.posY - mc.thePlayer.posY,
-                        entity.posZ - mc.thePlayer.posZ).normalize();
+                Vec3d playerLookVec = mc.player.getLookVec().normalize();
+                Vec3d entityVec = new Vec3d(entity.posX - mc.player.posX,
+                        entity.posY - mc.player.posY,
+                        entity.posZ - mc.player.posZ).normalize();
 
                 double dotProduct = playerLookVec.dotProduct(entityVec);
                 if (dotProduct < threshold) continue; // Skip entities outside FOV
 
                 BlockPos entityPos = new BlockPos(entity.posX, entity.posY - 1, entity.posZ);
-                if (playerPos.distanceTo(new Vec3(entityPos.getX() + 0.5,
+                if (playerPos.distanceTo(new Vec3d(entityPos.getX() + 0.5,
                         entityPos.getY() + 0.5,
                         entityPos.getZ() + 0.5)) <= range) {
                     blockFadeMap.put(entityPos, 1.0f);
@@ -127,41 +128,44 @@ public class FadeWalker extends Module {
     }
 
     private boolean shouldConsiderEntity(Entity entity) {
-      if (entity == null) return false;
+        if (entity == null) return false;
 
-      if (entity instanceof EntityZombie && Galacticc.instance.settingsManager.getSettingByName(this, "Zombie").getValBoolean()) return true;
-      if (entity instanceof EntityCreeper && Galacticc.instance.settingsManager.getSettingByName(this, "Creeper").getValBoolean()) return true;
-      if (entity instanceof EntityEnderman && Galacticc.instance.settingsManager.getSettingByName(this, "Enderman").getValBoolean()) return true;
-      if (entity instanceof EntitySkeleton && Galacticc.instance.settingsManager.getSettingByName(this, "Skeleton").getValBoolean()) return true;
-      if (entity instanceof EntityWitch && Galacticc.instance.settingsManager.getSettingByName(this, "Witch").getValBoolean()) return true;
-      if (entity instanceof EntitySlime && Galacticc.instance.settingsManager.getSettingByName(this, "Slime").getValBoolean()) return true;
-      if (entity instanceof EntityMagmaCube && Galacticc.instance.settingsManager.getSettingByName(this, "MagmaCube").getValBoolean()) return true;
-      if (entity instanceof EntitySpider && Galacticc.instance.settingsManager.getSettingByName(this, "Spider").getValBoolean()) return true;
-      if (entity instanceof EntityCaveSpider && Galacticc.instance.settingsManager.getSettingByName(this, "CaveSpider").getValBoolean()) return true;
-      if (entity instanceof EntityEndermite && Galacticc.instance.settingsManager.getSettingByName(this, "Endermite").getValBoolean()) return true;
-      if (entity instanceof EntityGuardian && Galacticc.instance.settingsManager.getSettingByName(this, "Guardian").getValBoolean()) return true;
-      if (entity instanceof EntityPigZombie && Galacticc.instance.settingsManager.getSettingByName(this, "ZombiePigman").getValBoolean()) return true;
-      if (entity instanceof EntitySilverfish && Galacticc.instance.settingsManager.getSettingByName(this, "Silverfish").getValBoolean()) return true;
+        if (entity instanceof EntityZombie && Galacticc.instance.settingsManager.getSettingByName(this, "Zombie").getValBoolean()) return true;
+        if (entity instanceof EntityCreeper && Galacticc.instance.settingsManager.getSettingByName(this, "Creeper").getValBoolean()) return true;
+        if (entity instanceof EntityEnderman && Galacticc.instance.settingsManager.getSettingByName(this, "Enderman").getValBoolean()) return true;
+        if (entity instanceof EntitySkeleton && Galacticc.instance.settingsManager.getSettingByName(this, "Skeleton").getValBoolean()) return true;
+        if (entity instanceof EntityWitch && Galacticc.instance.settingsManager.getSettingByName(this, "Witch").getValBoolean()) return true;
+        if (entity instanceof EntitySlime && Galacticc.instance.settingsManager.getSettingByName(this, "Slime").getValBoolean()) return true;
+        if (entity instanceof EntityMagmaCube && Galacticc.instance.settingsManager.getSettingByName(this, "MagmaCube").getValBoolean()) return true;
+        if (entity instanceof EntitySpider && Galacticc.instance.settingsManager.getSettingByName(this, "Spider").getValBoolean()) return true;
+        if (entity instanceof EntityCaveSpider && Galacticc.instance.settingsManager.getSettingByName(this, "CaveSpider").getValBoolean()) return true;
+        if (entity instanceof EntityEndermite && Galacticc.instance.settingsManager.getSettingByName(this, "Endermite").getValBoolean()) return true;
+        if (entity instanceof EntityGuardian && Galacticc.instance.settingsManager.getSettingByName(this, "Guardian").getValBoolean()) return true;
+        if (entity instanceof EntityPigZombie && Galacticc.instance.settingsManager.getSettingByName(this, "ZombiePigman").getValBoolean()) return true;
+        if (entity instanceof EntitySilverfish && Galacticc.instance.settingsManager.getSettingByName(this, "Silverfish").getValBoolean()) return true;
 
-      if (entity instanceof EntityPig && Galacticc.instance.settingsManager.getSettingByName(this, "Pig").getValBoolean()) return true;
-      if (entity instanceof EntityCow && Galacticc.instance.settingsManager.getSettingByName(this, "Cow").getValBoolean()) return true;
-      if (entity instanceof EntitySheep && Galacticc.instance.settingsManager.getSettingByName(this, "Sheep").getValBoolean()) return true;
-      if (entity instanceof EntityChicken && Galacticc.instance.settingsManager.getSettingByName(this, "Chicken").getValBoolean()) return true;
-      if (entity instanceof EntitySquid && Galacticc.instance.settingsManager.getSettingByName(this, "Squid").getValBoolean()) return true;
-      if (entity instanceof EntityVillager && Galacticc.instance.settingsManager.getSettingByName(this, "Villager").getValBoolean()) return true;
-      if (entity instanceof EntityRabbit && Galacticc.instance.settingsManager.getSettingByName(this, "Rabbit").getValBoolean()) return true;
-      if (entity instanceof EntityHorse && Galacticc.instance.settingsManager.getSettingByName(this, "Horse").getValBoolean()) return true;
-      if (entity instanceof EntityWolf && Galacticc.instance.settingsManager.getSettingByName(this, "Wolf").getValBoolean()) return true;
-      if (entity instanceof EntityOcelot && Galacticc.instance.settingsManager.getSettingByName(this, "Ocelot").getValBoolean()) return true;
-      if (entity instanceof EntityIronGolem && Galacticc.instance.settingsManager.getSettingByName(this, "IronGolem").getValBoolean()) return true;
+        if (entity instanceof EntityPig && Galacticc.instance.settingsManager.getSettingByName(this, "Pig").getValBoolean()) return true;
+        if (entity instanceof EntityCow && Galacticc.instance.settingsManager.getSettingByName(this, "Cow").getValBoolean()) return true;
+        if (entity instanceof EntitySheep && Galacticc.instance.settingsManager.getSettingByName(this, "Sheep").getValBoolean()) return true;
+        if (entity instanceof EntityChicken && Galacticc.instance.settingsManager.getSettingByName(this, "Chicken").getValBoolean()) return true;
+        if (entity instanceof EntitySquid && Galacticc.instance.settingsManager.getSettingByName(this, "Squid").getValBoolean()) return true;
+        if (entity instanceof EntityVillager && Galacticc.instance.settingsManager.getSettingByName(this, "Villager").getValBoolean()) return true;
+        if (entity instanceof EntityRabbit && Galacticc.instance.settingsManager.getSettingByName(this, "Rabbit").getValBoolean()) return true;
+        if (entity instanceof EntityHorse && Galacticc.instance.settingsManager.getSettingByName(this, "Horse").getValBoolean()) return true;
+        if (entity instanceof EntityWolf && Galacticc.instance.settingsManager.getSettingByName(this, "Wolf").getValBoolean()) return true;
+        if (entity instanceof EntityOcelot && Galacticc.instance.settingsManager.getSettingByName(this, "Ocelot").getValBoolean()) return true;
+        if (entity instanceof EntityIronGolem && Galacticc.instance.settingsManager.getSettingByName(this, "IronGolem").getValBoolean()) return true;
 
- return false;
-}
-
+        return false;
+    }
+//todo check if this is working? also cleanup.
     private void renderBlockFade(BlockPos blockPos, float fadeAlpha, int red, int green, int blue, float alphaMultiplier) {
-        AxisAlignedBB boundingBox = mc.theWorld.getBlockState(blockPos).getBlock()
-                .getSelectedBoundingBox(mc.theWorld, blockPos)
-                .offset(-mc.getRenderManager().viewerPosX, -mc.getRenderManager().viewerPosY, -mc.getRenderManager().viewerPosZ);
+        IBlockState blockState = mc.world.getBlockState(blockPos); // Fetch the block state
+        AxisAlignedBB boundingBox = blockState.getBlock()
+                .getSelectedBoundingBox(blockState, mc.world, blockPos) // Include `blockState` as the first argument
+                .offset(-mc.getRenderManager().viewerPosX,
+                        -mc.getRenderManager().viewerPosY,
+                        -mc.getRenderManager().viewerPosZ);
 
         GlStateManager.pushMatrix();
         GlStateManager.disableTexture2D();

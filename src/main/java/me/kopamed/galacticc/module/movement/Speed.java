@@ -28,13 +28,13 @@ public class Speed extends Module {
 
     @Override
     public void onEnabled() {
-        mc.thePlayer.setVelocity(speed, 1, speed);
+        mc.player.setVelocity(speed, 1, speed);
         super.onEnabled();
     }
 
     @Override
     public void onDisabled() {
         super.onDisabled();
-        mc.thePlayer.setVelocity(1, 1, 1);
+        mc.player.setVelocity(1, 1, 1);
     }
 }

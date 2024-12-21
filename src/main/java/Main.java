@@ -1,4 +1,5 @@
 import me.kopamed.galacticc.Galacticc;
+
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 
@@ -6,7 +7,7 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 public class Main {
 
     @Mod.EventHandler
-    public void init(FMLInitializationEvent event){
+    public void init(FMLInitializationEvent event) {
         Galacticc.instance = new Galacticc();
         Galacticc.instance.init();
     }

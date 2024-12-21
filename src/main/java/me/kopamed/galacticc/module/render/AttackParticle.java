@@ -55,7 +55,7 @@ public class AttackParticle extends Module {
 
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent event) {
-        if (event.phase != TickEvent.Phase.END || mc.thePlayer == null || mc.theWorld == null) {
+        if (event.phase != TickEvent.Phase.END || mc.player == null || mc.world == null) {
             return;
         }
 
@@ -71,7 +71,7 @@ public class AttackParticle extends Module {
     private void handleMultiplayerParticles() {
         String mode = Galacticc.instance.settingsManager.getSettingByName(this, "Partikel Modus").getValString();
 
-        for (Entity entity : mc.theWorld.loadedEntityList) {
+        for (Entity entity : mc.world.loadedEntityList) {
             if (!(entity instanceof EntityZombie)) {
                 continue;
             }
@@ -96,21 +96,21 @@ public class AttackParticle extends Module {
         }
 
         // Remove dead or unloaded zombies from the map
-        zombieHealthMap.keySet().removeIf(zombie -> zombie.isDead || !mc.theWorld.loadedEntityList.contains(zombie));
+        zombieHealthMap.keySet().removeIf(zombie -> zombie.isDead || !mc.world.loadedEntityList.contains(zombie));
     }
 
     //************************Handle Singleplayer Hits**************************
     @SubscribeEvent
     public void onLivingHurt(LivingHurtEvent event) {
-        if (!mc.isIntegratedServerRunning() || mc.theWorld == null || mc.thePlayer == null) {
+        if (!mc.isIntegratedServerRunning() || mc.world == null || mc.player == null) {
             return; // Only handle singleplayer hits
         }
 
-        if (!(event.entity instanceof EntityZombie)) {
+        if (!(event.getEntity() instanceof EntityZombie)) {
             return; // Only handle zombies
         }
 
-        EntityZombie zombie = (EntityZombie) event.entity;
+        EntityZombie zombie = (EntityZombie) event.getEntity();
         String mode = Galacticc.instance.settingsManager.getSettingByName(this, "Partikel Modus").getValString();
 
         if ("C-Schlag".equals(mode) && isCriticalHit()) {
@@ -121,9 +121,11 @@ public class AttackParticle extends Module {
     }
 
     private boolean isCriticalHit() {
-        return mc.thePlayer.fallDistance > 0.0F && !mc.thePlayer.onGround &&
-                !mc.thePlayer.isOnLadder() && !mc.thePlayer.isInWater() &&
-                !mc.thePlayer.isPotionActive(8) && mc.thePlayer.ridingEntity == null;
+        return mc.player.fallDistance > 0.0F && // Player is falling
+                !mc.player.onGround &&          // Player is not on the ground
+                !mc.player.isOnLadder() &&      // Player is not on a ladder
+                !mc.player.isInWater() &&       // Player is not in water
+                mc.player.getRidingEntity() == null; // Player is not riding an entity
     }
 
     private void spawnParticlesAroundEntity(Entity entity) {
@@ -131,51 +133,51 @@ public class AttackParticle extends Module {
         double y = entity.posY + entity.height / 2.0;
         double z = entity.posZ;
 
-        double offsetX = (mc.thePlayer.getRNG().nextDouble() - 0.5) * 2.0;
-        double offsetY = mc.thePlayer.getRNG().nextDouble();
-        double offsetZ = (mc.thePlayer.getRNG().nextDouble() - 0.5) * 2.0;
+        double offsetX = (mc.player.getRNG().nextDouble() - 0.5) * 2.0;
+        double offsetY = mc.player.getRNG().nextDouble();
+        double offsetZ = (mc.player.getRNG().nextDouble() - 0.5) * 2.0;
 
         if (isParticleEnabled("Herz")) {
-            mc.theWorld.spawnParticle(EnumParticleTypes.HEART, x + offsetX, y + offsetY, z + offsetZ, 0.0, 0.1, 0.0);
+            mc.world.spawnParticle(EnumParticleTypes.HEART, x + offsetX, y + offsetY, z + offsetZ, 0.0, 0.1, 0.0);
         }
         if (isParticleEnabled("Flamme")) {
-            mc.theWorld.spawnParticle(EnumParticleTypes.FLAME, x + offsetX, y + offsetY, z + offsetZ, 0.0, 0.1, 0.0);
+            mc.world.spawnParticle(EnumParticleTypes.FLAME, x + offsetX, y + offsetY, z + offsetZ, 0.0, 0.1, 0.0);
         }
         if (isParticleEnabled("Rauch-1")) {
-            mc.theWorld.spawnParticle(EnumParticleTypes.SMOKE_NORMAL, x + offsetX, y + offsetY, z + offsetZ, 0.0, 0.1, 0.0);
+            mc.world.spawnParticle(EnumParticleTypes.SMOKE_NORMAL, x + offsetX, y + offsetY, z + offsetZ, 0.0, 0.1, 0.0);
         }
         if (isParticleEnabled("Rauch-2")) {
-            mc.theWorld.spawnParticle(EnumParticleTypes.SMOKE_LARGE, x + offsetX, y + offsetY, z + offsetZ, 0.0, 0.1, 0.0);
+            mc.world.spawnParticle(EnumParticleTypes.SMOKE_LARGE, x + offsetX, y + offsetY, z + offsetZ, 0.0, 0.1, 0.0);
         }
         if (isParticleEnabled("Feuerwerk")) {
-            mc.theWorld.spawnParticle(EnumParticleTypes.FIREWORKS_SPARK, x + offsetX, y + offsetY, z + offsetZ, 0.0, 0.1, 0.0);
+            mc.world.spawnParticle(EnumParticleTypes.FIREWORKS_SPARK, x + offsetX, y + offsetY, z + offsetZ, 0.0, 0.1, 0.0);
         }
         if (isParticleEnabled("Happy")) {
-            mc.theWorld.spawnParticle(EnumParticleTypes.VILLAGER_HAPPY, x + offsetX, y + offsetY, z + offsetZ, 0.0, 0.1, 0.0);
+            mc.world.spawnParticle(EnumParticleTypes.VILLAGER_HAPPY, x + offsetX, y + offsetY, z + offsetZ, 0.0, 0.1, 0.0);
         }
         if (isParticleEnabled("Sauer")) {
-            mc.theWorld.spawnParticle(EnumParticleTypes.VILLAGER_ANGRY, x + offsetX, y + offsetY, z + offsetZ, 0.0, 0.1, 0.0);
+            mc.world.spawnParticle(EnumParticleTypes.VILLAGER_ANGRY, x + offsetX, y + offsetY, z + offsetZ, 0.0, 0.1, 0.0);
         }
         if (isParticleEnabled("Fluch")) {
-            mc.theWorld.spawnParticle(EnumParticleTypes.SPELL_WITCH, x + offsetX, y + offsetY, z + offsetZ, 0.0, 0.1, 0.0);
+            mc.world.spawnParticle(EnumParticleTypes.SPELL_WITCH, x + offsetX, y + offsetY, z + offsetZ, 0.0, 0.1, 0.0);
         }
         if (isParticleEnabled("WasserBlase")) {
-            mc.theWorld.spawnParticle(EnumParticleTypes.WATER_BUBBLE, x + offsetX, y + offsetY, z + offsetZ, 0.0, 0.1, 0.0);
+            mc.world.spawnParticle(EnumParticleTypes.WATER_BUBBLE, x + offsetX, y + offsetY, z + offsetZ, 0.0, 0.1, 0.0);
         }
         if (isParticleEnabled("Explosion-3")) {
-            mc.theWorld.spawnParticle(EnumParticleTypes.EXPLOSION_HUGE, x + offsetX, y + offsetY, z + offsetZ, 0.0, 0.1, 0.0);
+            mc.world.spawnParticle(EnumParticleTypes.EXPLOSION_HUGE, x + offsetX, y + offsetY, z + offsetZ, 0.0, 0.1, 0.0);
         }
         if (isParticleEnabled("Explosion-2")) {
-            mc.theWorld.spawnParticle(EnumParticleTypes.EXPLOSION_LARGE, x + offsetX, y + offsetY, z + offsetZ, 0.0, 0.1, 0.0);
+            mc.world.spawnParticle(EnumParticleTypes.EXPLOSION_LARGE, x + offsetX, y + offsetY, z + offsetZ, 0.0, 0.1, 0.0);
         }
         if (isParticleEnabled("Explosion-1")) {
-            mc.theWorld.spawnParticle(EnumParticleTypes.EXPLOSION_NORMAL, x + offsetX, y + offsetY, z + offsetZ, 0.0, 0.1, 0.0);
+            mc.world.spawnParticle(EnumParticleTypes.EXPLOSION_NORMAL, x + offsetX, y + offsetY, z + offsetZ, 0.0, 0.1, 0.0);
         }
         if (isParticleEnabled("SchneeFlocke")) {
-            mc.theWorld.spawnParticle(EnumParticleTypes.SNOW_SHOVEL, x + offsetX, y + offsetY, z + offsetZ, 0.0, 0.1, 0.0);
+            mc.world.spawnParticle(EnumParticleTypes.SNOW_SHOVEL, x + offsetX, y + offsetY, z + offsetZ, 0.0, 0.1, 0.0);
         }
         if (isParticleEnabled("Verzauberung")) {
-            mc.theWorld.spawnParticle(EnumParticleTypes.ENCHANTMENT_TABLE, x + offsetX, y + offsetY, z + offsetZ, 0.0, 0.1, 0.0);
+            mc.world.spawnParticle(EnumParticleTypes.ENCHANTMENT_TABLE, x + offsetX, y + offsetY, z + offsetZ, 0.0, 0.1, 0.0);
         }
     }
 

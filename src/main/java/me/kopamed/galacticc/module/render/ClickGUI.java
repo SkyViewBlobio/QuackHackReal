@@ -28,6 +28,12 @@ public class ClickGUI extends Module {
         Galacticc.instance.settingsManager.rSetting(new Setting("Modul Blau", this, 249, 0, 255, true));
         Galacticc.instance.settingsManager.rSetting(new Setting("Modul Alpha", this, 28, 0, 255, true));
 
+        //button class || highlights active modules.
+        Galacticc.instance.settingsManager.rSetting(new Setting("ModulHighlight Rot", this, 121, 0, 255, true));
+        Galacticc.instance.settingsManager.rSetting(new Setting("ModulHighlight Green", this, 147, 0, 255, true));
+        Galacticc.instance.settingsManager.rSetting(new Setting("ModulHighlight Blau", this, 249, 0, 255, true));
+        Galacticc.instance.settingsManager.rSetting(new Setting("ModulHighlight Alpha", this, 28, 0, 255, true));
+
         // Add the gradient-related settings
         Galacticc.instance.settingsManager.rSetting(new Setting("Gradient Modul Rot", this, 0, 0, 255, true));
         Galacticc.instance.settingsManager.rSetting(new Setting("Gradient Modul Green", this, 5, 0, 255, true));
@@ -67,7 +73,7 @@ public class ClickGUI extends Module {
         Galacticc.instance.settingsManager.rSetting(new Setting("Gradient Header Rot", this, 28, 0, 255, true));
         Galacticc.instance.settingsManager.rSetting(new Setting("Gradient Header Green", this, 0, 0, 255, true));
         Galacticc.instance.settingsManager.rSetting(new Setting("Gradient Header Blau", this, 72, 0, 255, true));
-        Galacticc.instance.settingsManager.rSetting(new Setting("Enable Gradient Header", this, false));
+        Galacticc.instance.settingsManager.rSetting(new Setting("Enable Gradient Header", this, true));
     }
 
     @Override

@@ -5,7 +5,7 @@ import me.kopamed.galacticc.Galacticc;
 import me.kopamed.galacticc.module.Category;
 import me.kopamed.galacticc.module.Module;
 import me.kopamed.galacticc.settings.Setting;
-import net.minecraft.network.play.client.C03PacketPlayer;
+import net.minecraft.network.play.client.CPacketPlayer;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
@@ -44,12 +44,12 @@ public class Criticals extends Module {
 
     @SubscribeEvent
     public void onTick(TickEvent.PlayerTickEvent event) {
-        if (!this.isToggled() || mc.thePlayer == null || mc.theWorld == null) return;
+        if (!this.isToggled() || mc.player == null || mc.world == null) return;
 
         String mode = Galacticc.instance.settingsManager.getSettingByName(this, "Mode").getValString();
         int delay = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Delay").getValDouble();
 
-        if (mc.thePlayer.onGround && mc.thePlayer.isSwingInProgress && canSendPacket(delay)) {
+        if (mc.player.onGround && mc.player.isSwingInProgress && canSendPacket(delay)) {
             switch (mode) {
                 case "Packet":
                     performPacketCritical();
@@ -82,68 +82,58 @@ public class Criticals extends Module {
     }
 
     private void performPacketCritical() {
-        double x = mc.thePlayer.posX;
-        double y = mc.thePlayer.posY;
-        double z = mc.thePlayer.posZ;
+        double x = mc.player.posX;
+        double y = mc.player.posY;
+        double z = mc.player.posZ;
 
-        mc.getNetHandler().addToSendQueue
-                (new C03PacketPlayer.C04PacketPlayerPosition(x, y + 0.0625, z, true));
-        mc.getNetHandler().addToSendQueue
-                (new C03PacketPlayer.C04PacketPlayerPosition(x, y, z, false));
+        mc.player.connection.sendPacket(new CPacketPlayer.Position(x, y + 0.0625, z, true));
+        mc.player.connection.sendPacket(new CPacketPlayer.Position(x, y, z, false));
     }
 
     private void performNCPPacketCritical() {
-        double x = mc.thePlayer.posX;
-        double y = mc.thePlayer.posY;
-        double z = mc.thePlayer.posZ;
+        double x = mc.player.posX;
+        double y = mc.player.posY;
+        double z = mc.player.posZ;
 
-        mc.getNetHandler().addToSendQueue
-                (new C03PacketPlayer.C04PacketPlayerPosition(x, y + 0.11, z, false));
-        mc.getNetHandler().addToSendQueue
-                (new C03PacketPlayer.C04PacketPlayerPosition(x, y + 0.1100013579, z, false));
-        mc.getNetHandler().addToSendQueue
-                (new C03PacketPlayer.C04PacketPlayerPosition(x, y + 0.0000013579, z, false));
+        mc.player.connection.sendPacket(new CPacketPlayer.Position(x, y + 0.11, z, false));
+        mc.player.connection.sendPacket(new CPacketPlayer.Position(x, y + 0.1100013579, z, false));
+        mc.player.connection.sendPacket(new CPacketPlayer.Position(x, y + 0.0000013579, z, false));
     }
 
     private void performBlocksMCCritical() {
-        double x = mc.thePlayer.posX;
-        double y = mc.thePlayer.posY;
-        double z = mc.thePlayer.posZ;
+        double x = mc.player.posX;
+        double y = mc.player.posY;
+        double z = mc.player.posZ;
 
-        mc.getNetHandler().addToSendQueue
-                (new C03PacketPlayer.C04PacketPlayerPosition(x, y + 0.0011, z, true));
-        mc.getNetHandler().addToSendQueue
-                (new C03PacketPlayer.C04PacketPlayerPosition(x, y, z, false));
+        mc.player.connection.sendPacket(new CPacketPlayer.Position(x, y + 0.0011, z, true));
+        mc.player.connection.sendPacket(new CPacketPlayer.Position(x, y, z, false));
     }
 
     private void performBlocksMC2Critical() {
-        if (mc.thePlayer.ticksExisted % 4 == 0) {
-            double x = mc.thePlayer.posX;
-            double y = mc.thePlayer.posY;
-            double z = mc.thePlayer.posZ;
+        if (mc.player.ticksExisted % 4 == 0) {
+            double x = mc.player.posX;
+            double y = mc.player.posY;
+            double z = mc.player.posZ;
 
-            mc.getNetHandler().addToSendQueue
-                    (new C03PacketPlayer.C04PacketPlayerPosition(x, y + 0.0011, z, true));
-            mc.getNetHandler().addToSendQueue
-                    (new C03PacketPlayer.C04PacketPlayerPosition(x, y, z, false));
+            mc.player.connection.sendPacket(new CPacketPlayer.Position(x, y + 0.0011, z, true));
+            mc.player.connection.sendPacket(new CPacketPlayer.Position(x, y, z, false));
         }
     }
 
     private void performNoGroundCritical() {
-        mc.getNetHandler().addToSendQueue
-                (new C03PacketPlayer(false));
+        mc.player.connection.sendPacket(new CPacketPlayer(false));
     }
 
     private void performJumpCritical() {
-        if (mc.thePlayer.onGround) {
-            mc.thePlayer.jump();
+        if (mc.player.onGround) {
+            mc.player.jump();
         }
     }
 
     private void performMiniJumpCritical() {
-        if (mc.thePlayer.onGround) {
-            mc.thePlayer.motionY = 0.1;
-            mc.thePlayer.fallDistance = 0.1f;
+        if (mc.player.onGround) {
+            mc.player.motionY = 0.1;
+            mc.player.fallDistance = 0.1f;
         }
     }
 

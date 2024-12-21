@@ -48,7 +48,7 @@ public class SelfParticle extends Module {
 
     @SubscribeEvent
     public void onPlayerTick(TickEvent.PlayerTickEvent event) {
-        if (!this.isToggled() || mc.thePlayer == null || mc.theWorld == null) {
+        if (!this.isToggled() || mc.player == null || mc.world == null) {
             return; // Exit if the module is disabled or the player/world is null
         }
 
@@ -69,62 +69,62 @@ public class SelfParticle extends Module {
         int count = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Partikel anzahl").getValDouble();
 
         for (int i = 0; i < count; i++) {
-            double x = mc.thePlayer.posX + (mc.thePlayer.getRNG().nextDouble() - 0.5D) * 2.0D;
-            double y = mc.thePlayer.posY + mc.thePlayer.getRNG().nextDouble();
-            double z = mc.thePlayer.posZ + (mc.thePlayer.getRNG().nextDouble() - 0.5D) * 2.0D;
+            double x = mc.player.posX + (mc.player.getRNG().nextDouble() - 0.5D) * 2.0D;
+            double y = mc.player.posY + mc.player.getRNG().nextDouble();
+            double z = mc.player.posZ + (mc.player.getRNG().nextDouble() - 0.5D) * 2.0D;
 
-            double motionX = mc.thePlayer.getRNG().nextGaussian() * 0.02D;
-            double motionY = mc.thePlayer.getRNG().nextGaussian() * 0.02D;
-            double motionZ = mc.thePlayer.getRNG().nextGaussian() * 0.02D;
+            double motionX = mc.player.getRNG().nextGaussian() * 0.02D;
+            double motionY = mc.player.getRNG().nextGaussian() * 0.02D;
+            double motionZ = mc.player.getRNG().nextGaussian() * 0.02D;
 
             // Spawn specific particles based on toggles
             if (Galacticc.instance.settingsManager.getSettingByName(this, "Herz").getValBoolean()) {
-                mc.theWorld.spawnParticle(EnumParticleTypes.HEART, x, y, z, motionX, motionY, motionZ);
+                mc.world.spawnParticle(EnumParticleTypes.HEART, x, y, z, motionX, motionY, motionZ);
             }
             if (Galacticc.instance.settingsManager.getSettingByName(this, "Verzauberung").getValBoolean()) {
-                mc.theWorld.spawnParticle(EnumParticleTypes.ENCHANTMENT_TABLE, x, y, z, motionX, motionY, motionZ);
+                mc.world.spawnParticle(EnumParticleTypes.ENCHANTMENT_TABLE, x, y, z, motionX, motionY, motionZ);
             }
             if (Galacticc.instance.settingsManager.getSettingByName(this, "Note").getValBoolean()) {
-                mc.theWorld.spawnParticle(EnumParticleTypes.NOTE, x, y, z, motionX, motionY, motionZ);
+                mc.world.spawnParticle(EnumParticleTypes.NOTE, x, y, z, motionX, motionY, motionZ);
             }
             if (Galacticc.instance.settingsManager.getSettingByName(this, "Flamme").getValBoolean()) {
-                mc.theWorld.spawnParticle(EnumParticleTypes.FLAME, x, y, z, motionX, motionY, motionZ);
+                mc.world.spawnParticle(EnumParticleTypes.FLAME, x, y, z, motionX, motionY, motionZ);
             }
             if (Galacticc.instance.settingsManager.getSettingByName(this, "Schneeflocke").getValBoolean()) {
-                mc.theWorld.spawnParticle(EnumParticleTypes.SNOW_SHOVEL, x, y, z, motionX, motionY, motionZ);
+                mc.world.spawnParticle(EnumParticleTypes.SNOW_SHOVEL, x, y, z, motionX, motionY, motionZ);
             }
             if (Galacticc.instance.settingsManager.getSettingByName(this, "Crit").getValBoolean()) {
-                mc.theWorld.spawnParticle(EnumParticleTypes.CRIT, x, y, z, motionX, motionY, motionZ);
+                mc.world.spawnParticle(EnumParticleTypes.CRIT, x, y, z, motionX, motionY, motionZ);
             }
             if (Galacticc.instance.settingsManager.getSettingByName(this, "Rauch").getValBoolean()) {
-                mc.theWorld.spawnParticle(EnumParticleTypes.SMOKE_NORMAL, x, y, z, motionX, motionY, motionZ);
+                mc.world.spawnParticle(EnumParticleTypes.SMOKE_NORMAL, x, y, z, motionX, motionY, motionZ);
             }
             if (Galacticc.instance.settingsManager.getSettingByName(this, "Portal").getValBoolean()) {
-                mc.theWorld.spawnParticle(EnumParticleTypes.PORTAL, x, y, z, motionX, motionY, motionZ);
+                mc.world.spawnParticle(EnumParticleTypes.PORTAL, x, y, z, motionX, motionY, motionZ);
             }
             if (Galacticc.instance.settingsManager.getSettingByName(this, "Lava").getValBoolean()) {
-                mc.theWorld.spawnParticle(EnumParticleTypes.LAVA, x, y, z, motionX, motionY, motionZ);
+                mc.world.spawnParticle(EnumParticleTypes.LAVA, x, y, z, motionX, motionY, motionZ);
             }
             if (Galacticc.instance.settingsManager.getSettingByName(this, "Explosion").getValBoolean()) {
-                mc.theWorld.spawnParticle(EnumParticleTypes.EXPLOSION_NORMAL, x, y, z, motionX, motionY, motionZ);
+                mc.world.spawnParticle(EnumParticleTypes.EXPLOSION_NORMAL, x, y, z, motionX, motionY, motionZ);
             }
             if (Galacticc.instance.settingsManager.getSettingByName(this, "Feuerwerk").getValBoolean()) {
-                mc.theWorld.spawnParticle(EnumParticleTypes.FIREWORKS_SPARK, x, y, z, motionX, motionY, motionZ);
+                mc.world.spawnParticle(EnumParticleTypes.FIREWORKS_SPARK, x, y, z, motionX, motionY, motionZ);
             }
             if (Galacticc.instance.settingsManager.getSettingByName(this, "Wasserblase").getValBoolean()) {
-                mc.theWorld.spawnParticle(EnumParticleTypes.WATER_BUBBLE, x, y, z, motionX, motionY, motionZ);
+                mc.world.spawnParticle(EnumParticleTypes.WATER_BUBBLE, x, y, z, motionX, motionY, motionZ);
             }
             if (Galacticc.instance.settingsManager.getSettingByName(this, "Fluch").getValBoolean()) {
-                mc.theWorld.spawnParticle(EnumParticleTypes.SPELL, x, y, z, motionX, motionY, motionZ);
+                mc.world.spawnParticle(EnumParticleTypes.SPELL, x, y, z, motionX, motionY, motionZ);
             }
             if (Galacticc.instance.settingsManager.getSettingByName(this, "Happy").getValBoolean()) {
-                mc.theWorld.spawnParticle(EnumParticleTypes.VILLAGER_HAPPY, x, y, z, motionX, motionY, motionZ);
+                mc.world.spawnParticle(EnumParticleTypes.VILLAGER_HAPPY, x, y, z, motionX, motionY, motionZ);
             }
             if (Galacticc.instance.settingsManager.getSettingByName(this, "Sauer").getValBoolean()) {
-                mc.theWorld.spawnParticle(EnumParticleTypes.VILLAGER_ANGRY, x, y, z, motionX, motionY, motionZ);
+                mc.world.spawnParticle(EnumParticleTypes.VILLAGER_ANGRY, x, y, z, motionX, motionY, motionZ);
             }
             if (Galacticc.instance.settingsManager.getSettingByName(this, "Hexe").getValBoolean()) {
-                mc.theWorld.spawnParticle(EnumParticleTypes.SPELL_WITCH, x, y, z, motionX, motionY, motionZ);
+                mc.world.spawnParticle(EnumParticleTypes.SPELL_WITCH, x, y, z, motionX, motionY, motionZ);
             }
         }
     }

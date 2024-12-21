@@ -26,18 +26,20 @@ public class CustomSkyColorAndFog extends Module {
             return;
         }
 
+        // Get RGB values from settings
         int red = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Nebel Rot").getValDouble();
         int green = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Nebel Green").getValDouble();
         int blue = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Nebel Blau").getValDouble();
 
-        event.red = red / 255.0f;
-        event.green = green / 255.0f;
-        event.blue = blue / 255.0f;
+        // Use event setters (if available) or manipulate event properties safely
+        event.setRed(red / 255.0f);
+        event.setGreen(green / 255.0f);
+        event.setBlue(blue / 255.0f);
     }
 
     @Override
     public String getHUDInfo() {
         boolean fogEnabled = Galacticc.instance.settingsManager.getSettingByName(this, "Nebel Farbe").getValBoolean();
-        return ChatFormatting.GRAY + "[FogColor: " + ChatFormatting.GRAY + ChatFormatting.GRAY + (fogEnabled ? "ON" +ChatFormatting.GRAY : "OFF") + ChatFormatting.GRAY  + "]";
+        return ChatFormatting.GRAY + "[FogColor: " + ChatFormatting.GRAY + (fogEnabled ? "ON" : "OFF") + "]";
     }
 }

@@ -70,7 +70,7 @@ public class Slider extends Component {
 		// Render the slider text
 		GL11.glPushMatrix();
 		GL11.glScalef(0.5f, 0.5f, 0.5f);
-		Minecraft.getMinecraft().fontRendererObj.drawStringWithShadow(
+		Minecraft.getMinecraft().fontRenderer.drawStringWithShadow(
 				this.set.getName() + ": " + this.set.getValDouble(),
 				(parent.parent.getX() + 7) * 2,
 				(parent.parent.getY() + offset + 2) * 2 + 5,

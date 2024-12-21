@@ -1,5 +1,6 @@
 package me.kopamed.galacticc.module.textstuff;
 
+import com.sun.management.OperatingSystemMXBean;
 import me.kopamed.galacticc.Galacticc;
 import me.kopamed.galacticc.module.Category;
 import me.kopamed.galacticc.module.Module;
@@ -9,11 +10,9 @@ import net.minecraft.client.entity.EntityPlayerSP;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.ScaledResolution;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.item.ItemStack;
-import com.sun.management.OperatingSystemMXBean;
-
 import net.minecraft.potion.PotionEffect;
-import net.minecraft.util.EnumChatFormatting;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
@@ -85,11 +84,11 @@ public class Informationen extends Module {
             return;
         }
 
-        if (mc == null || mc.theWorld == null || mc.thePlayer == null) {
+        if (mc == null || mc.world == null || mc.player == null) {
             return;
         }
 
-        FontRenderer fr = mc.fontRendererObj;
+        FontRenderer fr = mc.fontRenderer;
 
         int xOffset = (int) Galacticc.instance.settingsManager.getSettingByName(this, "X Offset").getValDouble();
         int yOffset = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Y Offset").getValDouble();
@@ -136,7 +135,7 @@ public class Informationen extends Module {
         if (showCPU) infoList.add(new String[]{"CPU Usage", String.format("%.1f%%", cpuUsage)});
         if (showFPS) infoList.add(new String[]{"FPS", String.valueOf(Minecraft.getDebugFPS())});
         if (showCoords)
-            infoList.add(new String[]{"Coordinates", String.format("X: %.1f, Y: %.1f, Z: %.1f", mc.thePlayer.posX, mc.thePlayer.posY, mc.thePlayer.posZ)});
+            infoList.add(new String[]{"Coordinates", String.format("X: %.1f, Y: %.1f, Z: %.1f", mc.player.posX, mc.player.posY, mc.player.posZ)});
         if (showGameTime) {
             long elapsedMillis = System.currentTimeMillis() - gameStartTime;
             long elapsedSeconds = elapsedMillis / 1000;
@@ -145,16 +144,16 @@ public class Informationen extends Module {
         if (showSystemTime)
             infoList.add(new String[]{"Systemzeit", new SimpleDateFormat("HH:mm:ss").format(new Date())});
         if (showMinecraftDay)
-            infoList.add(new String[]{"SpielTag", String.valueOf(mc.theWorld.getWorldTime() / 24000)});
+            infoList.add(new String[]{"SpielTag", String.valueOf(mc.world.getWorldTime() / 24000)});
         if (showPing) {
-            EntityPlayerSP player = mc.thePlayer;
-            int ping = player != null && mc.getNetHandler() != null && mc.getNetHandler().getPlayerInfo(player.getUniqueID()) != null
-                    ? mc.getNetHandler().getPlayerInfo(player.getUniqueID()).getResponseTime() : -1;
+            EntityPlayerSP player = mc.player;
+            int ping = player != null && mc.getConnection() != null && mc.getConnection().getPlayerInfo(player.getUniqueID()) != null
+                    ? mc.getConnection().getPlayerInfo(player.getUniqueID()).getResponseTime() : -1;
             infoList.add(new String[]{"Ping", ping == -1 ? "N/A" : ping + " ms"});
         }
         if (showDate) infoList.add(new String[]{"Datum", new SimpleDateFormat("dd-MM-yyyy").format(new Date())});
-        if (showItemInfo && mc.thePlayer.getHeldItem() != null) {
-            ItemStack heldItem = mc.thePlayer.getHeldItem();
+        if (showItemInfo && mc.player.getHeldItemMainhand() != null) {
+            ItemStack heldItem = mc.player.getHeldItemMainhand();
             String itemName = heldItem.getDisplayName();
             int durability = heldItem.getMaxDamage() - heldItem.getItemDamage();
             infoList.add(new String[]{"Hand", itemName + " (" + durability + " Durability)"});
@@ -163,14 +162,12 @@ public class Informationen extends Module {
 
         if (showPotions) {
             int potionCount = 0;
-
-            for (PotionEffect effect : mc.thePlayer.getActivePotionEffects()) {
+            //todo check if this even works and shows potions also stacks them
+            for (PotionEffect effect : mc.player.getActivePotionEffects()) {
                 if (effect != null) {
                     potionCount++;
 
-                    String potionName = net.minecraft.potion.Potion.potionTypes[effect.getPotionID()].getName();
-                    potionName = potionName.substring(potionName.lastIndexOf(".") + 1);
-
+                    String potionName = I18n.format(effect.getPotion().getName());
                     potionName = Character.toUpperCase(potionName.charAt(0)) + potionName.substring(1);
 
                     int level = effect.getAmplifier() + 1;

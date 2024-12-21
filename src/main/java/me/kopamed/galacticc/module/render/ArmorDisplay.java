@@ -9,6 +9,7 @@ import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.ScaledResolution;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.item.ItemStack;
+import net.minecraft.util.NonNullList;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -58,10 +59,10 @@ public class ArmorDisplay extends Module {
 
     @SubscribeEvent
     public void onRenderGameOverlay(RenderGameOverlayEvent.Post event) {
-        if (event.type != RenderGameOverlayEvent.ElementType.ALL) return;
+        if (event.getType() != RenderGameOverlayEvent.ElementType.ALL) return;
 
         Minecraft mc = Minecraft.getMinecraft();
-        if (mc.thePlayer == null) return;
+        if (mc.player == null) return;
 
         ScaledResolution sr = new ScaledResolution(mc);
         int screenWidth = sr.getScaledWidth();
@@ -80,8 +81,8 @@ public class ArmorDisplay extends Module {
         int textColor = (0xFF << 24) | (red << 16) | (green << 8) | blue;
 
         // Get armor inventory in correct order
-        ItemStack[] armorInventory = mc.thePlayer.inventory.armorInventory;
-        ItemStack[] orderedArmor = new ItemStack[]{armorInventory[3], armorInventory[2], armorInventory[1], armorInventory[0]};
+        NonNullList<ItemStack> armorInventory = mc.player.inventory.armorInventory;
+        ItemStack[] orderedArmor = new ItemStack[]{armorInventory.get(3), armorInventory.get(2), armorInventory.get(1), armorInventory.get(0)};
 
         // Calculate positions
         int xStart = (screenWidth / 2) + xOffset;
@@ -111,7 +112,7 @@ public class ArmorDisplay extends Module {
                 int adjustedY = (int) ((y - 5) / 0.7); // Slightly closer to the armor piece
 
                 // Draw the durability number
-                mc.fontRendererObj.drawStringWithShadow(String.valueOf(durability), adjustedX, adjustedY, textColor);
+                mc.fontRenderer.drawStringWithShadow(String.valueOf(durability), adjustedX, adjustedY, textColor);
 
                 GlStateManager.popMatrix();
             } else if (mode.equals("Balken")) {

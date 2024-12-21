@@ -51,7 +51,7 @@ public class Checkbox extends Component {
 		// Draw text
 		GL11.glPushMatrix();
 		GL11.glScalef(0.5f, 0.5f, 0.5f);
-		Minecraft.getMinecraft().fontRendererObj.drawStringWithShadow(
+		Minecraft.getMinecraft().fontRenderer.drawStringWithShadow(
 				this.op.getName(),
 				(parent.parent.getX() + 10 + 4) * 2 + 5,
 				(parent.parent.getY() + offset + 2) * 2 + 4,

@@ -17,16 +17,16 @@ public class Velocity extends Module {
     @SubscribeEvent
     public void onLivingUpdate(LivingEvent.LivingUpdateEvent e) {
         if (Galacticc.instance.destructed) {return;}
-        if (mc.thePlayer == null) {
+        if (mc.player == null) {
             return;
         }
         float horizontal = (float)Galacticc.instance.settingsManager.getSettingByName(this, "Horizontal").getValDouble();
         float vertical = (float)Galacticc.instance.settingsManager.getSettingByName(this, "Vertical").getValDouble();
 
-        if (mc.thePlayer.hurtTime == mc.thePlayer.maxHurtTime && mc.thePlayer.maxHurtTime > 0) {
-            mc.thePlayer.motionX *= horizontal / 100;
-            mc.thePlayer.motionY *= vertical / 100;
-            mc.thePlayer.motionZ *= horizontal / 100;
+        if (mc.player.hurtTime == mc.player.maxHurtTime && mc.player.maxHurtTime > 0) {
+            mc.player.motionX *= horizontal / 100;
+            mc.player.motionY *= vertical / 100;
+            mc.player.motionZ *= horizontal / 100;
         }
     }
 }

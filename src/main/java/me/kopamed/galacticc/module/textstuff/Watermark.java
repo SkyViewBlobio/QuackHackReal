@@ -105,7 +105,7 @@ public class Watermark extends Module {
         int xPos = sr.getScaledWidth() / 2 + xOffset;
         int yPos = sr.getScaledHeight() / 2 + yOffset;
 
-        FontRenderer fr = mc.fontRendererObj;
+        FontRenderer fr = mc.fontRenderer;
 
         // Get RGB and alpha values for text and background
         int textRed = (int)

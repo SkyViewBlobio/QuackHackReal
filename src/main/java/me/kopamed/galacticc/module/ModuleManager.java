@@ -23,12 +23,13 @@ public class ModuleManager {
 
         //************************COMBAT**************************//
 
-        this.modules.add(new AutoClicker());
+        //this.modules.add(new AutoClicker());
         this.modules.add(new Velocity());
         this.modules.add(new DelayRemover());
         this.modules.add(new Killaura());
         this.modules.add(new Reach());
         this.modules.add(new Criticals());
+        // need to fix autostart. this.modules.add(new AutoClicker());
 
         //************************Mod**************************//
         this.modules.add(new cKontrolle());
@@ -52,7 +53,6 @@ public class ModuleManager {
         //************************RENDER**************************//
 
         this.modules.add(new ClickGUI());
-        this.modules.add(new EnchantModifier());
         this.modules.add(new HUD());
         this.modules.add(new ArmorDisplay());
         this.modules.add(new BlockHighlight());
@@ -61,9 +61,9 @@ public class ModuleManager {
         this.modules.add(new SelfParticle());
         this.modules.add(new AttackParticle());
         this.modules.add(new InventoryDisplay());
-        this.modules.add(new CompassMap());
         this.modules.add(new FadeWalker());
         this.modules.add(new StorageESP());
+        this.modules.add(new HoleESP());
         this.modules.add(new FakePlayer());
 
         //************************TEXT STUFF**************************//
@@ -76,7 +76,7 @@ public class ModuleManager {
         //this.modules.add(new Fly());
         //this.modules.add(new NoFall());
         //this.modules.add(new Speed());
-        //this.modules.add(new AntiBot());
+        //this.modules.add(new AntiBot()); marked for removal
         //this.modules.add(new SelfDestruct());
         this.modules.add(new PlayerESP());
 

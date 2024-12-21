@@ -7,25 +7,19 @@ import me.kopamed.galacticc.settings.Setting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.ScaledResolution;
-import net.minecraft.client.renderer.InventoryEffectRenderer;
-import net.minecraft.client.renderer.entity.RenderItem;
-import net.minecraft.client.resources.model.ModelResourceLocation;
-import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 public class InventoryDisplay extends Module {
-
+//todo test if works??
     private final Minecraft mc;
-    private final RenderItem itemRenderer;
 
     public InventoryDisplay() {
         super("InventarZeiger", "@Hauptinformation: " +
                 "Zeigt dir das Inventar auf deinem Bildschirm an.", false, false, Category.VISUELLES);
 
         this.mc = Minecraft.getMinecraft();
-        this.itemRenderer = mc.getRenderItem();
 
         // Add settings for adjustable coordinates
         Galacticc.instance.settingsManager.rSetting(new Setting("X Offset", this, 0, -500, 500, true));
@@ -45,7 +39,6 @@ public class InventoryDisplay extends Module {
             return;
         }
 
-        // Save OpenGL state
         net.minecraft.client.renderer.GlStateManager.pushMatrix();
         net.minecraft.client.renderer.GlStateManager.enableBlend();
         net.minecraft.client.renderer.GlStateManager.disableLighting();
@@ -73,18 +66,17 @@ public class InventoryDisplay extends Module {
             Gui.drawRect(xPos, yPos, xPos + inventoryWidth, yPos + inventoryHeight, backgroundColor);
 
             // Render inventory items
-            for (int i = 0; i < mc.thePlayer.inventory.mainInventory.length; i++) {
-                ItemStack itemStack = mc.thePlayer.inventory.mainInventory[i];
-                if (itemStack != null) {
+            for (int i = 0; i < mc.player.inventory.mainInventory.size(); i++) {
+                ItemStack itemStack = mc.player.inventory.mainInventory.get(i);
+                if (!itemStack.isEmpty()) {
                     int slotX = xPos + (i % 9) * 18;
                     int slotY = yPos + (i / 9) * 18;
 
-                    itemRenderer.renderItemAndEffectIntoGUI(itemStack, slotX, slotY);
-                    itemRenderer.renderItemOverlayIntoGUI(mc.fontRendererObj, itemStack, slotX, slotY, null);
+                    mc.getRenderItem().renderItemAndEffectIntoGUI(itemStack, slotX, slotY);
+                    mc.getRenderItem().renderItemOverlayIntoGUI(mc.fontRenderer, itemStack, slotX, slotY, null);
                 }
             }
         } finally {
-            // Restore OpenGL state
             net.minecraft.client.renderer.GlStateManager.popMatrix();
             net.minecraft.client.renderer.GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
             net.minecraft.client.renderer.GlStateManager.enableTexture2D();

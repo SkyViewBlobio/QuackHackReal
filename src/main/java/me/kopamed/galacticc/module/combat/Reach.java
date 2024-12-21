@@ -29,11 +29,12 @@ public class Reach extends Module {
     }
 
     @SubscribeEvent
-    public void onRenderGameOverLay(RenderLivingEvent e) {
-        //if (e.entity. instanceof  mc.thePlayer)
-        //HO=LY SHIT RENDERLIVINGEVENT IS AN ACTUAL GOLDMINE
-        if (e.entity instanceof EntityPlayer) {
-            System.out.println("Pog, we are rendering " + e.entity.getName() + " " + e.entity.getCustomNameTag() + " with health " + e.entity.getHealth());
+    public void onRenderLiving(RenderLivingEvent.Specials.Pre<EntityPlayer> event) {
+        if (event.getEntity() instanceof EntityPlayer) {
+            EntityPlayer player = (EntityPlayer) event.getEntity();
+            System.out.println("Pog, we are rendering " + player.getName() + " " +
+                    player.getCustomNameTag() + " with health " + player.getHealth());
         }
     }
+//todo test if this shit works
 }

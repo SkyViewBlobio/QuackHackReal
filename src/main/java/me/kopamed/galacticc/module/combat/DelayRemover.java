@@ -66,8 +66,8 @@ public class DelayRemover extends Module {
     public void onPlayerTick(TickEvent.PlayerTickEvent e) {
         updateValues();
         if(leftDisable) {
-            if (mc.thePlayer != null && mc.theWorld != null) {
-                if (!mc.inGameHasFocus || mc.thePlayer.capabilities.isCreativeMode) {
+            if (mc.player != null && mc.world != null) {
+                if (!mc.inGameHasFocus || mc.player.capabilities.isCreativeMode) {
                     return;
                 }
 
@@ -80,8 +80,8 @@ public class DelayRemover extends Module {
         }
 
         if(rightDisable) {
-            if (mc.thePlayer != null && mc.theWorld != null) {
-                if (!mc.inGameHasFocus || mc.thePlayer.capabilities.isCreativeMode) {
+            if (mc.player != null && mc.world != null) {
+                if (!mc.inGameHasFocus || mc.player.capabilities.isCreativeMode) {
                     return;
                 }
 

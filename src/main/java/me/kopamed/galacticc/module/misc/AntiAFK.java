@@ -7,12 +7,13 @@ import me.kopamed.galacticc.module.Module;
 import me.kopamed.galacticc.settings.Setting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.settings.KeyBinding;
-import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraft.network.play.client.CPacketEntityAction;
+import net.minecraft.util.EnumHand;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-import org.lwjgl.input.Keyboard;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 public class AntiAFK extends Module {
-
+//todo check if this broke
     private final Minecraft mc = Minecraft.getMinecraft();
 
     private long afkStartTime = 0; // Time when the module was turned on
@@ -45,11 +46,11 @@ public class AntiAFK extends Module {
 
     @SubscribeEvent
     public void onClientTick(TickEvent.ClientTickEvent event) {
-        if (event.phase != TickEvent.Phase.END || mc.thePlayer == null || mc.theWorld == null) {
+        if (event.phase != TickEvent.Phase.END || mc.player == null || mc.world == null) {
             return;
         }
 
-        //************************Check Delay Timer**************************
+        // Check Delay Timer
         long delay = (long) (Galacticc.instance.settingsManager.getSettingByName(this, "Delay Timer").getValDouble() * 1000); // Convert seconds to milliseconds
         long currentTime = System.currentTimeMillis();
 
@@ -64,13 +65,15 @@ public class AntiAFK extends Module {
         boolean sneakEnabled = Galacticc.instance.settingsManager.getSettingByName(this, "Sneak").getValBoolean();
 
         if (punchEnabled) {
-            mc.thePlayer.swingItem(); // Perform punching animation
+            mc.player.swingArm(EnumHand.MAIN_HAND); // Perform punching animation
         }
 
         if (sneakEnabled) {
             // Simulate pressing the sneak key
             KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), true); // Start sneaking
-            mc.thePlayer.sendQueue.addToSendQueue(new net.minecraft.network.play.client.C0BPacketEntityAction(mc.thePlayer, net.minecraft.network.play.client.C0BPacketEntityAction.Action.START_SNEAKING));
+            if (mc.getConnection() != null) {
+                mc.getConnection().sendPacket(new CPacketEntityAction(mc.player, CPacketEntityAction.Action.START_SNEAKING));
+            }
 
             try {
                 Thread.sleep(100); // Short delay to simulate sneak press
@@ -79,7 +82,9 @@ public class AntiAFK extends Module {
 
             // Simulate releasing the sneak key
             KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(), false); // Stop sneaking
-            mc.thePlayer.sendQueue.addToSendQueue(new net.minecraft.network.play.client.C0BPacketEntityAction(mc.thePlayer, net.minecraft.network.play.client.C0BPacketEntityAction.Action.STOP_SNEAKING));
+            if (mc.getConnection() != null) {
+                mc.getConnection().sendPacket(new CPacketEntityAction(mc.player, CPacketEntityAction.Action.STOP_SNEAKING));
+            }
         }
     }
 

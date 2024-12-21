@@ -16,9 +16,9 @@ public class PlayerESP extends Module {
 
     @Override
     public void onEnabled() {
-        for(int k = 0; k < mc.theWorld.playerEntities.size(); k++) {
-            EntityPlayer ent = mc.theWorld.playerEntities.get(k);
-            if (!ent.getName().equalsIgnoreCase(mc.thePlayer.getName())) {
+        for(int k = 0; k < mc.world.playerEntities.size(); k++) {
+            EntityPlayer ent = mc.world.playerEntities.get(k);
+            if (!ent.getName().equalsIgnoreCase(mc.player.getName())) {
                 for (EntityPlayer bot : Galacticc.instance.getBots()) {
                     if (ent.getName().equalsIgnoreCase(bot.getName())) {
                         //System.out.println("Rendering BOT "  + ent.getDisplayNameString() + " with cutoms nametag " + ent.getCustomNameTag() + " with health " + ent.getHealth());

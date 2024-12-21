@@ -14,7 +14,10 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
 //todo: cleanup? and fix the funny hunger / heart / armor icon coloring.
 public class HUD extends Module {
     private boolean watermark, background, textShadow, active;
@@ -23,6 +26,10 @@ public class HUD extends Module {
     private int modColor = 0xFFFFFF;
     private int wmColor = 0xFF4500;
     private String sortMode;
+    // Track animation progress for modules
+    private final Map<Module, Long> moduleAnimationStartTimes = new HashMap<>();
+    private final Map<Module, Float> moduleAnimationProgress = new HashMap<>();
+    private final float ANIMATION_DURATION = 500.0F; // Duration of the animation in ms
     public List<Module> modList;
 
     public HUD() {
@@ -34,7 +41,7 @@ public class HUD extends Module {
         sort.add("kurz bis > lang");
         sort.add("Alphabetisch");
         sort.add("random");
-
+//todo fix gethudinfo
         Galacticc.instance.settingsManager.rSetting(new Setting("Arraylist sort", this, "lang bis > kurz", sort));
         Galacticc.instance.settingsManager.rSetting(new Setting("Modname", this, true));
         Galacticc.instance.settingsManager.rSetting(new Setting("Hintergrund", this, false));
@@ -75,7 +82,7 @@ public class HUD extends Module {
 
     @SubscribeEvent
     public void onRender(RenderGameOverlayEvent egoe) {
-        if (Galacticc.instance.destructed || egoe.type != RenderGameOverlayEvent.ElementType.CROSSHAIRS || !active) {
+        if (Galacticc.instance.destructed || egoe.getType() != RenderGameOverlayEvent.ElementType.CROSSHAIRS || !active) {
             return;
         }
 
@@ -112,7 +119,7 @@ public class HUD extends Module {
 
     private void renderWatermark(ScaledResolution sr) {
         String waterMarkText = Galacticc.MODID + Galacticc.VERSION.toUpperCase();
-        FontRenderer fr = Minecraft.getMinecraft().fontRendererObj;
+        FontRenderer fr = Minecraft.getMinecraft().fontRenderer;
 
         if (background) {
             Gui.drawRect(sr.getScaledWidth() - fr.getStringWidth(waterMarkText) - waterMarkMargin * 2 - rightOffSet,
@@ -136,7 +143,7 @@ public class HUD extends Module {
     }
 
     private void renderModules(ScaledResolution sr) {
-        FontRenderer fr = Minecraft.getMinecraft().fontRendererObj;
+        FontRenderer fr = Minecraft.getMinecraft().fontRenderer;
 
         // Fetch text colors setting and RGBA values
         boolean useColors = Galacticc.instance.settingsManager.getSettingByName(this, "Colors").getValBoolean();
@@ -154,33 +161,29 @@ public class HUD extends Module {
         int bgBlue = (int) Galacticc.instance.settingsManager.getSettingByName(this, "BG Blau").getValDouble();
         int bgAlpha = (int) Galacticc.instance.settingsManager.getSettingByName(this, "BG Alpha").getValDouble();
 
-        // Fetch settings for gradient colors
-        boolean useGradientColors = Galacticc.instance.settingsManager.getSettingByName(this, "Gradient Colors").getValBoolean();
-        int gradRed = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Gradient Rot").getValDouble();
-        int gradGreen = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Gradient Green").getValDouble();
-        int gradBlue = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Gradient Blau").getValDouble();
-        int gradAlpha = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Gradient Alpha").getValDouble();
-
-        boolean useAnimatedGradient = Galacticc.instance.settingsManager.getSettingByName(this, "AnimatedGradient").getValBoolean();
-        double gradientSpeed = Galacticc.instance.settingsManager.getSettingByName(this, "Gradient Speed").getValDouble();
-
         int backgroundColor = (bgAlpha << 24) | (bgRed << 16) | (bgGreen << 8) | bgBlue;
 
-        long currentTime = System.currentTimeMillis(); // Time for animation
-        int moduleCount = modList.size(); // Total modules for gradient calculation
+        long currentTime = System.currentTimeMillis();
+        int moduleCount = modList.size();
         int moduleIndex = 0; // Start from bottom
 
-        for (int i = moduleCount - 1; i >= 0; i--) { // Reverse order for bottom-to-top gradient
+        for (int i = moduleCount - 1; i >= 0; i--) {
             Module mod = modList.get(i);
             if (mod.visible && mod.isToggled()) {
-                // Check the global flag and suppress HUD info if needed
-                String hudInfo = Module.hideHUDInfo ? null : mod.getHUDInfo();
-                String displayText = mod.getName() + (hudInfo != null ? " " + hudInfo : ""); // Append HUD info to the module name
+                moduleAnimationStartTimes.putIfAbsent(mod, currentTime);
+                float elapsed = currentTime - moduleAnimationStartTimes.get(mod);
+                // Calculate vertical animation progress (0.0F to 1.0F)
+                float progress = Math.min(elapsed / ANIMATION_DURATION, 1.0F);
+
+                // Calculate horizontal animation position
+                int finalX = sr.getScaledWidth() - fr.getStringWidth(mod.getName()) - rightOffSet - margin;
+                int startX = sr.getScaledWidth();
+                int currentX = (int) (startX - (startX - finalX) * progress);
 
                 // Render background if enabled
-                if (background) {
+                if (useBackgroundColors) {
                     Gui.drawRect(
-                            sr.getScaledWidth() - fr.getStringWidth(displayText) - margin * 2 - rightOffSet,
+                            currentX - margin,
                             topOffSet,
                             sr.getScaledWidth() - rightOffSet,
                             topOffSet + margin * 2 + fr.FONT_HEIGHT,
@@ -188,49 +191,38 @@ public class HUD extends Module {
                     );
                 }
 
-                // Calculate color for the module
+                // Render module text
                 int renderColor = textColor;
                 if (useColors) {
-                    if (useAnimatedGradient) {
-                        // Animated gradient with bottom-to-top progression
-                        float hue = ((currentTime % (int) (5000 / gradientSpeed)) / (5000.0F / (float) gradientSpeed) + (float) moduleIndex / moduleCount) % 1.0F;
-                        int animatedColor = Color.HSBtoRGB(hue, 1.0F, 1.0F);
-                        int animatedAlpha = (int) (textAlpha * ((animatedColor >> 24) & 0xFF) / 255.0F); // Preserve alpha
-                        renderColor = (animatedAlpha << 24) | (animatedColor & 0xFFFFFF); // Combine alpha and RGB
-                    } else if (useGradientColors) {
-                        // Static gradient logic (bottom-to-top)
-                        float progress = (float) moduleIndex / (float) moduleCount;
-                        int blendedRed = (int) ((1 - progress) * textRed + progress * gradRed);
-                        int blendedGreen = (int) ((1 - progress) * textGreen + progress * gradGreen);
-                        int blendedBlue = (int) ((1 - progress) * textBlue + progress * gradBlue);
-                        int blendedAlpha = (int) ((1 - progress) * textAlpha + progress * gradAlpha);
-                        renderColor = (blendedAlpha << 24) | (blendedRed << 16) | (blendedGreen << 8) | blendedBlue;
-                    }
+                    // Replace the helper method with direct logic (if any special color effect is needed)
+                    renderColor = textColor; // Simplify to always use textColor if no special effect is needed
                 }
 
-                // Render module text
                 if (textShadow) {
                     fr.drawStringWithShadow(
-                            displayText,
-                            sr.getScaledWidth() - fr.getStringWidth(displayText) - rightOffSet - margin,
+                            mod.getName(),
+                            currentX,
                             topOffSet + margin,
                             renderColor
                     );
                 } else {
                     fr.drawString(
-                            displayText,
-                            sr.getScaledWidth() - fr.getStringWidth(displayText) - rightOffSet - margin,
+                            mod.getName(),
+                            currentX,
                             topOffSet + margin,
                             renderColor
                     );
                 }
 
                 topOffSet += fr.FONT_HEIGHT + margin * 2;
-                moduleIndex++; // Increment for gradient calculation
+                moduleIndex++;
             }
         }
+
+        // Cleanup animation data for removed modules
+        moduleAnimationStartTimes.keySet().removeIf(mod -> !modList.contains(mod) || !mod.isToggled());
     }
-    
+
     @Override
     public void onEnabled() {
         super.onEnabled();

@@ -1,6 +1,6 @@
 //Noi bypass lol sry vbabay ur going back to mumbay
 package me.kopamed.galacticc.module.movement;
-
+//todo maybe only trigger if elytra enabled?
 import me.kopamed.galacticc.Galacticc;
 import me.kopamed.galacticc.module.Category;
 import me.kopamed.galacticc.module.Module;
@@ -18,11 +18,11 @@ public class Fly extends Module {
     @Override
     public void onEnabled() {
         super.onEnabled();
-        if (mc.thePlayer != null) {
-            if (!mc.thePlayer.capabilities.isFlying) {
-                mc.thePlayer.jump();
-                mc.thePlayer.capabilities.allowFlying = true;
-                mc.thePlayer.capabilities.isFlying = true;
+        if (mc.player != null) {
+            if (!mc.player.capabilities.isFlying) {
+                mc.player.jump();
+                mc.player.capabilities.allowFlying = true;
+                mc.player.capabilities.isFlying = true;
             }
         }
     }
@@ -30,10 +30,10 @@ public class Fly extends Module {
     @Override
     public void onDisabled() {
         super.onDisabled();
-        if (mc.thePlayer != null) {
-            if (mc.thePlayer.capabilities.allowFlying) {
-                mc.thePlayer.capabilities.allowFlying = false;
-                mc.thePlayer.capabilities.isFlying = false;
+        if (mc.player != null) {
+            if (mc.player.capabilities.allowFlying) {
+                mc.player.capabilities.allowFlying = false;
+                mc.player.capabilities.isFlying = false;
             }
         }
     }

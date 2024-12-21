@@ -60,7 +60,7 @@ public class ModeButton extends Component {
 
 		GL11.glPushMatrix();
 		GL11.glScalef(0.5f, 0.5f, 0.5f);
-		Minecraft.getMinecraft().fontRendererObj.drawStringWithShadow(
+		Minecraft.getMinecraft().fontRenderer.drawStringWithShadow(
 				"Mode: " + set.getValString(),
 				(parent.parent.getX() + 7) * 2,
 				(parent.parent.getY() + offset + 2) * 2 + 5,
