@@ -29,7 +29,7 @@ public class AutoFish extends Module {
     }
 
     //************************Initialization and Toggle State Management**************************//
-
+//todo comment cleanup
     @Override
     public void onEnabled() {
         super.onEnabled();

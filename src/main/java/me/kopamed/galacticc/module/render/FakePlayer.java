@@ -10,6 +10,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.entity.EntityOtherPlayerMP;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.entity.item.EntityTNTPrimed;
 import net.minecraft.init.Items;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.BlockPos;
@@ -28,6 +29,7 @@ public class FakePlayer extends Module {
     private EntityOtherPlayerMP fakePlayer; // The fake player entity
     private float angle; // Current angle for walking in a circle
     private long lastEatTime; // Track the last time the fake player ate
+    private static final net.minecraft.util.DamageSource FAKE_EXPLOSION_DAMAGE = new net.minecraft.util.DamageSource("fakeExplosion").setExplosion();
 
     public FakePlayer() {
         super("FakePlayer", "Spawns a fake player (Notch) that walks in a circle around you.", true, false, Category.VISUELLES);
@@ -77,6 +79,9 @@ public class FakePlayer extends Module {
 
         // Step handling
         handleStepLogic();
+
+        // Call custom damage handling
+        handleDamage();
 
         // Handle regeneration if enabled
         if (Galacticc.instance.settingsManager.getSettingByName(this, "Regenerate").getValBoolean()) {
@@ -208,6 +213,50 @@ public class FakePlayer extends Module {
         });
         EnchantmentHelper.setEnchantments(enchantmentMap, itemStack);
         return itemStack;
+    }
+
+    private void handleDamage() {
+        if (fakePlayer == null) return;
+
+        // Handle damage from explosions
+        fakePlayer.worldObj.getEntitiesWithinAABBExcludingEntity(fakePlayer, fakePlayer.getEntityBoundingBox().expand(5.0, 5.0, 5.0))
+                .stream()
+                .filter(entity -> entity instanceof EntityTNTPrimed)
+                .forEach(entity -> {
+                    EntityTNTPrimed tnt = (EntityTNTPrimed) entity;
+
+                    // Simulate explosion damage when TNT is about to explode
+                    if (tnt.fuse <= 1) { // Fuse of 0 or 1 means it’s exploding
+                        double distance = fakePlayer.getDistance(tnt.posX, tnt.posY, tnt.posZ);
+                        double maxDamageDistance = 5.0; // Explosion radius
+                        if (distance <= maxDamageDistance) {
+                            float damage = (float) (10.0 * (1.0 - distance / maxDamageDistance)); // Scale damage by distance
+                            fakePlayer.attackEntityFrom(FAKE_EXPLOSION_DAMAGE, damage);
+                        }
+                    }
+                });
+
+        // Handle damage from your sword
+        if (mc.objectMouseOver != null && mc.objectMouseOver.entityHit == fakePlayer && mc.gameSettings.keyBindAttack.isKeyDown()) {
+            fakePlayer.attackEntityFrom(net.minecraft.util.DamageSource.causePlayerDamage(mc.thePlayer), 8.0F); // Example sword damage
+        }
+
+        // Handle damage from your arrows
+        fakePlayer.worldObj.getEntitiesWithinAABBExcludingEntity(fakePlayer, fakePlayer.getEntityBoundingBox().expand(5.0, 5.0, 5.0))
+                .stream()
+                .filter(entity -> entity instanceof net.minecraft.entity.projectile.EntityArrow)
+                .forEach(entity -> {
+                    net.minecraft.entity.projectile.EntityArrow arrow = (net.minecraft.entity.projectile.EntityArrow) entity;
+                    if (arrow.shootingEntity == mc.thePlayer) { // Only accept arrows shot by you
+                        fakePlayer.attackEntityFrom(net.minecraft.util.DamageSource.causeArrowDamage(arrow, arrow.shootingEntity), 5.0F); // Example arrow damage
+                        arrow.setDead(); // Remove arrow after hitting
+                    }
+                });
+
+        // Prevent death
+        if (fakePlayer.getHealth() <= 0.0F) {
+            fakePlayer.setHealth(fakePlayer.getMaxHealth()); // Reset health
+        }
     }
 
     @Override

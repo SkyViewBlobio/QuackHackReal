@@ -87,6 +87,14 @@ public class Module {
         }
     }
 
+    public void onUpdate() {
+        // Default behavior, can be overridden
+    }
+
+    public void onRender3D() {
+        // Default behavior, can be overridden
+    }
+
     public void onEnabled() {
         System.out.println("Enabled " + this.name);
         MinecraftForge.EVENT_BUS.register(this);
