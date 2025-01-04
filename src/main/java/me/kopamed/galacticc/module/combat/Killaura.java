@@ -87,7 +87,8 @@ public class Killaura extends Module {
     @SubscribeEvent
     public void onMotion(TickEvent.PlayerTickEvent event) {
         updateVals();
-        if (event.phase != TickEvent.Phase.START || mc.player.isSpectator()) {
+        // Check if mc.player is not null before proceeding
+        if (mc.player == null || event.phase != TickEvent.Phase.START || mc.player.isSpectator()) {
             return;
         }
 
