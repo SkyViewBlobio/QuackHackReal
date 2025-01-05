@@ -22,7 +22,7 @@ import java.util.List;
 
 public class Galacticc {
     public static final String MODID = "quackhack";
-    public static final String VERSION = " v1.6.8";
+    public static final String VERSION = " v1.7.2";
     public static String prefix = ".";
 
     public static Galacticc instance;

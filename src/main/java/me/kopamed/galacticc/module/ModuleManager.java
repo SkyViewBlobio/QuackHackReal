@@ -26,9 +26,9 @@ public class ModuleManager {
         //this.modules.add(new AutoClicker());
         this.modules.add(new Velocity());
         this.modules.add(new DelayRemover());
-        this.modules.add(new Killaura());
         this.modules.add(new Reach());
         this.modules.add(new Criticals());
+        this.modules.add(new Killaurarewrite());
         // need to fix autostart. this.modules.add(new AutoClicker());
 
         //************************Mod**************************//
@@ -80,6 +80,8 @@ public class ModuleManager {
         //this.modules.add(new SelfDestruct());
         this.modules.add(new PlayerESP());
 
+        //************************OLD*****************//
+        //this.modules.add(new Killaura()); keep in use?
 
         // Initialize open states
         for (Module module : modules) {

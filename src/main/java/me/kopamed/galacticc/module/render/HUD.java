@@ -25,7 +25,7 @@ public class HUD extends Module {
     private int wmColor = 0xFF4500;
     private String sortMode;
     public List<Module> modList;
-//todo fix this ASAP! its now on a lazy fix but we gotta fix the invert colors if hintergrund is disabled. currently hintergrund doesnt even work so yea. idk.
+    //todo fix this ASAP! its now on a lazy fix but we gotta fix the invert colors if hintergrund is disabled. currently hintergrund doesnt even work so yea. idk.
     public HUD() {
         super("Bildschirmzeugs", "@Hauptinformationen: " +
                 "Zeigt dir den Modnamen, die aktiven Module, laesst dich die Farben von den benannten Dingen aendern", false, false, Category.VISUELLES);
@@ -112,27 +112,38 @@ public class HUD extends Module {
     }
 
     private void renderWatermark(ScaledResolution sr) {
-        String waterMarkText = Galacticc.MODID + Galacticc.VERSION.toUpperCase();
-        FontRenderer fr = Minecraft.getMinecraft().fontRenderer;
+        String waterMarkText = "QuackHack | 1.12.2+Internal | v1.7.1"; // Static watermark text
+        FontRenderer fr = Minecraft.getMinecraft().fontRenderer;  // Updated here
 
+        // Draw a border around the watermark (this still remains)
         if (background) {
-            Gui.drawRect(sr.getScaledWidth() - fr.getStringWidth(waterMarkText) - waterMarkMargin * 2 - rightOffSet,
-                    topOffSet, sr.getScaledWidth() - rightOffSet,
-                    topOffSet + waterMarkMargin * 2 + fr.FONT_HEIGHT, 0x90000000);
-            Gui.drawRect(sr.getScaledWidth() - fr.getStringWidth(waterMarkText) - waterMarkMargin * 2 - rightOffSet - miniboxWidth,
-                    topOffSet, sr.getScaledWidth() - fr.getStringWidth(waterMarkText) - waterMarkMargin * 2 - rightOffSet,
-                    topOffSet + waterMarkMargin * 2 + fr.FONT_HEIGHT, 0xffff4500);
-        }
-        if (textShadow) {
-            fr.drawStringWithShadow(waterMarkText,
-                    sr.getScaledWidth() - fr.getStringWidth(waterMarkText) - rightOffSet - waterMarkMargin,
-                    topOffSet + waterMarkMargin, wmColor);
-        } else {
-            fr.drawString(waterMarkText,
-                    sr.getScaledWidth() - fr.getStringWidth(waterMarkText) - rightOffSet - waterMarkMargin,
-                    topOffSet + waterMarkMargin, wmColor);
+            Gui.drawRect(
+                    sr.getScaledWidth() - fr.getStringWidth(waterMarkText) - waterMarkMargin * 2 - rightOffSet - miniboxWidth,
+                    topOffSet,
+                    sr.getScaledWidth() - fr.getStringWidth(waterMarkText) - waterMarkMargin * 2 - rightOffSet,
+                    topOffSet + waterMarkMargin * 2 + fr.FONT_HEIGHT,
+                    0xffff4500
+            );
         }
 
+        // Draw the watermark text with or without shadow
+        if (textShadow) {
+            fr.drawStringWithShadow(
+                    waterMarkText,
+                    sr.getScaledWidth() - fr.getStringWidth(waterMarkText) - rightOffSet - waterMarkMargin,
+                    topOffSet + waterMarkMargin,
+                    wmColor
+            );
+        } else {
+            fr.drawString(
+                    waterMarkText,
+                    sr.getScaledWidth() - fr.getStringWidth(waterMarkText) - rightOffSet - waterMarkMargin,
+                    topOffSet + waterMarkMargin,
+                    wmColor
+            );
+        }
+
+        // Adjust the vertical offset for the next element
         topOffSet += fr.FONT_HEIGHT + waterMarkMargin * 2;
     }
 

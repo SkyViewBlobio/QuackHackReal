@@ -53,4 +53,11 @@
  *
  * By following these structure guidelines, I aim to create a well-organized and easy-to-maintain
  * Minecraft client while adhering to good coding practices.
+ *
+ * ------------------------------------------examples---------------------------------------
+ *     @Override
+    public String getHUDInfo() {
+        String or boolean example = Galacticc.instance.settingsManager.getSettingByName(this, "exampleInformation").getValString();
+        return ChatFormatting.GRAY + "[" + ChatFormatting.GRAY + exampleinformation + ChatFormatting.GRAY + "]";
+    }
  */

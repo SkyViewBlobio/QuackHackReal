@@ -12,7 +12,7 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 import java.util.ArrayList;
 
 public class Step extends Module {
-
+//todo make this not pull us down if we are in water.
     private static final Minecraft mc = Minecraft.getMinecraft();
 
     public Step() {
