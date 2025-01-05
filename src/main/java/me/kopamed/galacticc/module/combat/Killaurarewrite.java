@@ -34,16 +34,16 @@ public class Killaurarewrite extends Module {
         super("Aura", "@Hauptinformation: " +
                 "Greift Gegner automatisch an und beschutzt dich somit. " +
                 "@Optionen: " +
-                "- Attack Mode bietet drei Modi: " +
-                "- Einzel greift nur ein Ziel an. " +
-                "- Multi greift alle Ziele in  einer 4.5-Block Reichweite an. " +
-                "- Closest priorisiert das naeheste Ziel. " +
-                "- Kategorien zum Angriff: " +
-                "- Attack Monsters greift feindliche Kreaturen an. " +
-                "- Attack Animals greift Tiere an. " +
-                "- Attack Neutral greift neutrale Kreaturen an. " +
-                "- Attack Players greift andere Spieler an. " +
-                "- Die Reichweite des Moduls betraegt 4.5 Bloecke. " +
+                "- Attack Mode bietet drei Modi:  || " +
+                "- Einzel greift nur ein Ziel an. || " +
+                "- Multi greift alle Ziele in  einer 6-Block Reichweite an. || " +
+                "- Closest priorisiert das naeheste Ziel. || " +
+                "- Kategorien zum Angriff: || " +
+                "- Attack Monsters greift feindliche Kreaturen an. || " +
+                "- Attack Animals greift Tiere an. || " +
+                "- Attack Neutral greift neutrale Kreaturen an. || " +
+                "- Attack Players greift andere Spieler an. || " +
+                "- Die Reichweite des Moduls betraegt 6 Bloecke. || " +
                 "- Unterstuetzt Sweeping Edge und fuegt mehreren Zielen in einem Schwung Schaden zu.",
                 true, false, Category.ANGRIFF);
 
@@ -87,12 +87,12 @@ public class Killaurarewrite extends Module {
         boolean attackNeutral = Galacticc.instance.settingsManager.getSettingByName(this, "Attack Neutral").getValBoolean();
         boolean attackPlayers = Galacticc.instance.settingsManager.getSettingByName(this, "Attack Players").getValBoolean();
 
-        // Get all entities in range (6 blocks now)
-        List<Entity> entitiesInRange = mc.world.getEntitiesWithinAABB(Entity.class, mc.player.getEntityBoundingBox().grow(6.0));
+        // Copy entities into a local list to avoid concurrent modification issues
+        List<EntityLivingBase> entitiesInRange = new ArrayList<>(mc.world.getEntitiesWithinAABB(EntityLivingBase.class, mc.player.getEntityBoundingBox().grow(6.0)));
 
         List<Entity> targets = new ArrayList<>();
-        for (Entity entity : mc.world.getEntitiesWithinAABB(EntityLivingBase.class, mc.player.getEntityBoundingBox().grow(6.0))) {
-            if (entity == mc.player || !entity.isEntityAlive()) {
+        for (Entity entity : entitiesInRange) {
+            if (entity == null || entity == mc.player || !entity.isEntityAlive()) {
                 continue;
             }
 

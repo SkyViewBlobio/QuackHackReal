@@ -29,6 +29,7 @@ public class ModuleManager {
         this.modules.add(new Reach());
         this.modules.add(new Criticals());
         this.modules.add(new Killaurarewrite());
+        this.modules.add(new AutomaticTotemOffhand());
         // need to fix autostart. this.modules.add(new AutoClicker());
 
         //************************Mod**************************//

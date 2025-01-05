@@ -19,16 +19,16 @@ import java.util.ArrayList;
 public class ArmorDisplay extends Module {
 
     public ArmorDisplay() {
-        super("Rustung Zeiger",
-      "@Hauptinformation: " +
+        super("Rustung Zeiger", "@Hauptinformation: " +
                 "Zeigt dir deine Ruestung in verschiedenen layouts und laesst dich wichtige Informationen wissen. || " +
                 "@Optionen:" +
                 "- Verticales layout: Zeigt dir die Ruestung in vertikaler Reihenfolge. || " +
-                "- Balken und Nummern modes lassen dich die anzeige der rest-Haltbarkeit in nummer-form oder in Balkenformat praesentieren.", false, false, Category.VISUELLES);
+                "- Balken und Nummern modes lassen dich die anzeige der rest-Haltbarkeit in nummer-form oder in Balkenformat praesentieren.",
+                false, false, Category.VISUELLES);
 
         // Add position settings
-        Galacticc.instance.settingsManager.rSetting(new Setting("X Offset", this, 0, -500, 500, true));
-        Galacticc.instance.settingsManager.rSetting(new Setting("Y Offset", this, 0, -500, 500, true));
+        Galacticc.instance.settingsManager.rSetting(new Setting("X Offset", this, 11, -500, 500, true));
+        Galacticc.instance.settingsManager.rSetting(new Setting("Y Offset", this, -11, -500, 500, true));
 
         // Add layout setting (horizontal/vertical)
         Galacticc.instance.settingsManager.rSetting(new Setting("Verticales Layout", this, false));

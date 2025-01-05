@@ -41,7 +41,7 @@ public class FastPlace extends Module {
         onlyBlocks = Galacticc.instance.settingsManager.getSettingByName(this, "Only Blocks").getValBoolean();
 
         if (e.phase == TickEvent.Phase.END) {
-            if (onlyBlocks) {//todo cleanup and try to see if this even works?
+            if (onlyBlocks) {//todo cleanup and try to see if this even works? fix also check console
                 ItemStack item = e.player.getHeldItem(EnumHand.MAIN_HAND);
                 if (item.isEmpty() || !(item.getItem() instanceof ItemBlock)) {
                     return;
