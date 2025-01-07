@@ -29,7 +29,7 @@ public class ClickGui extends GuiScreen {
 
 	public ClickGui() {
 		this.frames = new ArrayList<>();
-		int frameX = 100;// center stuff
+		int frameX = 35;// center stuff
 		for (Category category : Category.values()) {
 			Frame frame = new Frame(category);
 			frame.setX(frameX);
@@ -96,7 +96,7 @@ public class ClickGui extends GuiScreen {
 	private void renderDescriptionSection(int mouseX, int mouseY) {
 		Module clickGuiModule = Galacticc.instance.moduleManager.getModule("Menu");
 
-		// Fetch colors for the description box
+		// Fetch colors
 		int headerRed = (int) Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Header Rot").getValDouble();
 		int headerGreen = (int) Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Header Green").getValDouble();
 		int headerBlue = (int) Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Header Blau").getValDouble();
@@ -112,19 +112,16 @@ public class ClickGui extends GuiScreen {
 		int lineBlue = (int) Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Linie Blau").getValDouble();
 		int lineAlpha = (int) Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Linie Alpha").getValDouble();
 
-		// Initialize position if not set
 		if (descBoxX == -1) {
-			descBoxX = (this.width / 2) - 125; // Centered horizontally
-			descBoxY = this.height - 100;     // Positioned near the bottom
+			descBoxX = (this.width / 2) - 125;
+			descBoxY = this.height - 100;
 		}
 
-		// Locate hovered module
 		Module hoveredModule = null;
 		for (Frame frame : frames) {
 			for (Component component : frame.getComponents()) {
 				if (component instanceof Button) {
-					Button button =
-							(Button) component;
+					Button button = (Button) component;
 					if (button.isMouseOnButton(mouseX, mouseY)) {
 						hoveredModule = button.mod;
 						break;
@@ -133,55 +130,44 @@ public class ClickGui extends GuiScreen {
 			}
 		}
 
-		// Default message when no module is hovered
 		String description = (hoveredModule != null)
 				? hoveredModule.getDescription()
 				: "Halte deinen Mauszeiger ueber ein Modul um zu wissen was es tut.";
 
-		// Dimensions
-		int containerWidth = 250;
+		int containerWidth = 370;
 		int headerHeight = 20;
 
-		// Render "Beschreibung" header with slider-defined colors
 		Gui.drawRect(descBoxX, descBoxY, descBoxX + containerWidth, descBoxY + headerHeight,
 				new Color(headerRed, headerGreen, headerBlue, headerAlpha).getRGB());
 		this.fontRenderer.drawStringWithShadow("Beschreibung", descBoxX + 5, descBoxY + 5, 0xFFFFFF);
 
-		// Render description
 		int descriptionY = descBoxY + headerHeight + 5;
-		int lineWidth = containerWidth - 10; // Padding
-		ArrayList<String> lines = splitTextIntoLines(description, lineWidth);
+		ArrayList<String> lines = parseDescriptionIntoLines(description, containerWidth);
 
-		// Render the background container with slider-defined colors
-		Gui.drawRect(descBoxX, descriptionY - 5, descBoxX + containerWidth, descriptionY + lines.size() * 10 + 5,
+		int totalHeight = lines.size() * 10 + 10;
+		Gui.drawRect(descBoxX, descriptionY - 5, descBoxX + containerWidth, descriptionY + totalHeight,
 				new Color(containerRed, containerGreen, containerBlue, containerAlpha).getRGB());
 
 		for (String line : lines) {
 			this.fontRenderer.drawStringWithShadow(line, descBoxX + 5, descriptionY, 0xFFFFFF);
-			descriptionY += 10; // Line height
+			descriptionY += 10;
 		}
 
-		// Render border lines with slider-defined colors
 		Color lineColor = new Color(lineRed, lineGreen, lineBlue, lineAlpha);
-		Gui.drawRect(descBoxX - 1, descBoxY - 1, descBoxX + containerWidth + 1, descBoxY, lineColor.getRGB()); // Top line
-		Gui.drawRect(descBoxX - 1, descBoxY - 1, descBoxX, descriptionY + 1, lineColor.getRGB());             // Left line
-		Gui.drawRect(descBoxX + containerWidth, descBoxY - 1, descBoxX + containerWidth + 1, descriptionY + 1, lineColor.getRGB()); // Right line
-		Gui.drawRect(descBoxX - 1, descriptionY, descBoxX + containerWidth + 1, descriptionY + 1, lineColor.getRGB());             // Bottom line
+		Gui.drawRect(descBoxX - 1, descBoxY - 1, descBoxX + containerWidth + 1, descBoxY, lineColor.getRGB());
+		Gui.drawRect(descBoxX - 1, descBoxY - 1, descBoxX, descriptionY + 1, lineColor.getRGB());
+		Gui.drawRect(descBoxX + containerWidth, descBoxY - 1, descBoxX + containerWidth + 1, descriptionY + 10, lineColor.getRGB());
+		Gui.drawRect(descBoxX - 1, descriptionY, descBoxX + containerWidth + 1, descriptionY + 10, lineColor.getRGB());
 	}
 
-	// Utility to split long text into multiple lines
-	private ArrayList<String> splitTextIntoLines(String text, int maxWidth) {
+	private ArrayList<String> parseDescriptionIntoLines(String description, int maxWidth) {
 		ArrayList<String> lines = new ArrayList<>();
-		StringBuilder currentLine = new StringBuilder();
-		for (String word : text.split(" ")) {
-			if (this.fontRenderer.getStringWidth(currentLine + word) > maxWidth) {
-				lines.add(currentLine.toString());
-				currentLine = new StringBuilder();
+		for (String section : description.split("\\|")) { // Break by '|'
+			for (String sentence : section.split("\\.")) { // Break by '.'
+				if (!sentence.trim().isEmpty()) {
+					lines.add(sentence.trim());
+				}
 			}
-			currentLine.append(word).append(" ");
-		}
-		if (!currentLine.toString().isEmpty()) {
-			lines.add(currentLine.toString());
 		}
 		return lines;
 	}

@@ -60,4 +60,22 @@
         String or boolean example = Galacticc.instance.settingsManager.getSettingByName(this, "exampleInformation").getValString();
         return ChatFormatting.GRAY + "[" + ChatFormatting.GRAY + exampleinformation + ChatFormatting.GRAY + "]";
     }
+    *  * ------------------------------------------example  annotation descripotor formatting ---------------------------------------
+
+    *
+    *                         ChatFormatting.BLUE + ChatFormatting.BOLD + ChatFormatting.UNDERLINE + "Nutzungsinformation:" + ChatFormatting.WHITE +
+    *
+    *     *  * ------------------------------------------example  annotation setting formatting ---------------------------------------
+
+    *
+    *                       ChatFormatting.RED + ChatFormatting.UNDERLINE +  "- Horizontal Speed:" + ChatFormatting.WHITE +
+    *
+    * ++++++++++++++++++++++++++++++++++++++++++++++++++++++++IMPORTANT DESCRIPTION INFORMATION+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+    * AFTER EVERY POINT WE BREAK THE SENTENCE IN THE DESCRIPTION TAB.
+    * AFTER EVERY | WE BREAK THE SENTENCE IN THE DESCRIPTION TAB.
+    * | CAN BE USED TO BREAK THE SENTENCE MID SENTENCE TO PREVENT OVER-EXCEEDING THE TAB LIMIT.
+    * GENERAL RULE FOR CLEAR VISIBLE SENTENCES IS AFTER EVERY HAUPTINFORMATION: WE SPLIT.
+    * GENERAL RULE FOR CLEANER SETTING SENTENCES AND SPACING AFTER EVERY OPTION: WE SPLIT ONCE, THEN SPLIT AGAIN TO ISOLATE THE WITH SPACE FOR BETTER FORMATTING. REPEAT AFTER FINISH.
+
+
  */

@@ -46,6 +46,7 @@ public class ModuleManager {
         this.modules.add(new GlideJump());
         this.modules.add(new NoFall());
         this.modules.add(new InventoryMovementBypass());
+        this.modules.add(new ElytraFly());
 
         //************************PLAYER**************************//
 

@@ -27,19 +27,19 @@ public class Frame {
 	public Frame(Category cat) {
 		this.components = new ArrayList<>();
 		this.category = cat;
-		this.width = 88;
+		this.width = 108;
 		this.x = 5;
 		this.y = 5;
 		this.barHeight = 13;
 		this.dragX = 0;
-		this.open = false;
+		this.open = true;
 		this.isDragging = false;
 		int tY = this.barHeight;
 
 		for (Module mod : Galacticc.instance.moduleManager.getModulesInCategory(category)) {
 			Button modButton = new Button(mod, this, tY);
 			this.components.add(modButton);
-			tY += 12;
+			tY += 17;
 		}
 	}
 
@@ -166,14 +166,44 @@ public class Frame {
 			Gui.drawRect(this.x - 1, currentY, this.x + this.width + 1, currentY + 1, lineColor.getRGB());
 		}
 
-		// Draw category name and toggle indicator
+// Draw category name and toggle indicator
 		GL11.glEnable(GL11.GL_TEXTURE_2D);
 		GL11.glEnable(GL11.GL_BLEND);
 		GL11.glBlendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+
+// Push matrix for scaling
 		GL11.glPushMatrix();
-		GL11.glScalef(0.5f, 0.5f, 0.5f);
-		fontRenderer.drawStringWithShadow(this.category.name(), (this.x + 2) * 2, (this.y + 2.5f) * 2, 0xFFFFFFFF);
-		fontRenderer.drawStringWithShadow(this.open ? "-" : "+", (this.x + this.width - 10) * 2, (this.y + 2.5f) * 2, -1);
+
+// Adjust scale factor to increase text size
+		float scaleFactor = 0.8f; // Increased from 0.5f
+		GL11.glScalef(scaleFactor, scaleFactor, scaleFactor);
+
+// Calculate adjusted coordinates for scaling
+		float scaledX = (this.x + 2) / scaleFactor;
+		float scaledY = (this.y + 2.5f) / scaleFactor;
+
+// Measure text widths
+		int categoryNameWidth = fontRenderer.getStringWidth(this.category.name());
+		int toggleIndicatorWidth = fontRenderer.getStringWidth(this.open ? "-" : "+");
+
+// Ensure text fits within the header
+		int maxTextWidth = (int) ((this.width - 12) / scaleFactor); // Adjusted for scaling
+		if (categoryNameWidth > maxTextWidth) {
+			// Truncate category name if it exceeds available width
+			String truncatedName = this.category.name();
+			while (fontRenderer.getStringWidth(truncatedName) > maxTextWidth && truncatedName.length() > 1) {
+				truncatedName = truncatedName.substring(0, truncatedName.length() - 1);
+			}
+			fontRenderer.drawStringWithShadow(truncatedName + "...", scaledX, scaledY, 0xFFFFFFFF);
+		} else {
+			fontRenderer.drawStringWithShadow(this.category.name(), scaledX, scaledY, 0xFFFFFFFF);
+		}
+
+// Render the toggle indicator at the end
+		float toggleX = (this.x + this.width - 10) / scaleFactor;
+		fontRenderer.drawStringWithShadow(this.open ? "-" : "+", toggleX, scaledY, -1);
+
+// Restore the matrix state
 		GL11.glPopMatrix();
 		GL11.glDisable(GL11.GL_BLEND);
 	}

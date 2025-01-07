@@ -37,22 +37,22 @@ public class Button extends Component {
 		this.offset = offset;
 		this.subcomponents = new ArrayList<Component>();
 		this.open = Galacticc.instance.moduleManager.isModuleOpen(mod); // Retrieve persisted state
-		height = 12;
+		height = 17;
 
-		int opY = offset + 12;
+		int opY = offset + 17;
 		if (Galacticc.instance.settingsManager.getSettingsByMod(mod) != null) {
 			for (Setting s : Galacticc.instance.settingsManager.getSettingsByMod(mod)) {
 				if (s.isCombo()) {
 					this.subcomponents.add(new ModeButton(s, this, mod, opY));
-					opY += 12;
+					opY += 17;
 				}
 				if (s.isSlider()) {
 					this.subcomponents.add(new Slider(s, this, opY));
-					opY += 12;
+					opY += 17;
 				}
 				if (s.isCheck()) {
 					this.subcomponents.add(new Checkbox(s, this, opY));
-					opY += 12;
+					opY += 17;
 				}
 			}
 		}
@@ -63,10 +63,10 @@ public class Button extends Component {
 	@Override
 	public void setOff(int newOff) {
 		offset = newOff;
-		int opY = offset + 12;
+		int opY = offset + 17;
 		for(Component comp : this.subcomponents) {
 			comp.setOff(opY);
-			opY += 12;
+			opY += 17;
 		}
 	}
 
@@ -107,16 +107,16 @@ public class Button extends Component {
 
 		boolean enableGradient = Galacticc.instance.settingsManager.getSettingByName(clickGuiModule, "Enable Gradient Modul").getValBoolean();
 		// Check for null and assign default values if necessary
-        if (headerRotSetting != null) {
-            headerRotSetting.getValDouble();
-        }
-        if (headerGreenSetting != null) {
-            headerGreenSetting.getValDouble();
-        }
-        if (headerBlueSetting != null) {
-            headerBlueSetting.getValDouble();
-        }
-        int headerAlpha = headerAlphaSetting != null ? (int) headerAlphaSetting.getValDouble() : 255;
+		if (headerRotSetting != null) {
+			headerRotSetting.getValDouble();
+		}
+		if (headerGreenSetting != null) {
+			headerGreenSetting.getValDouble();
+		}
+		if (headerBlueSetting != null) {
+			headerBlueSetting.getValDouble();
+		}
+		int headerAlpha = headerAlphaSetting != null ? (int) headerAlphaSetting.getValDouble() : 255;
 
 		// Compute color values
 		int backgroundColor = new Color(
@@ -153,42 +153,60 @@ public class Button extends Component {
 		if (enableGradient) {
 			if (isHovered) {
 				Gui.drawRect(parent.getX(), parent.getY() + offset, parent.getX() + parent.getWidth(),
-						parent.getY() + offset + 12, hoverColor);
+						parent.getY() + offset + 17, hoverColor);
 			} else {
 				drawGradientRect(parent.getX(), parent.getY() + offset, parent.getX() + parent.getWidth(),
-						parent.getY() + offset + 12, backgroundColor, gradientColor);
+						parent.getY() + offset + 17, backgroundColor, gradientColor);
 			}
 		} else {
 			Gui.drawRect(parent.getX(), parent.getY() + offset, parent.getX() + parent.getWidth(),
-					parent.getY() + offset + 12, colorToDraw);
+					parent.getY() + offset + 17, colorToDraw);
 		}
 
 		if (isActive) {
 			Gui.drawRect(parent.getX(), parent.getY() + offset, parent.getX() + parent.getWidth(),
-					parent.getY() + offset + 12, highlightColor);
+					parent.getY() + offset + 17, highlightColor);
 		}
 
-		// Render text and indicators
+// Render text and indicators
 		GL11.glPushMatrix();
-		GL11.glScalef(0.5f, 0.5f, 0.5f);
-		Minecraft.getMinecraft().fontRenderer.drawStringWithShadow(
-				this.mod.getName(),
-				(parent.getX() + 2) * 2,
-				(parent.getY() + offset + 2) * 2 + 4,
-				0xFFFFFFFF
-		);
 
-		if (this.subcomponents.size() > 2) {
-			Minecraft.getMinecraft().fontRenderer.drawStringWithShadow(
-					this.open ? "-" : "+",
-					(parent.getX() + parent.getWidth() - 10) * 2,
-					(parent.getY() + offset + 2) * 2 + 4,
-					0xFFFFFFFF
-			);
+// Adjust scale factor to increase text size
+		float scaleFactor = 0.6f; // Adjusted from 0.5f
+		GL11.glScalef(scaleFactor, scaleFactor, scaleFactor);
+
+// Calculate adjusted coordinates for scaling
+		float scaledX = (parent.getX() + 2) / scaleFactor;
+		float scaledY = ((parent.getY() + offset + 2) + 4) / scaleFactor;
+
+// Measure text widths
+		String moduleName = this.mod.getName();
+		int moduleNameWidth = Minecraft.getMinecraft().fontRenderer.getStringWidth(moduleName);
+		int maxTextWidth = (int) ((parent.getWidth() - 12) / scaleFactor); // Adjusted for scaling
+
+// Ensure module name fits within bounds
+		if (moduleNameWidth > maxTextWidth) {
+			// Truncate module name if it exceeds available width
+			while (Minecraft.getMinecraft().fontRenderer.getStringWidth(moduleName + "...") > maxTextWidth && moduleName.length() > 1) {
+				moduleName = moduleName.substring(0, moduleName.length() - 1);
+			}
+			moduleName += "...";
 		}
+
+// Render the module name
+		Minecraft.getMinecraft().fontRenderer.drawStringWithShadow(moduleName, scaledX, scaledY, 0xFFFFFFFF);
+
+// Render the toggle indicator if subcomponents exist
+		if (this.subcomponents.size() > 2) {
+			String toggleSymbol = this.open ? "-" : "+";
+			float toggleX = (parent.getX() + parent.getWidth() - 10) / scaleFactor;
+
+			Minecraft.getMinecraft().fontRenderer.drawStringWithShadow(toggleSymbol, toggleX, scaledY, 0xFFFFFFFF);
+		}
+
 		GL11.glPopMatrix();
 
-		// Render subcomponents if open
+// Render subcomponents if open
 		if (this.open) {
 			for (Component comp : subcomponents) {
 				comp.renderComponent();
@@ -238,9 +256,9 @@ public class Button extends Component {
 	@Override
 	public int getHeight() {
 		if(this.open) {
-			return (12 * (this.subcomponents.size() + 1));
+			return (17 * (this.subcomponents.size() + 1));
 		}
-		return 12;
+		return 17;
 	}
 
 	@Override
