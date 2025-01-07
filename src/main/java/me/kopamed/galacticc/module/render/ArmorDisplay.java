@@ -1,5 +1,6 @@
 package me.kopamed.galacticc.module.render;
 
+import com.mojang.realmsclient.gui.ChatFormatting;
 import me.kopamed.galacticc.Galacticc;
 import me.kopamed.galacticc.module.Category;
 import me.kopamed.galacticc.module.Module;
@@ -19,27 +20,25 @@ import java.util.ArrayList;
 public class ArmorDisplay extends Module {
 
     public ArmorDisplay() {
-        super("Rustung Zeiger", "@Hauptinformation: " +
-                "Zeigt dir deine Ruestung in verschiedenen layouts und laesst dich wichtige Informationen wissen. || " +
-                "@Optionen:" +
-                "- Verticales layout: Zeigt dir die Ruestung in vertikaler Reihenfolge. || " +
-                "- Balken und Nummern modes lassen dich die anzeige der rest-Haltbarkeit in nummer-form oder in Balkenformat praesentieren.",
+        super("Ruestung Zeiger", "" +
+                        ChatFormatting.BLUE + ChatFormatting.BOLD + ChatFormatting.UNDERLINE + "Hauptinformation:|" + ChatFormatting.WHITE +
+                        "Zeigt dir deine Ruestung an und liefert| wichtige Informationen wie Haltbarkeit." +
+                        ChatFormatting.BLUE + ChatFormatting.BOLD + ChatFormatting.UNDERLINE + "Optionen:|" + ChatFormatting.RED +
+                        "- Vertikales Layout: " + ChatFormatting.WHITE + "Zeigt die Ruestung in vertikaler Reihenfolge an." + ChatFormatting.RED +
+                        "- Haltbarkeitsanzeige: " + ChatFormatting.WHITE + "Wechselt zwischen Nummern| und Balken zur Darstellung der Haltbarkeit." + ChatFormatting.RED +
+                        "- Nummern: " + ChatFormatting.WHITE + "Zeigt die Haltbarkeit in Nummer-form." + ChatFormatting.RED +
+                        "- Balken: " + ChatFormatting.WHITE + "Zeigt dir die Haltbarkeit in Balken an sollte| deine Ruestung unter 99% Haltbarkeit liegen."
+                        ,
                 false, false, Category.VISUELLES);
 
-        // Add position settings
         Galacticc.instance.settingsManager.rSetting(new Setting("X Offset", this, 11, -500, 500, true));
         Galacticc.instance.settingsManager.rSetting(new Setting("Y Offset", this, -11, -500, 500, true));
-
-        // Add layout setting (horizontal/vertical)
         Galacticc.instance.settingsManager.rSetting(new Setting("Verticales Layout", this, false));
 
-        // Add mode settings
         ArrayList<String> durabilityModes = new ArrayList<>();
         durabilityModes.add("Nummern");
         durabilityModes.add("Balken");
         Galacticc.instance.settingsManager.rSetting(new Setting("Durability Mode", this, "Nummern", durabilityModes));
-
-        // Add RGB settings for durability text (Nummern mode)
         Galacticc.instance.settingsManager.rSetting(new Setting("Text Rot", this, 255, 0, 255, true));
         Galacticc.instance.settingsManager.rSetting(new Setting("Text Green", this, 255, 0, 255, true));
         Galacticc.instance.settingsManager.rSetting(new Setting("Text Blau", this, 255, 0, 255, true));
@@ -68,55 +67,44 @@ public class ArmorDisplay extends Module {
         int screenWidth = sr.getScaledWidth();
         int screenHeight = sr.getScaledHeight();
 
-        // Fetch settings
         int xOffset = (int) Galacticc.instance.settingsManager.getSettingByName(this, "X Offset").getValDouble();
         int yOffset = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Y Offset").getValDouble();
         boolean vertical = Galacticc.instance.settingsManager.getSettingByName(this, "Verticales Layout").getValBoolean();
         String mode = Galacticc.instance.settingsManager.getSettingByName(this, "Durability Mode").getValString();
 
-        // RGB for text (Nummern mode)
         int red = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Text Rot").getValDouble();
         int green = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Text Green").getValDouble();
         int blue = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Text Blau").getValDouble();
         int textColor = (0xFF << 24) | (red << 16) | (green << 8) | blue;
 
-        // Get armor inventory in correct order
         NonNullList<ItemStack> armorInventory = mc.player.inventory.armorInventory;
         ItemStack[] orderedArmor = new ItemStack[]{armorInventory.get(3), armorInventory.get(2), armorInventory.get(1), armorInventory.get(0)};
 
-        // Calculate positions
         int xStart = (screenWidth / 2) + xOffset;
         int yStart = screenHeight - 50 + yOffset;
 
         for (int i = 0; i < orderedArmor.length; i++) {
             ItemStack armorPiece = orderedArmor[i];
-            if (armorPiece == null) continue;
+            if (armorPiece.isEmpty()) continue;
 
-            // Adjust positions for vertical or horizontal layout
             int x = vertical ? xStart : xStart + (i * 20);
             int y = vertical ? yStart + (i * 20) : yStart;
 
-            // Draw armor piece
             drawItemIcon(armorPiece, x, y);
 
-            // Display durability based on mode
             int durability = armorPiece.getMaxDamage() - armorPiece.getItemDamage();
 
             if (mode.equals("Nummern")) {
-                // Scale down the font size further and adjust position
                 GlStateManager.pushMatrix();
-                GlStateManager.scale(0.7, 0.7, 1.0); // Scale text down to 60% size
+                GlStateManager.scale(0.7, 0.7, 1.0);
 
-                // Adjust x and y for proper alignment after scaling
-                int adjustedX = (int) ((x + 1) / 0.7); // Shift further left, adjust for scaling
-                int adjustedY = (int) ((y - 5) / 0.7); // Slightly closer to the armor piece
+                int adjustedX = (int) ((x + 1) / 0.7);
+                int adjustedY = (int) ((y - 5) / 0.7);
 
-                // Draw the durability number
                 mc.fontRenderer.drawStringWithShadow(String.valueOf(durability), adjustedX, adjustedY, textColor);
 
                 GlStateManager.popMatrix();
             } else if (mode.equals("Balken")) {
-                // Display durability as a bar
                 drawDurabilityBar(armorPiece, x, y + 16);
             }
         }
@@ -132,28 +120,28 @@ public class ArmorDisplay extends Module {
     private void drawDurabilityBar(ItemStack stack, int x, int y) {
         int maxDurability = stack.getMaxDamage();
         int currentDurability = maxDurability - stack.getItemDamage();
-        float durabilityPercent = (float) currentDurability / maxDurability;
 
-        // Calculate bar width
-        int barWidth = (int) (13 * durabilityPercent);
-
-        // Determine color based on durability percentage
-        int barColor;
-        if (durabilityPercent > 0.5f) {
-            barColor = 0xFF00FF00; // Green
-        } else if (durabilityPercent > 0.2f) {
-            barColor = 0xFFFFFF00; // Yellow
-        } else {
-            barColor = 0xFFFF0000; // Red
+        if (currentDurability == maxDurability) {
+            return;
         }
 
-        // Adjusted x-coordinate for horizontal alignment
-        int adjustedX = x + 2; // Move the bar 2 pixels to the right
+        float durabilityPercent = (float) currentDurability / maxDurability;
 
-        // Draw background bar (gray)
+        int barWidth = (int) (13 * durabilityPercent);
+
+        int barColor;
+        if (durabilityPercent > 0.5f) {
+            barColor = 0xFF00FF00;
+        } else if (durabilityPercent > 0.2f) {
+            barColor = 0xFFFFFF00;
+        } else {
+            barColor = 0xFFFF0000;
+        }
+
+        int adjustedX = x + 2;
+
         Gui.drawRect(adjustedX, y, adjustedX + 13, y + 2, 0xFF808080);
 
-        // Draw durability bar
         Gui.drawRect(adjustedX, y, adjustedX + barWidth, y + 2, barColor);
     }
 }

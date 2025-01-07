@@ -66,6 +66,7 @@ public class ModuleManager {
         this.modules.add(new FadeWalker());
         this.modules.add(new StorageESP());
         this.modules.add(new HoleESP());
+        this.modules.add(new ShulkerPreview());
         this.modules.add(new FakePlayer());
 
         //************************TEXT STUFF**************************//

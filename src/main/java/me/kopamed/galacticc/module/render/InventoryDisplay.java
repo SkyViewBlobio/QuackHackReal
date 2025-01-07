@@ -12,7 +12,7 @@ import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 public class InventoryDisplay extends Module {
-//todo test if works??
+
     private final Minecraft mc;
 
     public InventoryDisplay() {

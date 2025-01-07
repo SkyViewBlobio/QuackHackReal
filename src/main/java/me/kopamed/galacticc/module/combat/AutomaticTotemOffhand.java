@@ -38,9 +38,9 @@ public class AutomaticTotemOffhand extends Module {
                         "- Beste Essen: " + ChatFormatting.WHITE +
                         "Falls **Prioritise EnchantedApple** deaktiviert ist,| wird automatisch das| beste Essen in die Offhand genommen." + ChatFormatting.RED +
                         "- Kampfmodus: " + ChatFormatting.WHITE +
-                        "Erlaubt dir, waehrend des Kampfes mit einem Schwert in der| Offhand zu essen, ohne den Angriff| zu unterbrechen." + ChatFormatting.RED +
+                        "Erlaubt dir, waehrend des Kampfes| mit einem Schwert in der| Offhand zu essen, ohne den Angriff| zu unterbrechen." + ChatFormatting.RED +
                         "- Automatische Umschaltung: " + ChatFormatting.WHITE +
-                        "Halte den **RECHTEN MAUSKNOPF**| gedrueckt,| um zwischen Totem und Essen zu wechseln. Diese Funktion funktioniert nur mit| einem| Schwert in der Haupthand,| nicht mit anderen Werkzeugen." +
+                        "Halte den **RECHTEN MAUSKNOPF**| gedrueckt, um zwischen Totem und Essen zu wechseln. Diese Funktion| funktioniert nur mit einem Schwert| in der Haupthand, nicht mit anderen Werkzeugen." +
                         ChatFormatting.BLUE + ChatFormatting.BOLD + ChatFormatting.UNDERLINE + "Nutzungsinformation:|" + ChatFormatting.WHITE +
                         "Halte ein Schwert in der Haupthand und druecke| den **RECHTEN MAUSKNOPF**, um automatisch zwischen| Totem und Essen zu wechseln.",
                 true, false, Category.ANGRIFF);
