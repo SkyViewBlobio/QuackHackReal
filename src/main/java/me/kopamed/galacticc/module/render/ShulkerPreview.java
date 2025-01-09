@@ -39,7 +39,7 @@ public class ShulkerPreview extends Module {
         NBTTagCompound blockEntityTag = tag.getCompoundTag("BlockEntityTag");
         NBTTagList items = blockEntityTag.getTagList("Items", 10);
 
-        int adjustedX = event.getX() + 120;
+        int adjustedX = event.getX() + 150;
         int adjustedY = event.getY();
 
         renderShulkerPreview(adjustedX, adjustedY, items);

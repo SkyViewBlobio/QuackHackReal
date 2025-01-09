@@ -3,6 +3,8 @@ package me.kopamed.galacticc.module;
 import me.kopamed.galacticc.module.combat.*;
 import me.kopamed.galacticc.module.misc.AntiAFK;
 import me.kopamed.galacticc.module.misc.AutoFish;
+import me.kopamed.galacticc.module.misc.AutomaticCreeperLighter;
+import me.kopamed.galacticc.module.misc.RandomChatMessages;
 import me.kopamed.galacticc.module.mod.cKontrolle;
 import me.kopamed.galacticc.module.movement.*;
 import me.kopamed.galacticc.module.player.FastPlace;
@@ -38,6 +40,8 @@ public class ModuleManager {
         //************************MISC**************************//
         this.modules.add(new AutoFish());
         this.modules.add(new AntiAFK());
+        this.modules.add(new RandomChatMessages());
+        this.modules.add(new AutomaticCreeperLighter());
 
         //************************MOVEMENT**************************//
 
@@ -47,6 +51,8 @@ public class ModuleManager {
         this.modules.add(new NoFall());
         this.modules.add(new InventoryMovementBypass());
         this.modules.add(new ElytraFly());
+        this.modules.add(new WaterWalker());
+        this.modules.add(new EntityControl());
 
         //************************PLAYER**************************//
 
