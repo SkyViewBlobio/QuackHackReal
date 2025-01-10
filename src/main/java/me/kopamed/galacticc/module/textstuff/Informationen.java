@@ -1,5 +1,6 @@
 package me.kopamed.galacticc.module.textstuff;
 
+import com.mojang.realmsclient.gui.ChatFormatting;
 import com.sun.management.OperatingSystemMXBean;
 import me.kopamed.galacticc.Galacticc;
 import me.kopamed.galacticc.module.Category;
@@ -42,7 +43,10 @@ public class Informationen extends Module {
     private boolean deathCoordinatesSet = false;
 
     public Informationen() {
-        super("Informationen", "zeigt dir zeugs", false, false, Category.TEXTSTUFF);
+        super("Informationen", "" +
+                        ChatFormatting.BLUE + ChatFormatting.BOLD + ChatFormatting.UNDERLINE + "Hauptinformation:|" + ChatFormatting.WHITE +
+                        "Zeigt dir viele wichtige Informationen.",
+                false, false, Category.TEXTSTUFF);
 
         Galacticc.instance.settingsManager.rSetting(new Setting("Zeige FPS", this, true));
         Galacticc.instance.settingsManager.rSetting(new Setting("Coordinaten", this, true));
@@ -165,9 +169,15 @@ public class Informationen extends Module {
         if (showSystemTime) infoList.add(new String[]{"Systemzeit", new SimpleDateFormat("HH:mm:ss").format(new Date())});
         if (showMinecraftDay) infoList.add(new String[]{"SpielTag", String.valueOf(mc.world.getWorldTime() / 24000)});
         if (showPing && mc.getConnection() != null && mc.player != null) {
-            int ping = mc.getConnection().getPlayerInfo(mc.player.getUniqueID()).getResponseTime();
-            infoList.add(new String[]{"Ping", ping + " ms"});
-        }
+            NetworkPlayerInfo playerInfo = mc.getConnection().getPlayerInfo(mc.player.getUniqueID());
+            if (playerInfo != null) { //todo find cause and fix
+                int ping = playerInfo.getResponseTime();
+                infoList.add(new String[]{"Ping", ping + " ms"});
+            } else {
+                infoList.add(new String[]{"Ping", "N/A"});
+            }
+        } //if the error isn't fixed refer to https://discord.com/channels/@me/1024677907173494805/1327345331905495051
+
         if (showDate) infoList.add(new String[]{"Datum", new SimpleDateFormat("dd-MM-yyyy").format(new Date())});
         if (showItemInfo && mc.player != null) {
             ItemStack heldItem = mc.player.getHeldItemMainhand();

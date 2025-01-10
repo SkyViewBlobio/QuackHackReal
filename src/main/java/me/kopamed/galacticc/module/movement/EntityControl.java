@@ -5,9 +5,11 @@ import me.kopamed.galacticc.Galacticc;
 import me.kopamed.galacticc.module.Category;
 import me.kopamed.galacticc.module.Module;
 import me.kopamed.galacticc.settings.Setting;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.passive.AbstractHorse;
 import net.minecraft.entity.passive.EntityPig;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraftforge.event.entity.living.LivingFallEvent;
@@ -16,7 +18,7 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 public class EntityControl extends Module {
     private long lastStepTime = 0;
-
+//todo cleanup coments
     public EntityControl() {
         super("EntityControl", "" +
                         ChatFormatting.BLUE + ChatFormatting.BOLD + ChatFormatting.UNDERLINE + "Hauptinformation:|" + ChatFormatting.WHITE +
@@ -65,7 +67,7 @@ public class EntityControl extends Module {
 
             // Enable walking on liquids and automatic rising
             if (walkOnLiquids) {
-                enableLiquidWalking(riddenEntity);
+                enableLiquidWalkingAndStepping(riddenEntity);
             }
 
             // Control entity movement via WASD
@@ -135,17 +137,56 @@ public class EntityControl extends Module {
         }
     }
 
-    private void enableLiquidWalking(Entity entity) {
+    private void enableLiquidWalkingAndStepping(Entity entity) {
         BlockPos entityPos = new BlockPos(entity.posX, entity.posY, entity.posZ);
 
-        if (mc.world.getBlockState(entityPos).getMaterial().isLiquid() ||
-                mc.world.getBlockState(entityPos.down()).getMaterial().isLiquid()) {
-            entity.motionY = 0.1; // Slowly rise upwards
+        boolean inLiquid = mc.world.getBlockState(entityPos).getMaterial().isLiquid() ||
+                mc.world.getBlockState(entityPos.down()).getMaterial().isLiquid();
+
+        double customStepHeight = Galacticc.instance.settingsManager.getSettingByName(this, "Step Height").getValDouble();
+
+        if (inLiquid) {
+            double surfaceY = mc.world.getTopSolidOrLiquidBlock(entityPos).getY();
+
+            if (entity.posY < surfaceY - 0.1) {
+                entity.motionY = 0.05; // Smoothly rise
+            } else {
+                entity.motionY = 0; // Stop rising once at the surface
+                entity.onGround = true;
+            }
+
+            entity.stepHeight = (float) customStepHeight;
+        } else {
+            if (canStepOverTallBlock(entity, customStepHeight)) {
+                entity.stepHeight = (float) customStepHeight;
+            } else {
+                entity.stepHeight = 0.6f; // Default step height
+            }
+
+            if (entity.motionY > 0.1) {
+                entity.motionY = 0.1;
+            }
+        }
+    }
+
+    private boolean canStepOverTallBlock(Entity entity, double customStepHeight) {
+        BlockPos entityPos = new BlockPos(entity.posX, entity.posY, entity.posZ);
+
+        // Check within a 3-block radius for a 1-block tall support
+        for (int dx = -3; dx <= 3; dx++) {
+            for (int dz = -3; dz <= 3; dz++) {
+                BlockPos checkPos = entityPos.add(dx, -1, dz); // Check 1 block below for support
+                IBlockState state = mc.world.getBlockState(checkPos);
+
+                // Check if the block is not air and has a height of 1 block or less
+                if (!state.getBlock().isAir(state, mc.world, checkPos) &&
+                        state.getBoundingBox(mc.world, checkPos).maxY <= 1.0) {
+                    return true; // Found a support block within range
+                }
+            }
         }
 
-        if (entity.posY < mc.world.getTopSolidOrLiquidBlock(entityPos).getY()) {
-            entity.motionY = 0.1; // Continue rising until on the surface
-        }
+        return false; // No support block found nearby
     }
 
     private void trickFallDamage(Entity entity) {

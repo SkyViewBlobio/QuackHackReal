@@ -83,7 +83,7 @@ public class StorageESP extends Module {
 
         // Adding sliders for Fade Speed, RGBA values, and Range
         Galacticc.instance.settingsManager.rSetting(new Setting("Duration", this, 5.0F, 1.0F, 40.0F, false));
-        Galacticc.instance.settingsManager.rSetting(new Setting("Range", this, 10.0F, 3.0F, 15.0F, false));
+        Galacticc.instance.settingsManager.rSetting(new Setting("Range", this, 15.0F, 3.0F, 40.0F, false));
     }
 
     @SubscribeEvent

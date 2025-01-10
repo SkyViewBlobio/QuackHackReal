@@ -23,6 +23,7 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class Killaurarewrite extends Module {
@@ -31,20 +32,34 @@ public class Killaurarewrite extends Module {
     private long lastHitTime;
 
     public Killaurarewrite() {
-        super("Aura", "@Hauptinformation: " +
-                "Greift Gegner automatisch an und beschutzt dich somit. " +
-                "@Optionen: " +
-                "- Attack Mode bietet drei Modi:  || " +
-                "- Einzel greift nur ein Ziel an. || " +
-                "- Multi greift alle Ziele in  einer 6-Block Reichweite an. || " +
-                "- Closest priorisiert das naeheste Ziel. || " +
-                "- Kategorien zum Angriff: || " +
-                "- Attack Monsters greift feindliche Kreaturen an. || " +
-                "- Attack Animals greift Tiere an. || " +
-                "- Attack Neutral greift neutrale Kreaturen an. || " +
-                "- Attack Players greift andere Spieler an. || " +
-                "- Die Reichweite des Moduls betraegt 6 Bloecke. || " +
-                "- Unterstuetzt Sweeping Edge und fuegt mehreren Zielen in einem Schwung Schaden zu.",
+        super("Aura", "" +
+                        ChatFormatting.BLUE + ChatFormatting.BOLD + ChatFormatting.UNDERLINE + "Hauptinformation:|" + ChatFormatting.WHITE +
+                        "Greift Gegner automatisch an und bietet| Schutz durch automatische Angriffe.|" +
+                        ChatFormatting.BLUE + ChatFormatting.BOLD + ChatFormatting.UNDERLINE + "Optionen:|" + ChatFormatting.RED +
+                        "- Attack Mode: " + ChatFormatting.WHITE +
+                        "Waehle aus drei Modi, um Ziele| strategisch anzugreifen:|" + ChatFormatting.RED +
+                        "- Einzel: " + ChatFormatting.WHITE +
+                        "Greift ein einzelnes Ziel an.|" + ChatFormatting.RED +
+                        "- Multi: " + ChatFormatting.WHITE +
+                        "Greift alle Ziele innerhalb von| 6 Bloecken an.|" + ChatFormatting.RED +
+                        "- Closest: " + ChatFormatting.WHITE +
+                        "Priorisiert das naeheste Ziel.|" + ChatFormatting.RED +
+                        "- Kategorien zum Angriff: " + ChatFormatting.WHITE +
+                        "Passe an, welche Entitaeten angegriffen| werden sollen:|" + ChatFormatting.RED +
+                        "- Attack Monsters: " + ChatFormatting.WHITE +
+                        "Greift feindliche Kreaturen an.|" + ChatFormatting.RED +
+                        "- Attack Animals: " + ChatFormatting.WHITE +
+                        "Greift Tiere an.|" + ChatFormatting.RED +
+                        "- Attack Neutral: " + ChatFormatting.WHITE +
+                        "Greift neutrale Kreaturen an.|" + ChatFormatting.RED +
+                        "- Attack Players: " + ChatFormatting.WHITE +
+                        "Greift andere Spieler an.|" + ChatFormatting.RED +
+                        "- Reichweite: " + ChatFormatting.WHITE +
+                        "Laesst dich die Angriffsreichweite bestimmen." + ChatFormatting.RED +
+                        "- Sweeping Edge Unterstuetzung: " + ChatFormatting.WHITE +
+                        "Fuegt mehreren Zielen in einem| Schwung Schaden zu.|" +
+                        ChatFormatting.BLUE + ChatFormatting.BOLD + ChatFormatting.UNDERLINE + "Nutzungsinformation:|" + ChatFormatting.WHITE +
+                        "Passe die Angriffskategorien und den| Modus im Modulmenue an, um optimalen| Schutz und Angriffseffizienz zu erreichen.",
                 true, false, Category.ANGRIFF);
 
         this.mc = Minecraft.getMinecraft();
@@ -96,11 +111,11 @@ public class Killaurarewrite extends Module {
                 continue;
             }
 
-            if (attackMonsters && entity instanceof EntityMob) {
+            if (attackMonsters && (entity instanceof EntityMob || isCustomHostileEntity(entity))) {
                 targets.add(entity);
             } else if (attackAnimals && entity instanceof EntityAnimal) {
                 targets.add(entity);
-            } else if (attackNeutral && isNeutralEntity(entity)) {
+            } else if (attackNeutral && (isNeutralEntity(entity) || isCustomNeutralEntity(entity))) {
                 targets.add(entity);
             } else if (attackPlayers && entity instanceof EntityPlayer && entity != mc.player) {
                 targets.add(entity);
@@ -122,6 +137,45 @@ public class Killaurarewrite extends Module {
                 attackClosestEntity(targets);
                 break;
         }
+    }
+
+    private boolean isCustomHostileEntity(Entity entity) {
+        List<String> customHostileClassNames = new ArrayList<>();
+        Collections.addAll(customHostileClassNames,
+                "EntityCQRBoarman",
+                "EntityCQRMandril",
+                "EntityCQRIllager",
+                "EntityCQRGremlin",
+                "EntityCQRGoblin",
+                "EntityCQREnderman",
+                "EntityCQRMinotaur",
+                "EntityCQRMummy",
+                "EntityCQRPirate",
+                "EntityCQRSkeleton",
+                "EntityCQRSpectre",
+                "EntityCQRWalker",
+                "EntityCQRZombie"
+        );
+
+        String className = entity.getClass().getSimpleName();
+        return customHostileClassNames.contains(className);
+    }
+
+    private boolean isCustomNeutralEntity(Entity entity) {
+        List<String> customNeutralClassNames = new ArrayList<>();
+        Collections.addAll(customNeutralClassNames,
+                "EntityCQRDummy",
+                "EntityCQRDwarf",
+                "EntityCQRHuman",
+                "EntityCQRGolem",
+                "EntityCQRTriton",
+                "EntityCQRNPC",
+                "EntityCQROgre",
+                "EntityCQROrc"
+        );
+
+        String className = entity.getClass().getSimpleName();
+        return customNeutralClassNames.contains(className);
     }
 
     private boolean isNeutralEntity(Entity entity) {
