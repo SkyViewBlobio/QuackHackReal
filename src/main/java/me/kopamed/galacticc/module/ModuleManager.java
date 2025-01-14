@@ -7,10 +7,12 @@ import me.kopamed.galacticc.module.misc.AutomaticCreeperLighter;
 import me.kopamed.galacticc.module.misc.RandomChatMessages;
 import me.kopamed.galacticc.module.mod.cKontrolle;
 import me.kopamed.galacticc.module.movement.*;
+import me.kopamed.galacticc.module.player.AutomaticBridgeBuilder;
 import me.kopamed.galacticc.module.player.FastPlace;
 import me.kopamed.galacticc.module.render.*;
 import me.kopamed.galacticc.module.textstuff.Informationen;
 import me.kopamed.galacticc.module.textstuff.Watermark;
+import net.minecraft.client.audio.ElytraSound;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -57,6 +59,7 @@ public class ModuleManager {
         //************************PLAYER**************************//
 
         this.modules.add(new FastPlace());
+        this.modules.add(new AutomaticBridgeBuilder());
 
         //************************RENDER**************************//
 
@@ -75,6 +78,9 @@ public class ModuleManager {
         this.modules.add(new ShulkerPreview());
         this.modules.add(new FakePlayer());
         this.modules.add(new ItemESP());
+        this.modules.add(new NameTagHighlight());
+        this.modules.add(new ESP());
+        //this.modules.add(new EntityESP());
 
         //************************TEXT STUFF**************************//
 
