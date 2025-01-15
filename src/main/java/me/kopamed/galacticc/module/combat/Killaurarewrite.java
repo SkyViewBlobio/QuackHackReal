@@ -14,6 +14,9 @@ import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.monster.EntityPigZombie;
 import net.minecraft.entity.passive.EntityAnimal;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.ItemSword;
+import net.minecraft.network.play.client.CPacketHeldItemChange;
 import net.minecraft.network.play.client.CPacketPlayer;
 import net.minecraft.network.play.client.CPacketUseEntity;
 import net.minecraft.util.EnumHand;
@@ -70,6 +73,7 @@ public class Killaurarewrite extends Module {
         attackModes.add("Multi");
         attackModes.add("Closest");
         Galacticc.instance.settingsManager.rSetting(new Setting("Attack Mode", this, "Closest", attackModes));
+        Galacticc.instance.settingsManager.rSetting(new Setting("Silent-Switch", this, false));
         Galacticc.instance.settingsManager.rSetting(new Setting("Attack Monsters", this, true));
         Galacticc.instance.settingsManager.rSetting(new Setting("Attack Animals", this, false));
         Galacticc.instance.settingsManager.rSetting(new Setting("Attack Neutral", this, false));
@@ -96,13 +100,11 @@ public class Killaurarewrite extends Module {
         }
 
         String mode = Galacticc.instance.settingsManager.getSettingByName(this, "Attack Mode").getValString();
-
         boolean attackMonsters = Galacticc.instance.settingsManager.getSettingByName(this, "Attack Monsters").getValBoolean();
         boolean attackAnimals = Galacticc.instance.settingsManager.getSettingByName(this, "Attack Animals").getValBoolean();
         boolean attackNeutral = Galacticc.instance.settingsManager.getSettingByName(this, "Attack Neutral").getValBoolean();
         boolean attackPlayers = Galacticc.instance.settingsManager.getSettingByName(this, "Attack Players").getValBoolean();
 
-        // Copy entities into a local list to avoid concurrent modification issues
         List<EntityLivingBase> entitiesInRange = new ArrayList<>(mc.world.getEntitiesWithinAABB(EntityLivingBase.class, mc.player.getEntityBoundingBox().grow(6.0)));
 
         List<Entity> targets = new ArrayList<>();
@@ -138,6 +140,7 @@ public class Killaurarewrite extends Module {
                 break;
         }
     }
+
 
     private boolean isCustomHostileEntity(Entity entity) {
         List<String> customHostileClassNames = new ArrayList<>();
@@ -238,33 +241,65 @@ public class Killaurarewrite extends Module {
             return;
         }
 
-        float[] rotation = calculateAngles(target.getPositionVector());
+        boolean silentSwitchEnabled = Galacticc.instance.settingsManager.getSettingByName(this, "Silent-Switch").getValBoolean();
+        int swordSlot = findSwordInHotbar();
 
-        mc.player.connection.sendPacket(new CPacketPlayer.Rotation(rotation[0], rotation[1], mc.player.onGround));
+        int originalSlot = mc.player.inventory.currentItem; // Store the original slot
 
-        mc.player.connection.sendPacket(new CPacketUseEntity(target));
-        mc.player.swingArm(EnumHand.MAIN_HAND);
+        Runnable attackAction = () -> {
+            float[] rotation = calculateAngles(target.getPositionVector());
 
-        if (mc.player.onGround && !mc.player.isSprinting() && mc.player.getCooledAttackStrength
-                (0.5f) >= 0.848f) {
-            List<Entity> nearbyEntities = mc.world.getEntitiesWithinAABB(EntityLivingBase.class,
-                    target.getEntityBoundingBox().grow(
-                            1.0,
-                            0.25,
-                            1.0));
-            for (Entity entity : nearbyEntities) {
-                if (entity == mc.player || entity == target || !entity.isEntityAlive()) {
-                    continue; // Skip the player, the main target, and dead entities
+            mc.player.connection.sendPacket(new CPacketPlayer.Rotation(rotation[0], rotation[1], mc.player.onGround));
+            mc.player.connection.sendPacket(new CPacketUseEntity(target));
+            mc.player.swingArm(EnumHand.MAIN_HAND);
+
+            if (mc.player.onGround && !mc.player.isSprinting() && mc.player.getCooledAttackStrength(0.5f) >= 0.848f) {
+                List<Entity> nearbyEntities = mc.world.getEntitiesWithinAABB(EntityLivingBase.class,
+                        target.getEntityBoundingBox().grow(1.0, 0.25, 1.0));
+                for (Entity entity : nearbyEntities) {
+                    if (entity == mc.player || entity == target || !entity.isEntityAlive()) {
+                        continue; // Skip the player, the main target, and dead entities
+                    }
+
+                    if (!Galacticc.instance.settingsManager.getSettingByName(this, "Attack Players").getValBoolean()
+                            && entity instanceof EntityPlayer) {
+                        continue;
+                    }
+
+                    mc.player.connection.sendPacket(new CPacketUseEntity(entity));
                 }
+            }
+        };
 
-                if (!Galacticc.instance.settingsManager.getSettingByName
-                        (this, "Attack Players").getValBoolean() && entity instanceof EntityPlayer) {
-                    continue;
-                }
+        if (silentSwitchEnabled && swordSlot != -1 && swordSlot != originalSlot) {
+            // Switch to sword slot silently
+            mc.player.connection.sendPacket(new CPacketHeldItemChange(swordSlot));
 
-                mc.player.connection.sendPacket(new CPacketUseEntity(entity));
+            // Perform the attack
+            attackAction.run();
+
+            // Revert back to the original slot
+            mc.player.connection.sendPacket(new CPacketHeldItemChange(originalSlot));
+            mc.playerController.updateController();
+        } else {
+            // Perform the attack without switching slots
+            attackAction.run();
+        }
+    }
+
+    /**
+     * Finds the first sword in the player's hotbar.
+     *
+     * @return The hotbar slot index of the sword, or -1 if no sword is found.
+     */
+    private int findSwordInHotbar() {
+        for (int i = 0; i < 9; i++) {
+            ItemStack itemStack = mc.player.inventory.getStackInSlot(i);
+            if (itemStack.getItem() instanceof ItemSword) {
+                return i;
             }
         }
+        return -1;
     }
 
     @Override

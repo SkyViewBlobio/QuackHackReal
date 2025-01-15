@@ -29,7 +29,7 @@ public class ESP extends Module {
     private boolean cachedShowEndCrystals;
     private float cachedRange;
     private float cachedNoRenderRange;
-
+//todo add player
     public ESP() {
         super("ESP", "Draws outlines or boxes around entities", false, false, Category.VISUELLES);
 

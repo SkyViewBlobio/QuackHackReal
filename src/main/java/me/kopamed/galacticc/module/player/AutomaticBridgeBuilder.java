@@ -38,7 +38,7 @@ public class AutomaticBridgeBuilder extends Module {
         }
 
         if (mc.gameSettings.keyBindJump.isKeyDown()) {
-            mc.player.motionY = 0.15;
+            mc.player.motionY = 0.35;
 
             placeBlockBelow();
         }

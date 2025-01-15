@@ -16,7 +16,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import org.lwjgl.opengl.GL11;
-//todo cleanup and fix
+//todo cleanup and fix also make the close up minimizer adjustable via slider bc ente cant see shit
 public class NameTagHighlight extends Module {
 
     public NameTagHighlight() {
