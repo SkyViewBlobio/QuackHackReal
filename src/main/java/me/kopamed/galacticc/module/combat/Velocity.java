@@ -8,8 +8,9 @@ import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
 public class Velocity extends Module {
+
     public Velocity() {
-            super("Ruckschlag", "Changes the amount of knockback you take", false, false, Category.ANGRIFF);
+        super("Ruckschlag", "Changes the amount of knockback you take", false, false, Category.ANGRIFF);
         Galacticc.instance.settingsManager.rSetting(new Setting("Horizontal", this, 92, 0, 200, true));
         Galacticc.instance.settingsManager.rSetting(new Setting("Vertical", this, 100, 0, 200, true));
     }

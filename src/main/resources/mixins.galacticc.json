@@ -1,23 +1,16 @@
 {
   "required": true,
-  "package": "me.kopamed.injection.mixins",
-  "refmap": "mixins.hydrogen.refmap.json",
+  "minVersion": "0.8",
+  "package": "me.kopamed.galacticc.injection.mixins",
+  "refmap": "mixins.galacticc.refmap.json",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
-    "MixinEntity",
-    "MixinEntityPlayerSP",
-    "MixinGui",
-    "MixinGuiIngame",
-    "MixinGuiScreen",
-    "MixinGuiSpectator",
-    "MixinMinecraft",
     "MixinNetworkManager",
-    "MixinRenderer",
-    "MixinRendererLivingEntity",
-    "MixinAbstractClientPlayer",
-    "MixinEntityLivingBase",
-    "MixinEntityPlayer",
-    "MixinEntityRenderer",
-    "MixinGuiMainMenu"
+    "MixinPlayerControllerMP"
+
+  ],
+
+    "client": [
+      "MixinEntityRenderer"
   ]
 }

@@ -7,12 +7,13 @@ import me.kopamed.galacticc.module.misc.AutomaticCreeperLighter;
 import me.kopamed.galacticc.module.misc.RandomChatMessages;
 import me.kopamed.galacticc.module.mod.cKontrolle;
 import me.kopamed.galacticc.module.movement.*;
+import me.kopamed.galacticc.module.player.AutoObsidianMiner;
 import me.kopamed.galacticc.module.player.AutomaticBridgeBuilder;
 import me.kopamed.galacticc.module.player.FastPlace;
+import me.kopamed.galacticc.module.player.Reach2;
 import me.kopamed.galacticc.module.render.*;
 import me.kopamed.galacticc.module.textstuff.Informationen;
 import me.kopamed.galacticc.module.textstuff.Watermark;
-import net.minecraft.client.audio.ElytraSound;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,9 +32,9 @@ public class ModuleManager {
         this.modules.add(new Velocity());
         this.modules.add(new DelayRemover());
         this.modules.add(new Reach());
-        this.modules.add(new Criticals());
         this.modules.add(new Killaurarewrite());
         this.modules.add(new AutomaticTotemOffhand());
+        this.modules.add(new PacketCriticals());
         // need to fix autostart. this.modules.add(new AutoClicker());
 
         //************************Mod**************************//
@@ -60,6 +61,8 @@ public class ModuleManager {
 
         this.modules.add(new FastPlace());
         this.modules.add(new AutomaticBridgeBuilder());
+        this.modules.add(new Reach2());
+        this.modules.add(new AutoObsidianMiner());
 
         //************************RENDER**************************//
 

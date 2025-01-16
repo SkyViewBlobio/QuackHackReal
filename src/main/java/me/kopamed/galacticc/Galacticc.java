@@ -3,6 +3,7 @@ package me.kopamed.galacticc;
 import me.kopamed.galacticc.clickgui.ClickGui;
 import me.kopamed.galacticc.command.CommandManager;
 import me.kopamed.galacticc.config.SaveLoad;
+import me.kopamed.galacticc.events.Network.NettyInjector;
 import me.kopamed.galacticc.module.Module;
 import me.kopamed.galacticc.module.ModuleManager;
 import me.kopamed.galacticc.module.misc.SafeSettings;
@@ -22,7 +23,7 @@ import java.util.List;
 
 public class Galacticc {
     public static final String MODID = "quackhack";
-    public static final String VERSION = " v1.8.9";
+    public static final String VERSION = " v1.9.3";
     public static String prefix = ".";
 
     public static Galacticc instance;
@@ -37,6 +38,7 @@ public class Galacticc {
     public void init() {
         // following 5 lines must be in this order or java has a stroke and dies
         MinecraftForge.EVENT_BUS.register(this);
+        MinecraftForge.EVENT_BUS.register(new NettyInjector()); // Register injector
         instance = this;
         settingsManager = new SettingsManager();
         moduleManager = new ModuleManager();
@@ -50,17 +52,14 @@ public class Galacticc {
     @SubscribeEvent
     public void key(InputEvent.KeyInputEvent e) {
         Minecraft mc = Minecraft.getMinecraft();
-        //make sure that we are in a game
-        if (mc.world == null || mc.player == null)
-            return;
+        if (mc.world == null || mc.player == null) return;
 
-        // Process key input for toggling modules
         try {
             if (Keyboard.isCreated()) {
                 if (Keyboard.getEventKeyState()) {
                     int keyCode = Keyboard.getEventKey();
-                    if (keyCode <= 0)
-                        return;
+                    if (keyCode <= 0) return;
+
                     for (Module m : moduleManager.getModulesList()) {
                         if (m.getKey() == keyCode && keyCode > 0) {
                             m.toggle();

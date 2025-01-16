@@ -33,6 +33,12 @@ public class Killaurarewrite extends Module {
 
     private final Minecraft mc;
     private long lastHitTime;
+    private String attackMode;
+    private boolean attackMonsters;
+    private boolean attackAnimals;
+    private boolean attackNeutral;
+    private boolean attackPlayers;
+    private boolean silentSwitchEnabled;
 
     public Killaurarewrite() {
         super("Aura", "" +
@@ -43,6 +49,8 @@ public class Killaurarewrite extends Module {
                         "Waehle aus drei Modi, um Ziele| strategisch anzugreifen:|" + ChatFormatting.RED +
                         "- Einzel: " + ChatFormatting.WHITE +
                         "Greift ein einzelnes Ziel an.|" + ChatFormatting.RED +
+                        "- Silent-Switch: " +ChatFormatting.WHITE +
+                        "Wechselt zum Schwert, erlaubt dir waehrenddessen zu essen.| Du musst kein Schwert halten|, mit dieser Funktion." + ChatFormatting.RED +
                         "- Multi: " + ChatFormatting.WHITE +
                         "Greift alle Ziele innerhalb von| 6 Bloecken an.|" + ChatFormatting.RED +
                         "- Closest: " + ChatFormatting.WHITE +
@@ -78,6 +86,7 @@ public class Killaurarewrite extends Module {
         Galacticc.instance.settingsManager.rSetting(new Setting("Attack Animals", this, false));
         Galacticc.instance.settingsManager.rSetting(new Setting("Attack Neutral", this, false));
         Galacticc.instance.settingsManager.rSetting(new Setting("Attack Players", this, false));
+        cacheSettings();
 
     }
 
@@ -93,22 +102,77 @@ public class Killaurarewrite extends Module {
         lastHitTime = 0;
     }
 
+    /**
+     * Caches the settings to minimize repeated lookups.
+     */
+    private void cacheSettings() {
+        this.attackMode = Galacticc.instance.settingsManager.getSettingByName(this, "Attack Mode").getValString();
+        this.attackMonsters = Galacticc.instance.settingsManager.getSettingByName(this, "Attack Monsters").getValBoolean();
+        this.attackAnimals = Galacticc.instance.settingsManager.getSettingByName(this, "Attack Animals").getValBoolean();
+        this.attackNeutral = Galacticc.instance.settingsManager.getSettingByName(this, "Attack Neutral").getValBoolean();
+        this.attackPlayers = Galacticc.instance.settingsManager.getSettingByName(this, "Attack Players").getValBoolean();
+        this.silentSwitchEnabled = Galacticc.instance.settingsManager.getSettingByName(this, "Silent-Switch").getValBoolean();
+    }
+
     @SubscribeEvent
     public void onTick(TickEvent.PlayerTickEvent event) {
         if (mc.player == null || mc.world == null || event.phase != TickEvent.Phase.START) {
             return;
         }
 
-        String mode = Galacticc.instance.settingsManager.getSettingByName(this, "Attack Mode").getValString();
-        boolean attackMonsters = Galacticc.instance.settingsManager.getSettingByName(this, "Attack Monsters").getValBoolean();
-        boolean attackAnimals = Galacticc.instance.settingsManager.getSettingByName(this, "Attack Animals").getValBoolean();
-        boolean attackNeutral = Galacticc.instance.settingsManager.getSettingByName(this, "Attack Neutral").getValBoolean();
-        boolean attackPlayers = Galacticc.instance.settingsManager.getSettingByName(this, "Attack Players").getValBoolean();
+        // Update settings cache only when necessary
+        if (settingsHaveChanged()) {
+            cacheSettings();
+        }
 
-        List<EntityLivingBase> entitiesInRange = new ArrayList<>(mc.world.getEntitiesWithinAABB(EntityLivingBase.class, mc.player.getEntityBoundingBox().grow(6.0)));
+        // Find entities within range
+        List<EntityLivingBase> entitiesInRange = mc.world.getEntitiesWithinAABB(EntityLivingBase.class,
+                mc.player.getEntityBoundingBox().grow(6.0));
 
+        // Filter entities based on attack categories
+        List<Entity> targets = filterTargets(entitiesInRange);
+
+        if (targets.isEmpty()) {
+            return;
+        }
+
+        // Attack based on the selected mode
+        switch (attackMode) {
+            case "Einzel":
+                attackSingleEntity(targets);
+                break;
+            case "Multi":
+                attackMultipleEntities(targets);
+                break;
+            case "Closest":
+                attackClosestEntity(targets);
+                break;
+        }
+    }
+
+    /**
+     * Checks if any settings have changed.
+     *
+     * @return True if any setting has changed, false otherwise.
+     */
+    private boolean settingsHaveChanged() {
+        return !attackMode.equals(Galacticc.instance.settingsManager.getSettingByName(this, "Attack Mode").getValString())
+                || attackMonsters != Galacticc.instance.settingsManager.getSettingByName(this, "Attack Monsters").getValBoolean()
+                || attackAnimals != Galacticc.instance.settingsManager.getSettingByName(this, "Attack Animals").getValBoolean()
+                || attackNeutral != Galacticc.instance.settingsManager.getSettingByName(this, "Attack Neutral").getValBoolean()
+                || attackPlayers != Galacticc.instance.settingsManager.getSettingByName(this, "Attack Players").getValBoolean()
+                || silentSwitchEnabled != Galacticc.instance.settingsManager.getSettingByName(this, "Silent-Switch").getValBoolean();
+    }
+
+    /**
+     * Filters entities based on the cached attack settings.
+     *
+     * @param entities The list of entities to filter.
+     * @return A list of entities to attack.
+     */
+    private List<Entity> filterTargets(List<EntityLivingBase> entities) {
         List<Entity> targets = new ArrayList<>();
-        for (Entity entity : entitiesInRange) {
+        for (Entity entity : entities) {
             if (entity == null || entity == mc.player || !entity.isEntityAlive()) {
                 continue;
             }
@@ -123,24 +187,8 @@ public class Killaurarewrite extends Module {
                 targets.add(entity);
             }
         }
-
-        if (targets.isEmpty()) {
-            return;
-        }
-
-        switch (mode) {
-            case "Einzel":
-                attackSingleEntity(targets);
-                break;
-            case "Multi":
-                attackMultipleEntities(targets);
-                break;
-            case "Closest":
-                attackClosestEntity(targets);
-                break;
-        }
+        return targets;
     }
-
 
     private boolean isCustomHostileEntity(Entity entity) {
         List<String> customHostileClassNames = new ArrayList<>();
@@ -193,7 +241,7 @@ public class Killaurarewrite extends Module {
 
     private void attackSingleEntity(List<Entity> entitiesInRange) {
         for (Entity entity : entitiesInRange) {
-            if (entity != null && canHit()) {
+            if (entity != null && System.currentTimeMillis() - lastHitTime >= 700) {
                 if (mc.player.getCooledAttackStrength(0.0f) >= 0.848) {
                     performSweepAttack(entity);
                 }
@@ -205,7 +253,7 @@ public class Killaurarewrite extends Module {
 
     private void attackMultipleEntities(List<Entity> entitiesInRange) {
         for (Entity entity : entitiesInRange) {
-            if (entity != null && canHit()) {
+            if (entity != null && System.currentTimeMillis() - lastHitTime >= 700) {
                 if (mc.player.getCooledAttackStrength(0.0f) >= 0.848) {
                     performSweepAttack(entity);
                 }
@@ -228,7 +276,7 @@ public class Killaurarewrite extends Module {
             }
         }
 
-        if (closestEntity != null && canHit()) {
+        if (closestEntity != null && System.currentTimeMillis() - lastHitTime >= 700) {
             if (mc.player.getCooledAttackStrength(0.0f) >= 0.848) {
                 performSweepAttack(closestEntity);
             }
@@ -236,19 +284,34 @@ public class Killaurarewrite extends Module {
         }
     }
 
+    /**
+     * Performs a sweep attack on the given target entity, attacking nearby entities as well.
+     * <p>
+     * This method performs the following actions:
+     * <ul>
+     *     <li>Checks if the target entity is valid and alive.</li>
+     *     <li>Calculates the required rotation for the player to face the target entity.</li>
+     *     <li>Sends a rotation packet to adjust the player's facing direction.</li>
+     *     <li>Executes an attack on the target entity using a {@link CPacketUseEntity} packet.</li>
+     *     <li>If the player is grounded, not sprinting, and the attack cooldown is satisfied, checks for nearby entities and attacks them as well,
+     *         based on configurable settings.</li>
+     *     <li>Optionally performs a silent switch to the sword slot if enabled, and reverts back to the original slot after the attack.</li>
+     * </ul>
+     * </p>
+     *
+     * @param target The target entity to attack. It should not be null and must be alive.
+     */
     private void performSweepAttack(Entity target) {
         if (target == null || !target.isEntityAlive()) {
             return;
         }
 
         boolean silentSwitchEnabled = Galacticc.instance.settingsManager.getSettingByName(this, "Silent-Switch").getValBoolean();
+
         int swordSlot = findSwordInHotbar();
-
-        int originalSlot = mc.player.inventory.currentItem; // Store the original slot
-
+        int originalSlot = mc.player.inventory.currentItem;
         Runnable attackAction = () -> {
             float[] rotation = calculateAngles(target.getPositionVector());
-
             mc.player.connection.sendPacket(new CPacketPlayer.Rotation(rotation[0], rotation[1], mc.player.onGround));
             mc.player.connection.sendPacket(new CPacketUseEntity(target));
             mc.player.swingArm(EnumHand.MAIN_HAND);
@@ -256,9 +319,10 @@ public class Killaurarewrite extends Module {
             if (mc.player.onGround && !mc.player.isSprinting() && mc.player.getCooledAttackStrength(0.5f) >= 0.848f) {
                 List<Entity> nearbyEntities = mc.world.getEntitiesWithinAABB(EntityLivingBase.class,
                         target.getEntityBoundingBox().grow(1.0, 0.25, 1.0));
+
                 for (Entity entity : nearbyEntities) {
                     if (entity == mc.player || entity == target || !entity.isEntityAlive()) {
-                        continue; // Skip the player, the main target, and dead entities
+                        continue; // Skip the player, the target, and dead entities
                     }
 
                     if (!Galacticc.instance.settingsManager.getSettingByName(this, "Attack Players").getValBoolean()
@@ -266,19 +330,21 @@ public class Killaurarewrite extends Module {
                         continue;
                     }
 
+                    // Send attack packet to the nearby entity
                     mc.player.connection.sendPacket(new CPacketUseEntity(entity));
                 }
             }
         };
 
+        // If silent switching is enabled and the sword slot is not the current slot, switch slots silently
         if (silentSwitchEnabled && swordSlot != -1 && swordSlot != originalSlot) {
-            // Switch to sword slot silently
+            // Send a packet to switch to the sword slot
             mc.player.connection.sendPacket(new CPacketHeldItemChange(swordSlot));
 
-            // Perform the attack
+            // Execute the attack action
             attackAction.run();
 
-            // Revert back to the original slot
+            // Revert back to the original slot after the attack
             mc.player.connection.sendPacket(new CPacketHeldItemChange(originalSlot));
             mc.playerController.updateController();
         } else {
@@ -307,7 +373,7 @@ public class Killaurarewrite extends Module {
         String attackMode = Galacticc.instance.settingsManager.getSettingByName
                 (this, "Attack Mode").getValString();
         int targetCount = (int) mc.world.getEntitiesWithinAABB(EntityLivingBase.class, mc.player.getEntityBoundingBox().grow(
-                6.0))
+                        6.0))
                 .stream()
                 .filter(entity -> entity != mc.player && entity.isEntityAlive())
                 .count();
@@ -330,9 +396,5 @@ public class Killaurarewrite extends Module {
 
         return new float[]{yaw, pitch};
     }
-
-        private boolean canHit() {
-            return System.currentTimeMillis() - lastHitTime >= 700;
-        }
-    }
+}
 

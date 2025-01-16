@@ -19,33 +19,33 @@ public class GlideJump extends Module {
                 "Macht dich schneller und laesst dich beim springen gleiten, fast wie ein Supersprung.", true, false, Category.BEWEGUNG);
 
         // Add slider for strafe speed (0.1 to 2.0)
-        Galacticc.instance.settingsManager.rSetting(new Setting("Schnelligkeit", this, 0.5, 0.1, 2.0, false));
+        Galacticc.instance.settingsManager.rSetting(new Setting("Schnelligkeit", this, 0.5, 0.1, 0.13, false));
     }
 
     @SubscribeEvent
     public void onPlayerTick(TickEvent.PlayerTickEvent event) {
         if (mc.player == null || mc.world == null) return;
 
-        // Retrieve the strafe speed from the slider
+        // Retrieve the strafe speed from the slider (can be adjusted to a slower value)
         double strafeSpeed = Galacticc.instance.settingsManager.getSettingByName(this, "Schnelligkeit").getValDouble();
 
-        // Adjust movement on ground or in air
-        applyStrafe(mc.player, strafeSpeed);
+        // Adjust movement only when in the air (if on ground, no air strafe effect)
+        if (!mc.player.onGround) {
+            applyAirStrafe(mc.player, strafeSpeed);
+        }
     }
 
-    private void applyStrafe(EntityPlayerSP player, double speed) {
+    private void applyAirStrafe(EntityPlayerSP player, double speed) {
+        // If there's no movement input, return early to avoid unnecessary calculations
         if (player.moveForward == 0 && player.moveStrafing == 0) {
-            return; // No input, no movement adjustment needed
+            return;
         }
-
-        // Check if the player is on the ground or in the air
-        boolean onGround = player.onGround;
 
         // Retrieve movement input
         float yaw = player.rotationYaw;
         MovementInput input = player.movementInput;
 
-        // Calculate movement direction
+        // Get forward and strafe inputs (convert forward to -1 or 1 for cleaner control)
         double forward = input.moveForward;
         double strafe = input.moveStrafe;
 
@@ -72,14 +72,24 @@ public class GlideJump extends Module {
         double motionX = forward * speed * cos + strafe * speed * sin;
         double motionZ = forward * speed * sin - strafe * speed * cos;
 
+        // Check if the player is on the ground
+        boolean onGround = player.onGround;
+
+        // Apply air strafe with smoother control
+        double airControlFactor = 0.3; // Adjust this to control the intensity of air movement
+        player.motionX += motionX * airControlFactor;
+        player.motionZ += motionZ * airControlFactor;
+
+        // If the player is on the ground, apply some small ground speed boost
         if (onGround) {
-            // Ground movement: Directly set motionX and motionZ
-            player.motionX = motionX;
-            player.motionZ = motionZ;
-        } else {
-            // Air movement: Add motionX and motionZ for smoother control
-            player.motionX += motionX * 0.2; // Reduced effect in the air
-            player.motionZ += motionZ * 0.2;
+            double groundSpeedBoost = 0.05; // Small speed boost on ground
+            player.motionX += motionX * groundSpeedBoost;
+            player.motionZ += motionZ * groundSpeedBoost;
         }
+
+        // Optional: Apply a slight drag effect to make the movement feel less sharp
+        double dragFactor = 0.95; // Smoothing factor for air control
+        player.motionX *= dragFactor;
+        player.motionZ *= dragFactor;
     }
 }

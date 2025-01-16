@@ -13,7 +13,7 @@ public class Reach extends Module {
     private float partialTick;
 
     public Reach() {
-            super("Reichweite", "You have a good gaming chait", true, false, Category.ANGRIFF);
+        super("Reichweite", "You have a good gaming chait", true, false, Category.ANGRIFF);
 
         Setting minReach = new Setting("Min Reach", this, 3, 3, 12, false);
         Setting maxReach = new Setting("Max Reach", this, 3.2, 3, 12, false);
@@ -32,9 +32,8 @@ public class Reach extends Module {
     public void onRenderLiving(RenderLivingEvent.Specials.Pre<EntityPlayer> event) {
         if (event.getEntity() instanceof EntityPlayer) {
             EntityPlayer player = (EntityPlayer) event.getEntity();
-            System.out.println("Pog, we are rendering " + player.getName() + " " +
-                    player.getCustomNameTag() + " with health " + player.getHealth());
         }
     }
-//todo test if this shit works
 }
+
+
