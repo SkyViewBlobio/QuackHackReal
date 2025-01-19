@@ -35,6 +35,7 @@ public class ModuleManager {
         this.modules.add(new Killaurarewrite());
         this.modules.add(new AutomaticTotemOffhand());
         this.modules.add(new PacketCriticals());
+        //this.modules.add(new OneShotArrowModule());
         // need to fix autostart. this.modules.add(new AutoClicker());
 
         //************************Mod**************************//
@@ -56,6 +57,8 @@ public class ModuleManager {
         this.modules.add(new ElytraFly());
         this.modules.add(new WaterWalker());
         this.modules.add(new EntityControl());
+        this.modules.add(new NoSlowModule());
+        this.modules.add(new EatingSpeedBoostModule());
 
         //************************PLAYER**************************//
 

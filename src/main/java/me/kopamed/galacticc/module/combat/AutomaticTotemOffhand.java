@@ -120,6 +120,8 @@ public class AutomaticTotemOffhand extends Module {
                 block instanceof BlockBeacon ||
                 block instanceof BlockBrewingStand ||
                 block instanceof BlockWorkbench ||
+                block instanceof BlockDoor ||
+                block instanceof BlockTrapDoor ||
                 block instanceof BlockCommandBlock;
     }
 

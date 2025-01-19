@@ -9,14 +9,14 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.FontRenderer;
 import net.minecraft.client.gui.Gui;
 import net.minecraft.client.gui.ScaledResolution;
-import net.minecraft.client.renderer.GlStateManager;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
-import java.awt.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-//todo: cleanup? and fix the funny hunger / heart / armor icon coloring.
+import java.util.Map;
+
 public class HUD extends Module {
     private boolean watermark, background, textShadow, active;
     private int margin;
@@ -25,7 +25,8 @@ public class HUD extends Module {
     private int wmColor = 0xFF4500;
     private String sortMode;
     public List<Module> modList;
-    //todo fix this ASAP! its now on a lazy fix but we gotta fix the invert colors if hintergrund is disabled. currently hintergrund doesnt even work so yea. idk.
+    private final Map<Module, Long> activationTimes = new HashMap<>(); // Store activation times
+
     public HUD() {
         super("Bildschirmzeugs", "@Hauptinformationen: " +
                 "Zeigt dir den Modnamen, die aktiven Module, laesst dich die Farben von den benannten Dingen aendern", false, false, Category.VISUELLES);
@@ -166,78 +167,60 @@ public class HUD extends Module {
         int bgBlue = (int) Galacticc.instance.settingsManager.getSettingByName(this, "BG Blau").getValDouble();
         int bgAlpha = (int) Galacticc.instance.settingsManager.getSettingByName(this, "BG Alpha").getValDouble();
 
-        // Fetch settings for gradient colors
-        boolean useGradientColors = Galacticc.instance.settingsManager.getSettingByName(this, "Gradient Colors").getValBoolean();
-        int gradRed = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Gradient Rot").getValDouble();
-        int gradGreen = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Gradient Green").getValDouble();
-        int gradBlue = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Gradient Blau").getValDouble();
-        int gradAlpha = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Gradient Alpha").getValDouble();
-
-        boolean useAnimatedGradient = Galacticc.instance.settingsManager.getSettingByName(this, "AnimatedGradient").getValBoolean();
-        double gradientSpeed = Galacticc.instance.settingsManager.getSettingByName(this, "Gradient Speed").getValDouble();
-
         int backgroundColor = (bgAlpha << 24) | (bgRed << 16) | (bgGreen << 8) | bgBlue;
 
-        long currentTime = System.currentTimeMillis(); // Time for animation
+        long currentTime = System.currentTimeMillis(); // Time for animations
+        int slideDuration = 500; // Slide-in duration in milliseconds
+
         int moduleCount = modList.size(); // Total modules for gradient calculation
         int moduleIndex = 0; // Start from bottom
 
         for (int i = moduleCount - 1; i >= 0; i--) { // Reverse order for bottom-to-top gradient
             Module mod = modList.get(i);
             if (mod.visible && mod.isToggled()) {
-                // Check the global flag and suppress HUD info if needed
+                if (!activationTimes.containsKey(mod)) {
+                    activationTimes.put(mod, currentTime); // Register activation time if not already added
+                }
+
+                long activationTime = activationTimes.get(mod);
+                int elapsed = (int) (currentTime - activationTime);
+
                 String hudInfo = Module.hideHUDInfo ? null : mod.getHUDInfo();
-                String displayText = mod.getName() + (hudInfo != null ? " " + hudInfo : ""); // Append HUD info to the module name
+                String displayText = mod.getName() + (hudInfo != null ? " " + hudInfo : "");
+                int displayTextWidth = fr.getStringWidth(displayText); // Width of the full text
+
+                // Determine horizontal position based on slide-in progress
+                int finalPosition = sr.getScaledWidth() - displayTextWidth - rightOffSet - margin;
+                int startOffScreen = sr.getScaledWidth() + displayTextWidth;
+                int textX = elapsed < slideDuration
+                        ? startOffScreen - (int) ((startOffScreen - finalPosition) * (elapsed / (double) slideDuration))
+                        : finalPosition; // Animate for slideDuration, then stop
 
                 // Render background if enabled
                 if (useBackgroundColors && background) {
                     Gui.drawRect(
-                            sr.getScaledWidth() - fr.getStringWidth(displayText) - margin * 2 - rightOffSet,
+                            textX - margin,
                             topOffSet,
-                            sr.getScaledWidth() - rightOffSet,
+                            textX + displayTextWidth + margin,
                             topOffSet + margin * 2 + fr.FONT_HEIGHT,
                             backgroundColor
                     );
                 }
 
-                // Calculate color for the module
-                int renderColor = textColor;
-
-                if (useColors) {
-                    if (useAnimatedGradient) {
-                        // Animated gradient with bottom-to-top progression
-                        float hue = ((currentTime % (int) (5000 / gradientSpeed)) / (5000.0F / (float) gradientSpeed) + (float) moduleIndex / moduleCount) % 1.0F;
-                        int animatedColor = Color.HSBtoRGB(hue, 1.0F, 1.0F);
-                        int animatedAlpha = (int) (textAlpha * ((animatedColor >> 24) & 0xFF) / 255.0F); // Preserve alpha
-                        renderColor = (animatedAlpha << 24) | (animatedColor & 0xFFFFFF); // Combine alpha and RGB
-                    } else if (useGradientColors) {
-                        // Static gradient logic (bottom-to-top)
-                        float progress = (float) moduleIndex / (float) moduleCount;
-                        int blendedRed = (int) ((1 - progress) * textRed + progress * gradRed);
-                        int blendedGreen = (int) ((1 - progress) * textGreen + progress * gradGreen);
-                        int blendedBlue = (int) ((1 - progress) * textBlue + progress * gradBlue);
-                        int blendedAlpha = (int) ((1 - progress) * textAlpha + progress * gradAlpha);
-                        renderColor = (blendedAlpha << 24) | (blendedRed << 16) | (blendedGreen << 8) | blendedBlue;
-                    }
-                }
-
-                // Reset color before drawing text
-                GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F); // Reset color (important for preserving original color state)
-
-                // Render module text with shadow
+                // Render module text
                 if (textShadow) {
                     fr.drawStringWithShadow(
                             displayText,
-                            sr.getScaledWidth() - fr.getStringWidth(displayText) - rightOffSet - margin,
+                            textX,
                             topOffSet + margin,
-                            renderColor
+                            textColor
                     );
                 } else {
                     fr.drawString(
                             displayText,
-                            sr.getScaledWidth() - fr.getStringWidth(displayText) - rightOffSet - margin,
+                            textX,
                             topOffSet + margin,
-                            renderColor
+                            textColor
                     );
                 }
 
@@ -245,8 +228,10 @@ public class HUD extends Module {
                 moduleIndex++; // Increment for gradient calculation
             }
         }
-    }
 
+        // Clean up activation times for inactive modules
+        activationTimes.keySet().removeIf(mod -> !modList.contains(mod) || !mod.isToggled());
+    }
 
     @Override
     public void onEnabled() {

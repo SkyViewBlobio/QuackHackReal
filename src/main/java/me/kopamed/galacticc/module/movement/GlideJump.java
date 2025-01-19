@@ -15,8 +15,8 @@ public class GlideJump extends Module {
     private static final Minecraft mc = Minecraft.getMinecraft();
 
     public GlideJump() {
-        super("SprungGleiter", "@Hauptinformation: " +
-                "Macht dich schneller und laesst dich beim springen gleiten, fast wie ein Supersprung.", true, false, Category.BEWEGUNG);
+        super("Speed", "@Hauptinformation: " +
+                "Macht dich schneller", true, false, Category.BEWEGUNG);
 
         // Add slider for strafe speed (0.1 to 2.0)
         Galacticc.instance.settingsManager.rSetting(new Setting("Schnelligkeit", this, 0.5, 0.1, 0.13, false));

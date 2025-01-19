@@ -6,6 +6,7 @@ import me.kopamed.galacticc.module.Module;
 import me.kopamed.galacticc.settings.Setting;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Enchantments;
@@ -13,20 +14,25 @@ import net.minecraft.item.ItemPickaxe;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.play.client.CPacketHeldItemChange;
 import net.minecraft.network.play.client.CPacketPlayerDigging;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.TextFormatting;
+import net.minecraftforge.client.event.RenderWorldLastEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
+import org.lwjgl.opengl.GL11;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class AutoObsidianMiner extends Module {
     private boolean isMining = false;
     private BlockPos targetBlockPos = null;
     private long lastMiningTime = 0;
     private long miningDuration = 0;
-    private float blockHardness = 0;
+    private final Map<BlockPos, Float> fadeBlocks = new HashMap<>();
 
     public AutoObsidianMiner() {
         super("AutoObsidianMiner", "Mines Obsidian blocks automatically when left-clicked.", false, false, Category.SPIELER);
@@ -47,55 +53,177 @@ public class AutoObsidianMiner extends Module {
 
         Block block = mc.world.getBlockState(event.getPos()).getBlock();
 
-        // Only mine if the block is Obsidian
         if (block != Blocks.OBSIDIAN) return;
 
         targetBlockPos = event.getPos();
         IBlockState blockState = mc.world.getBlockState(targetBlockPos);
-        blockHardness = getBlockStrength(blockState, targetBlockPos);
+        float blockHardness = getBlockStrength(blockState, targetBlockPos);
 
-        // Calculate mining duration based on block hardness
         miningDuration = getMiningDuration(blockHardness);
         lastMiningTime = System.currentTimeMillis();
 
-        // Silent switch to pickaxe
         int pickaxeSlot = findPickaxeInHotbar();
         if (pickaxeSlot != -1) {
             silentSwitchToPickaxe(pickaxeSlot);
         }
+
+        fadeBlocks.put(targetBlockPos, 0.4f);
 
         isMining = true;
     }
 
     @SubscribeEvent
     public void onTick(TickEvent.PlayerTickEvent event) {
-        if (mc.player == null || mc.world == null || !isMining) return;
+        if (mc.player == null || mc.world == null) return;
 
-        String mode = Galacticc.instance.settingsManager.getSettingByName(this, "Mode").getValString();
-        long elapsedTime = System.currentTimeMillis() - lastMiningTime;
+        // Handle mining logic
+        if (isMining) {
+            String mode = Galacticc.instance.settingsManager.getSettingByName(this, "Mode").getValString();
+            long elapsedTime = System.currentTimeMillis() - lastMiningTime;
 
-        // Delegate behavior based on mode
-        switch (mode) {
-            case "Vanilla":
-                handleVanillaMining(elapsedTime);
-                break;
-            case "Damage":
-                handleDamageMining(elapsedTime);
-                break;
-            case "Packet":
-                handlePacketMining(elapsedTime);
-                break;
-            case "SpeedMine":
-                handleSpeedMining(elapsedTime);
-                break;
-            default:
-                // Default fallback mode
-                handleVanillaMining(elapsedTime);
-                break;
+            switch (mode) {
+                case "Damage":
+                    handleDamageMining(elapsedTime);
+                    break;
+                case "Packet":
+                    handlePacketMining(elapsedTime);
+                    break;
+                case "SpeedMine":
+                    handleSpeedMining(elapsedTime);
+                    break;
+                default:
+                    handleVanillaMining(elapsedTime);
+                    break;
+            }
+        }
+
+        fadeBlocks.entrySet().removeIf(entry -> {
+            float alpha = entry.getValue() - 0.01f;
+            if (alpha <= 0) return true;
+            entry.setValue(alpha);
+            return false;
+        });
+    }
+
+    @SubscribeEvent
+    public void onRenderWorldLast(RenderWorldLastEvent event) {
+        if (mc.player == null || mc.world == null) return;
+
+        // Render fading blocks
+        for (Map.Entry<BlockPos, Float> entry : fadeBlocks.entrySet()) {
+            BlockPos blockPos = entry.getKey();
+            float alpha = entry.getValue();
+            renderBlockFade(blockPos, alpha);
         }
     }
 
-    // Vanilla mining mode
+    private void renderBlockFade(BlockPos blockPos, float fadeAlpha) {
+        IBlockState blockState = mc.world.getBlockState(blockPos);
+        AxisAlignedBB boundingBox = blockState.getBoundingBox(mc.world, blockPos)
+                .offset(blockPos)
+                .offset(-mc.getRenderManager().viewerPosX,
+                        -mc.getRenderManager().viewerPosY,
+                        -mc.getRenderManager().viewerPosZ);
+
+        GlStateManager.pushMatrix();
+        GlStateManager.disableTexture2D();
+        GlStateManager.enableBlend();
+        GlStateManager.disableDepth();
+        GlStateManager.blendFunc(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA);
+
+        // Render green color with fading alpha
+        GlStateManager.color(0.0f, 1.0f, 0.0f, fadeAlpha);
+        drawFilledBox(boundingBox);
+
+        drawOutline(boundingBox, fadeAlpha);
+
+        GlStateManager.enableTexture2D();
+        GlStateManager.enableDepth();
+        GlStateManager.disableBlend();
+        GlStateManager.popMatrix();
+    }
+
+    private void drawOutline(AxisAlignedBB box, float alpha) {
+        GL11.glLineWidth(2.0F);
+        GL11.glColor4f(0.0f, 1.0f, 0.0f, alpha);
+        GL11.glBegin(GL11.GL_LINES);
+
+        GL11.glVertex3d(box.minX, box.minY, box.minZ);
+        GL11.glVertex3d(box.maxX, box.minY, box.minZ);
+
+        GL11.glVertex3d(box.maxX, box.minY, box.minZ);
+        GL11.glVertex3d(box.maxX, box.minY, box.maxZ);
+
+        GL11.glVertex3d(box.maxX, box.minY, box.maxZ);
+        GL11.glVertex3d(box.minX, box.minY, box.maxZ);
+
+        GL11.glVertex3d(box.minX, box.minY, box.maxZ);
+        GL11.glVertex3d(box.minX, box.minY, box.minZ);
+
+        GL11.glVertex3d(box.minX, box.maxY, box.minZ);
+        GL11.glVertex3d(box.maxX, box.maxY, box.minZ);
+
+        GL11.glVertex3d(box.maxX, box.maxY, box.minZ);
+        GL11.glVertex3d(box.maxX, box.maxY, box.maxZ);
+
+        GL11.glVertex3d(box.maxX, box.maxY, box.maxZ);
+        GL11.glVertex3d(box.minX, box.maxY, box.maxZ);
+
+        GL11.glVertex3d(box.minX, box.maxY, box.maxZ);
+        GL11.glVertex3d(box.minX, box.maxY, box.minZ);
+
+        GL11.glVertex3d(box.minX, box.minY, box.minZ);
+        GL11.glVertex3d(box.minX, box.maxY, box.minZ);
+
+        GL11.glVertex3d(box.maxX, box.minY, box.minZ);
+        GL11.glVertex3d(box.maxX, box.maxY, box.minZ);
+
+        GL11.glVertex3d(box.maxX, box.minY, box.maxZ);
+        GL11.glVertex3d(box.maxX, box.maxY, box.maxZ);
+
+        GL11.glVertex3d(box.minX, box.minY, box.maxZ);
+        GL11.glVertex3d(box.minX, box.maxY, box.maxZ);
+
+        GL11.glEnd();
+    }
+
+    private void drawFilledBox(AxisAlignedBB box) {
+        GL11.glBegin(GL11.GL_QUADS);
+
+        GL11.glVertex3d(box.minX, box.minY, box.minZ);
+        GL11.glVertex3d(box.maxX, box.minY, box.minZ);
+        GL11.glVertex3d(box.maxX, box.minY, box.maxZ);
+        GL11.glVertex3d(box.minX, box.minY, box.maxZ);
+
+        GL11.glVertex3d(box.minX, box.maxY, box.minZ);
+        GL11.glVertex3d(box.minX, box.maxY, box.maxZ);
+        GL11.glVertex3d(box.maxX, box.maxY, box.maxZ);
+        GL11.glVertex3d(box.maxX, box.maxY, box.minZ);
+
+        GL11.glVertex3d(box.minX, box.minY, box.minZ);
+        GL11.glVertex3d(box.minX, box.maxY, box.minZ);
+        GL11.glVertex3d(box.maxX, box.maxY, box.minZ);
+        GL11.glVertex3d(box.maxX, box.minY, box.minZ);
+
+        GL11.glVertex3d(box.minX, box.minY, box.maxZ);
+        GL11.glVertex3d(box.maxX, box.minY, box.maxZ);
+        GL11.glVertex3d(box.maxX, box.maxY, box.maxZ);
+        GL11.glVertex3d(box.minX, box.maxY, box.maxZ);
+
+        GL11.glVertex3d(box.minX, box.minY, box.minZ);
+        GL11.glVertex3d(box.minX, box.minY, box.maxZ);
+        GL11.glVertex3d(box.minX, box.maxY, box.maxZ);
+        GL11.glVertex3d(box.minX, box.maxY, box.minZ);
+
+        GL11.glVertex3d(box.maxX, box.minY, box.minZ);
+        GL11.glVertex3d(box.maxX, box.maxY, box.minZ);
+        GL11.glVertex3d(box.maxX, box.maxY, box.maxZ);
+        GL11.glVertex3d(box.maxX, box.minY, box.maxZ);
+
+        GL11.glEnd();
+    }
+
+
     private void handleVanillaMining(long elapsedTime) {
         if (elapsedTime >= miningDuration) {
             sendMiningPacket(CPacketPlayerDigging.Action.STOP_DESTROY_BLOCK, targetBlockPos);
@@ -158,7 +286,6 @@ public class AutoObsidianMiner extends Module {
         CPacketPlayerDigging packet = new CPacketPlayerDigging(action, pos, mc.player.getHorizontalFacing());
         mc.player.connection.sendPacket(packet);
     }
-
     // Get block strength (hardness)
     public float getBlockStrength(IBlockState state, BlockPos position) {
         float hardness = state.getBlockHardness(mc.world, position);
@@ -171,13 +298,13 @@ public class AutoObsidianMiner extends Module {
         float effectiveStrength = hardness;
         int efficiencyLevel = EnchantmentHelper.getEnchantmentLevel(Enchantments.EFFICIENCY, currentTool);
         if (efficiencyLevel > 0) {
-            effectiveStrength *= (1 + (efficiencyLevel * 0.1));
+            effectiveStrength *= (float) (1 + (efficiencyLevel * 0.1)); // Explicit cast to float
         }
 
         return effectiveStrength;
     }
 
-    // Calculate mining duration
+        // Calculate mining duration
     private long getMiningDuration(float hardness) {
         return (long) (1000 * (1 / hardness)); // Adjust as needed
     }
@@ -185,6 +312,6 @@ public class AutoObsidianMiner extends Module {
     @Override
     public String getHUDInfo() {
         String mode = Galacticc.instance.settingsManager.getSettingByName(this, "Mode").getValString();
-        return TextFormatting.GRAY + "[Mode: " + TextFormatting.GREEN + mode + TextFormatting.GRAY + "]";
+        return TextFormatting.GRAY + "[Mode: " + TextFormatting.GRAY + mode + TextFormatting.GRAY + "]";
     }
 }
