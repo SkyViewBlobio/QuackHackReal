@@ -2,10 +2,13 @@ package me.kopamed.galacticc.module.movement;
 
 import com.mojang.realmsclient.gui.ChatFormatting;
 import me.kopamed.galacticc.Galacticc;
+import me.kopamed.galacticc.events.PacketEvent;
 import me.kopamed.galacticc.module.Category;
 import me.kopamed.galacticc.module.Module;
 import me.kopamed.galacticc.settings.Setting;
 import net.minecraft.client.Minecraft;
+import net.minecraft.network.Packet;
+import net.minecraft.network.play.client.CPacketEntityAction;
 import net.minecraft.network.play.client.CPacketPlayer;
 import net.minecraftforge.event.entity.living.LivingFallEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -16,6 +19,7 @@ public class ElytraFly extends Module {
     private boolean nearGround = false;
     private boolean forceFall = false;
     private long groundProximityStartTime = 0;
+    private boolean isCustomPacket = false;
 
     public ElytraFly() {
         super("ElytraFly", "" +
@@ -41,7 +45,17 @@ public class ElytraFly extends Module {
 
     @SubscribeEvent
     public void onTick(TickEvent.PlayerTickEvent event) {
-        if (mc.player == null || mc.world == null || !mc.player.isElytraFlying() || event.phase != TickEvent.Phase.START) {
+        if (mc.player == null || mc.world == null || event.phase != TickEvent.Phase.START) {
+            return;
+        }
+
+        if (!mc.player.isElytraFlying() && !mc.player.onGround && mc.player.fallDistance > 0.1f) {
+            mc.player.connection.sendPacket(new CPacketEntityAction(mc.player, CPacketEntityAction.Action.START_FALL_FLYING));
+        }
+
+        if (mc.player.onGround) {
+            mc.player.motionX = 0.0;
+            mc.player.motionZ = 0.0;
             return;
         }
 
@@ -86,12 +100,55 @@ public class ElytraFly extends Module {
         } else {
             mc.player.motionY = -0.05;
         }
+    }
 
-        mc.player.fallDistance = 0.0f;
 
-        if (playerHeightAboveGround <= 1.5) {
-            mc.player.connection.sendPacket(new CPacketPlayer(true));
-            mc.player.onGround = true;
+    @SubscribeEvent
+    public void onPacketSend(PacketEvent event) {
+        if (event.getTime() != PacketEvent.Time.Send) {
+            return;
+        }
+
+        if (isCustomPacket) {
+            return;
+        }
+
+        Packet<?> packet = event.getPacket();
+
+        if (packet instanceof CPacketPlayer.Position) {
+            CPacketPlayer.Position posPacket = (CPacketPlayer.Position) packet;
+
+            if (mc.player.fallDistance > 2.0f || mc.player.isElytraFlying()) {
+                mc.player.fallDistance = 0.0f;
+                event.setCanceled(true);
+
+                isCustomPacket = true;
+                mc.player.connection.sendPacket(new CPacketPlayer.Position(
+                        posPacket.getX(mc.player.posX),
+                        posPacket.getY(mc.player.posY),
+                        posPacket.getZ(mc.player.posZ),
+                        true
+                ));
+                isCustomPacket = false;
+            }
+        } else if (packet instanceof CPacketPlayer.PositionRotation) {
+            CPacketPlayer.PositionRotation posRotPacket = (CPacketPlayer.PositionRotation) packet;
+
+            if (mc.player.fallDistance > 2.0f || mc.player.isElytraFlying()) {
+                mc.player.fallDistance = 0.0f;
+                event.setCanceled(true);
+
+                isCustomPacket = true;
+                mc.player.connection.sendPacket(new CPacketPlayer.PositionRotation(
+                        posRotPacket.getX(mc.player.posX),
+                        posRotPacket.getY(mc.player.posY),
+                        posRotPacket.getZ(mc.player.posZ),
+                        mc.player.rotationYaw,
+                        mc.player.rotationPitch,
+                        true
+                ));
+                isCustomPacket = false;
+            }
         }
     }
 

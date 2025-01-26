@@ -47,7 +47,7 @@ public class Informationen extends Module {
                         ChatFormatting.BLUE + ChatFormatting.BOLD + ChatFormatting.UNDERLINE + "Hauptinformation:|" + ChatFormatting.WHITE +
                         "Zeigt dir viele wichtige Informationen.",
                 false, false, Category.TEXTSTUFF);
-
+        Galacticc.instance.settingsManager.rSetting(new Setting("Right-Aligned", this, false));
         Galacticc.instance.settingsManager.rSetting(new Setting("Zeige FPS", this, true));
         Galacticc.instance.settingsManager.rSetting(new Setting("Coordinaten", this, true));
         Galacticc.instance.settingsManager.rSetting(new Setting("Spielzeit", this, true));
@@ -110,6 +110,7 @@ public class Informationen extends Module {
 
         int xOffset = (int) Galacticc.instance.settingsManager.getSettingByName(this, "X Offset").getValDouble();
         int yOffset = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Y Offset").getValDouble();
+        boolean useGradient = Galacticc.instance.settingsManager.getSettingByName(this, "Gradient Colors").getValBoolean();
 
         int labelRed = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Label Rot").getValDouble();
         int labelGreen = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Label Green").getValDouble();
@@ -118,7 +119,6 @@ public class Informationen extends Module {
         int valueGreen = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Value Green").getValDouble();
         int valueBlue = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Value Blau").getValDouble();
 
-        boolean useGradient = Galacticc.instance.settingsManager.getSettingByName(this, "Gradient Colors").getValBoolean();
         int gradRed = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Gradient Rot").getValDouble();
         int gradGreen = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Gradient Green").getValDouble();
         int gradBlue = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Gradient Blau").getValDouble();
@@ -138,7 +138,7 @@ public class Informationen extends Module {
         int xPos = sr.getScaledWidth() / 2 + xOffset;
         int yPos = sr.getScaledHeight() / 2 - 40 + yOffset;
 
-
+        boolean rightaligned = Galacticc.instance.settingsManager.getSettingByName(this, "Right-Aligned").getValBoolean();
         boolean showFPS = Galacticc.instance.settingsManager.getSettingByName(this, "Zeige FPS").getValBoolean();
         boolean showCoords = Galacticc.instance.settingsManager.getSettingByName(this, "Coordinaten").getValBoolean();
         boolean showGameTime = Galacticc.instance.settingsManager.getSettingByName(this, "Spielzeit").getValBoolean();
@@ -261,12 +261,34 @@ public class Informationen extends Module {
                 valueRenderColor = (valueAlpha << 24) | (valueRed << 16) | (valueGreen << 8) | valueBlue;
             }
 
-            renderText(fr, label, xPos, adjustedYPos, backgroundColor, labelRenderColor);
-            renderText(fr, value, xPos + fr.getStringWidth(label), adjustedYPos, 0, valueRenderColor);
+            // Calculate the width of the label and value strings
+            int labelWidth = fr.getStringWidth(label);
+            int valueWidth = fr.getStringWidth(value);
+            int totalWidth = labelWidth + valueWidth;
+
+            // Default position for left alignment
+            int xRenderPos = xPos;
+
+            // Apply right-aligned logic only if enabled
+            if (rightaligned) {
+                int screenWidth = sr.getScaledWidth();
+                xRenderPos = screenWidth - xOffset; // Start rendering from the right
+
+                // Check if text will render offscreen
+                if (xRenderPos - totalWidth < 0) {
+                    // Adjust to fit within the screen
+                    xRenderPos = totalWidth + 5; // Add a small margin of 5 pixels
+                }
+            }
+
+            // Render the label and value with the adjusted positions
+            renderText(fr, label, rightaligned ? xRenderPos - totalWidth : xRenderPos, adjustedYPos, backgroundColor, labelRenderColor);
+            renderText(fr, value, rightaligned ? xRenderPos - valueWidth : xRenderPos + labelWidth, adjustedYPos, 0, valueRenderColor);
 
             adjustedYPos += 12;
             moduleIndex++;
         }
+
     }
 
     private String getTPS() {

@@ -39,6 +39,9 @@ public class Killaurarewrite extends Module {
     private boolean attackNeutral;
     private boolean attackPlayers;
     private boolean silentSwitchEnabled;
+    private boolean obsidianSwitchEnabled;
+    private long lastObsidianSwitchTime = 0;
+    private static final long WEAKNESS_DURATION_MS = 11000;
 
     public Killaurarewrite() {
         super("Aura", "" +
@@ -68,7 +71,9 @@ public class Killaurarewrite extends Module {
                         "- Reichweite: " + ChatFormatting.WHITE +
                         "Laesst dich die Angriffsreichweite bestimmen." + ChatFormatting.RED +
                         "- Sweeping Edge Unterstuetzung: " + ChatFormatting.WHITE +
-                        "Fuegt mehreren Zielen in einem| Schwung Schaden zu.|" +
+                        "Fuegt mehreren Zielen in einem| Schwung Schaden zu.|" + ChatFormatting.RED +
+                        "- ObsidianSword-Switch: " + ChatFormatting.WHITE +
+                        "Schaltet zum Obsidian-Schwert, um das Ziel| mit Schwaeche II fuer 11 Sekunden zu belegen.| Wechselt danach zu einem anderen Schwert, um| effizient Schaden zuzufugen, bevor nach 11| Sekunden erneut zum Obsidian-Schwert gewechselt wird.|" +
                         ChatFormatting.BLUE + ChatFormatting.BOLD + ChatFormatting.UNDERLINE + "Nutzungsinformation:|" + ChatFormatting.WHITE +
                         "Passe die Angriffskategorien und den| Modus im Modulmenue an, um optimalen| Schutz und Angriffseffizienz zu erreichen.",
                 true, false, Category.ANGRIFF);
@@ -81,6 +86,7 @@ public class Killaurarewrite extends Module {
         attackModes.add("Multi");
         attackModes.add("Closest");
         Galacticc.instance.settingsManager.rSetting(new Setting("Attack Mode", this, "Closest", attackModes));
+        Galacticc.instance.settingsManager.rSetting(new Setting("ObsidianSword-Switch", this, false));
         Galacticc.instance.settingsManager.rSetting(new Setting("Silent-Switch", this, false));
         Galacticc.instance.settingsManager.rSetting(new Setting("Attack Monsters", this, true));
         Galacticc.instance.settingsManager.rSetting(new Setting("Attack Animals", this, false));
@@ -103,7 +109,7 @@ public class Killaurarewrite extends Module {
     }
 
     /**
-     * Caches the settings to minimize repeated lookups.
+     * Caches the settings to minimize repeated lookup.
      */
     private void cacheSettings() {
         this.attackMode = Galacticc.instance.settingsManager.getSettingByName(this, "Attack Mode").getValString();
@@ -112,6 +118,7 @@ public class Killaurarewrite extends Module {
         this.attackNeutral = Galacticc.instance.settingsManager.getSettingByName(this, "Attack Neutral").getValBoolean();
         this.attackPlayers = Galacticc.instance.settingsManager.getSettingByName(this, "Attack Players").getValBoolean();
         this.silentSwitchEnabled = Galacticc.instance.settingsManager.getSettingByName(this, "Silent-Switch").getValBoolean();
+        this.obsidianSwitchEnabled = Galacticc.instance.settingsManager.getSettingByName(this, "ObsidianSword-Switch").getValBoolean(); // New cache
     }
 
     @SubscribeEvent
@@ -161,7 +168,8 @@ public class Killaurarewrite extends Module {
                 || attackAnimals != Galacticc.instance.settingsManager.getSettingByName(this, "Attack Animals").getValBoolean()
                 || attackNeutral != Galacticc.instance.settingsManager.getSettingByName(this, "Attack Neutral").getValBoolean()
                 || attackPlayers != Galacticc.instance.settingsManager.getSettingByName(this, "Attack Players").getValBoolean()
-                || silentSwitchEnabled != Galacticc.instance.settingsManager.getSettingByName(this, "Silent-Switch").getValBoolean();
+                || silentSwitchEnabled != Galacticc.instance.settingsManager.getSettingByName(this, "Silent-Switch").getValBoolean()
+                || obsidianSwitchEnabled != Galacticc.instance.settingsManager.getSettingByName(this, "ObsidianSword-Switch").getValBoolean(); // Check for change
     }
 
     /**
@@ -293,7 +301,7 @@ public class Killaurarewrite extends Module {
      *     <li>Calculates the required rotation for the player to face the target entity.</li>
      *     <li>Sends a rotation packet to adjust the player's facing direction.</li>
      *     <li>Executes an attack on the target entity using a {@link CPacketUseEntity} packet.</li>
-     *     <li>If the player is grounded, not sprinting, and the attack cooldown is satisfied, checks for nearby entities and attacks them as well,
+     *     <li>If the player is grounded, not sprinting, and the attack cool-down is satisfied, checks for nearby entities and attacks them as well,
      *         based on configurable settings.</li>
      *     <li>Optionally performs a silent switch to the sword slot if enabled, and reverts back to the original slot after the attack.</li>
      * </ul>
@@ -306,10 +314,15 @@ public class Killaurarewrite extends Module {
             return;
         }
 
+        boolean obsidianSwitchEnabled = Galacticc.instance.settingsManager.getSettingByName(this, "ObsidianSword-Switch").getValBoolean();
         boolean silentSwitchEnabled = Galacticc.instance.settingsManager.getSettingByName(this, "Silent-Switch").getValBoolean();
 
-        int swordSlot = findSwordInHotbar();
+        int obsidianSwordSlot = findObsidianSwordInHotbar();
+        int otherSwordSlot = findSwordInHotbar();
         int originalSlot = mc.player.inventory.currentItem;
+
+        long currentTime = System.currentTimeMillis();
+
         Runnable attackAction = () -> {
             float[] rotation = calculateAngles(target.getPositionVector());
             mc.player.connection.sendPacket(new CPacketPlayer.Rotation(rotation[0], rotation[1], mc.player.onGround));
@@ -336,27 +349,35 @@ public class Killaurarewrite extends Module {
             }
         };
 
-        // If silent switching is enabled and the sword slot is not the current slot, switch slots silently
-        if (silentSwitchEnabled && swordSlot != -1 && swordSlot != originalSlot) {
-            // Send a packet to switch to the sword slot
-            mc.player.connection.sendPacket(new CPacketHeldItemChange(swordSlot));
+        if (obsidianSwitchEnabled && obsidianSwordSlot != -1 && (currentTime - lastObsidianSwitchTime) >= WEAKNESS_DURATION_MS) {
+            if (silentSwitchEnabled) {
+                mc.player.connection.sendPacket(new CPacketHeldItemChange(obsidianSwordSlot));
+            } else {
+                mc.player.inventory.currentItem = obsidianSwordSlot;
+            }
 
-            // Execute the attack action
             attackAction.run();
+            lastObsidianSwitchTime = currentTime;
 
-            // Revert back to the original slot after the attack
+            if (silentSwitchEnabled) {
+                mc.player.connection.sendPacket(new CPacketHeldItemChange(originalSlot));
+            } else {
+                mc.player.inventory.currentItem = originalSlot;
+            }
+        } else if (silentSwitchEnabled && otherSwordSlot != -1) {
+            mc.player.connection.sendPacket(new CPacketHeldItemChange(otherSwordSlot));
+            attackAction.run();
             mc.player.connection.sendPacket(new CPacketHeldItemChange(originalSlot));
-            mc.playerController.updateController();
         } else {
-            // Perform the attack without switching slots
             attackAction.run();
         }
     }
 
+
     /**
-     * Finds the first sword in the player's hotbar.
+     * Finds the first sword in the player's hot-bar.
      *
-     * @return The hotbar slot index of the sword, or -1 if no sword is found.
+     * @return The hot-bar slot index of the sword, or -1 if no sword is found.
      */
     private int findSwordInHotbar() {
         for (int i = 0; i < 9; i++) {
@@ -367,6 +388,17 @@ public class Killaurarewrite extends Module {
         }
         return -1;
     }
+
+    private int findObsidianSwordInHotbar() {
+        for (int i = 0; i < 9; i++) {
+            ItemStack itemStack = mc.player.inventory.getStackInSlot(i);
+            if (itemStack.getItem() instanceof ItemSword && "Obsidian Sword".equals(itemStack.getDisplayName())) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
 
     @Override
     public String getHUDInfo() {

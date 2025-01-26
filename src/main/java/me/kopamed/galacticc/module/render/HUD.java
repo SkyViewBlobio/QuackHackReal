@@ -12,6 +12,7 @@ import net.minecraft.client.gui.ScaledResolution;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -26,7 +27,8 @@ public class HUD extends Module {
     private String sortMode;
     public List<Module> modList;
     private final Map<Module, Long> activationTimes = new HashMap<>(); // Store activation times
-
+    private final Map<Module, Long> deactivationTimes = new HashMap<>();
+    //todo cleanup
     public HUD() {
         super("Bildschirmzeugs", "@Hauptinformationen: " +
                 "Zeigt dir den Modnamen, die aktiven Module, laesst dich die Farben von den benannten Dingen aendern", false, false, Category.VISUELLES);
@@ -113,7 +115,7 @@ public class HUD extends Module {
     }
 
     private void renderWatermark(ScaledResolution sr) {
-        String waterMarkText = "QuackHack | 1.12.2+Internal+AutoOBMiner | v1.9.3b+"; // Static watermark text
+        String waterMarkText = "QuackHack | 1.12.2+Internal-AutoCrystal | v2.0.0b+"; // Static watermark text
         FontRenderer fr = Minecraft.getMinecraft().fontRenderer;  // Updated here
 
         // Draw a border around the watermark (this still remains)
@@ -167,71 +169,129 @@ public class HUD extends Module {
         int bgBlue = (int) Galacticc.instance.settingsManager.getSettingByName(this, "BG Blau").getValDouble();
         int bgAlpha = (int) Galacticc.instance.settingsManager.getSettingByName(this, "BG Alpha").getValDouble();
 
+        // Fetch settings for gradient colors
+        boolean useGradientColors = Galacticc.instance.settingsManager.getSettingByName(this, "Gradient Colors").getValBoolean();
+        int gradRed = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Gradient Rot").getValDouble();
+        int gradGreen = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Gradient Green").getValDouble();
+        int gradBlue = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Gradient Blau").getValDouble();
+        int gradAlpha = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Gradient Alpha").getValDouble();
+
+        boolean useAnimatedGradient = Galacticc.instance.settingsManager.getSettingByName(this, "AnimatedGradient").getValBoolean();
+        double gradientSpeed = Galacticc.instance.settingsManager.getSettingByName(this, "Gradient Speed").getValDouble();
+
         int backgroundColor = (bgAlpha << 24) | (bgRed << 16) | (bgGreen << 8) | bgBlue;
 
         long currentTime = System.currentTimeMillis(); // Time for animations
-        int slideDuration = 500; // Slide-in duration in milliseconds
+        int slideDuration = 500; // Slide-in and slide-out duration in milliseconds
 
         int moduleCount = modList.size(); // Total modules for gradient calculation
         int moduleIndex = 0; // Start from bottom
 
+        // Loop through active modules
         for (int i = moduleCount - 1; i >= 0; i--) { // Reverse order for bottom-to-top gradient
             Module mod = modList.get(i);
-            if (mod.visible && mod.isToggled()) {
+            boolean isActive = mod.visible && mod.isToggled();
+
+            // Handle activation and deactivation times
+            if (isActive) {
                 if (!activationTimes.containsKey(mod)) {
                     activationTimes.put(mod, currentTime); // Register activation time if not already added
                 }
+            } else if (activationTimes.containsKey(mod)) {
+                if (!deactivationTimes.containsKey(mod)) {
+                    deactivationTimes.put(mod, currentTime); // Register deactivation time if not already added
+                }
+            }
 
-                long activationTime = activationTimes.get(mod);
-                int elapsed = (int) (currentTime - activationTime);
+            long activationTime = activationTimes.getOrDefault(mod, 0L);
+            long deactivationTime = deactivationTimes.getOrDefault(mod, 0L);
 
-                String hudInfo = Module.hideHUDInfo ? null : mod.getHUDInfo();
-                String displayText = mod.getName() + (hudInfo != null ? " " + hudInfo : "");
-                int displayTextWidth = fr.getStringWidth(displayText); // Width of the full text
+            // Determine if the module is in slide-in or slide-out phase
+            int elapsed = (int) (currentTime - activationTime);
+            int elapsedDeactivation = (int) (currentTime - deactivationTime);
 
-                // Determine horizontal position based on slide-in progress
-                int finalPosition = sr.getScaledWidth() - displayTextWidth - rightOffSet - margin;
-                int startOffScreen = sr.getScaledWidth() + displayTextWidth;
-                int textX = elapsed < slideDuration
+            boolean isSlidingOut = !isActive && deactivationTimes.containsKey(mod) && elapsedDeactivation < slideDuration;
+            if (!isActive && !isSlidingOut) {
+                // Remove from activationTimes and deactivationTimes after sliding out
+                activationTimes.remove(mod);
+                deactivationTimes.remove(mod);
+                continue; // Skip rendering
+            }
+
+            String hudInfo = Module.hideHUDInfo ? null : mod.getHUDInfo();
+            String displayText = mod.getName() + (hudInfo != null ? " " + hudInfo : "");
+            int displayTextWidth = fr.getStringWidth(displayText); // Width of the full text
+
+            // Determine horizontal position for slide-in or slide-out
+            int finalPosition = sr.getScaledWidth() - displayTextWidth - rightOffSet - margin;
+            int startOffScreen = sr.getScaledWidth() + displayTextWidth;
+            int textX;
+
+            if (isSlidingOut) {
+                textX = finalPosition + (int) ((startOffScreen - finalPosition) * (elapsedDeactivation / (double) slideDuration));
+            } else {
+                textX = elapsed < slideDuration
                         ? startOffScreen - (int) ((startOffScreen - finalPosition) * (elapsed / (double) slideDuration))
                         : finalPosition; // Animate for slideDuration, then stop
-
-                // Render background if enabled
-                if (useBackgroundColors && background) {
-                    Gui.drawRect(
-                            textX - margin,
-                            topOffSet,
-                            textX + displayTextWidth + margin,
-                            topOffSet + margin * 2 + fr.FONT_HEIGHT,
-                            backgroundColor
-                    );
-                }
-
-                // Render module text
-                if (textShadow) {
-                    fr.drawStringWithShadow(
-                            displayText,
-                            textX,
-                            topOffSet + margin,
-                            textColor
-                    );
-                } else {
-                    fr.drawString(
-                            displayText,
-                            textX,
-                            topOffSet + margin,
-                            textColor
-                    );
-                }
-
-                topOffSet += fr.FONT_HEIGHT + margin * 2;
-                moduleIndex++; // Increment for gradient calculation
             }
+
+            // Calculate gradient or static color
+            int renderColor = textColor;
+            if (useColors) {
+                if (useAnimatedGradient) {
+                    // Animated gradient with bottom-to-top progression
+                    float hue = ((currentTime % (int) (5000 / gradientSpeed)) / (5000.0F / (float) gradientSpeed) + (float) moduleIndex / moduleCount) % 1.0F;
+                    int animatedColor = Color.HSBtoRGB(hue, 1.0F, 1.0F);
+                    int animatedAlpha = (int) (textAlpha * ((animatedColor >> 24) & 0xFF) / 255.0F); // Preserve alpha
+                    renderColor = (animatedAlpha << 24) | (animatedColor & 0xFFFFFF); // Combine alpha and RGB
+                } else if (useGradientColors) {
+                    // Static gradient logic (bottom-to-top)
+                    float progress = (float) moduleIndex / (float) moduleCount;
+                    int blendedRed = (int) ((1 - progress) * textRed + progress * gradRed);
+                    int blendedGreen = (int) ((1 - progress) * textGreen + progress * gradGreen);
+                    int blendedBlue = (int) ((1 - progress) * textBlue + progress * gradBlue);
+                    int blendedAlpha = (int) ((1 - progress) * textAlpha + progress * gradAlpha);
+                    renderColor = (blendedAlpha << 24) | (blendedRed << 16) | (blendedGreen << 8) | blendedBlue;
+                }
+            }
+
+            // Render background if enabled
+            if (useBackgroundColors && background) {
+                Gui.drawRect(
+                        textX - margin,
+                        topOffSet,
+                        textX + displayTextWidth + margin,
+                        topOffSet + margin * 2 + fr.FONT_HEIGHT,
+                        backgroundColor
+                );
+            }
+
+            // Render module text
+            if (textShadow) {
+                fr.drawStringWithShadow(
+                        displayText,
+                        textX,
+                        topOffSet + margin,
+                        renderColor
+                );
+            } else {
+                fr.drawString(
+                        displayText,
+                        textX,
+                        topOffSet + margin,
+                        renderColor
+                );
+            }
+
+            topOffSet += fr.FONT_HEIGHT + margin * 2;
+            moduleIndex++; // Increment for gradient calculation
         }
 
-        // Clean up activation times for inactive modules
-        activationTimes.keySet().removeIf(mod -> !modList.contains(mod) || !mod.isToggled());
+        // Clean up activation and deactivation times for inactive modules
+        activationTimes.keySet().removeIf(mod -> !modList.contains(mod) || (!mod.isToggled() && !deactivationTimes.containsKey(mod)));
+        deactivationTimes.keySet().removeIf(mod -> !modList.contains(mod));
     }
+
 
     @Override
     public void onEnabled() {

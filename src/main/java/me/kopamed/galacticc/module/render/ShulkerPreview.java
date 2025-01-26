@@ -39,43 +39,50 @@ public class ShulkerPreview extends Module {
         NBTTagCompound blockEntityTag = tag.getCompoundTag("BlockEntityTag");
         NBTTagList items = blockEntityTag.getTagList("Items", 10);
 
-        int adjustedX = event.getX() + 150;
+        int adjustedX = event.getX() + 180;
         int adjustedY = event.getY();
 
         renderShulkerPreview(adjustedX, adjustedY, items);
     }
 
     private void renderShulkerPreview(int x, int y, NBTTagList items) {
-        int rows = 3;
-        int columns = 9;
-        int slotSize = 18;
-        int width = columns * slotSize;
-        int height = rows * slotSize;
+        final int rows = 3;
+        final int columns = 9;
+        final int slotSize = 18;
+        final int width = columns * slotSize;
+        final int height = rows * slotSize;
 
-        Gui.drawRect(x, y, x + width, y + height, new Color(0, 0, 0, 150).getRGB());
+        // Draw the background rectangle only once
+        Gui.drawRect(x, y, x + width, y + height, new Color(186, 85, 211, 150).getRGB());
 
+        // Use one push/pop matrix for the entire preview
+        GlStateManager.pushMatrix();
+        GlStateManager.enableRescaleNormal();
+        GlStateManager.enableBlend();
+        GlStateManager.disableLighting(); // Disable lighting once for all items
+        GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F); // Brighten the items
+
+        // Render each item in the preview
+        RenderItem itemRender = Minecraft.getMinecraft().getRenderItem();
         for (int i = 0; i < items.tagCount(); i++) {
             NBTTagCompound itemTag = items.getCompoundTagAt(i);
             ItemStack itemStack = new ItemStack(itemTag);
 
-            int slotX = x + (i % columns) * slotSize;
-            int slotY = y + (i / columns) * slotSize;
-
-            renderItemStack(itemStack, slotX, slotY);
+            if (!itemStack.isEmpty()) { // Only render non-empty stacks
+                int slotX = x + (i % columns) * slotSize;
+                int slotY = y + (i / columns) * slotSize;
+                renderItemStack(itemRender, itemStack, slotX, slotY);
+            }
         }
+
+        // Restore OpenGL state
+        GlStateManager.enableLighting();
+        GlStateManager.disableBlend();
+        GlStateManager.popMatrix();
     }
 
-        private void renderItemStack (ItemStack stack,int x, int y){
-            RenderItem itemRender = Minecraft.getMinecraft().getRenderItem();
-            GlStateManager.pushMatrix();
-            GlStateManager.enableRescaleNormal();
-            GlStateManager.enableBlend();
-
-            itemRender.renderItemAndEffectIntoGUI(stack, x, y);
-            itemRender.renderItemOverlayIntoGUI(Minecraft.getMinecraft().fontRenderer, stack, x, y, null);
-
-            GlStateManager.disableBlend();
-            GlStateManager.disableRescaleNormal();
-            GlStateManager.popMatrix();
-        }
+    private void renderItemStack(RenderItem itemRender, ItemStack stack, int x, int y) {
+        itemRender.renderItemAndEffectIntoGUI(stack, x, y);
+        itemRender.renderItemOverlayIntoGUI(Minecraft.getMinecraft().fontRenderer, stack, x, y, null);
     }
+}

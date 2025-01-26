@@ -28,13 +28,13 @@ public class ModuleManager {
 
         //************************COMBAT**************************//
 
-        //this.modules.add(new AutoClicker());
         this.modules.add(new Velocity());
         this.modules.add(new DelayRemover());
         this.modules.add(new Reach());
         this.modules.add(new Killaurarewrite());
         this.modules.add(new AutomaticTotemOffhand());
         this.modules.add(new PacketCriticals());
+        this.modules.add(new CrystalAttackModule());
         //this.modules.add(new OneShotArrowModule());
         // need to fix autostart. this.modules.add(new AutoClicker());
 
@@ -86,7 +86,6 @@ public class ModuleManager {
         this.modules.add(new ItemESP());
         this.modules.add(new NameTagHighlight());
         this.modules.add(new ESP());
-        //this.modules.add(new EntityESP());
 
         //************************TEXT STUFF**************************//
 
@@ -95,9 +94,7 @@ public class ModuleManager {
 
         //************************ BS **************************//
 
-        //this.modules.add(new Fly());
         //this.modules.add(new NoFall());
-        //this.modules.add(new Speed());
         //this.modules.add(new AntiBot()); marked for removal
         //this.modules.add(new SelfDestruct());
         this.modules.add(new PlayerESP());

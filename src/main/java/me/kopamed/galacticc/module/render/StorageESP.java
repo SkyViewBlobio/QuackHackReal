@@ -28,6 +28,7 @@ public class StorageESP extends Module {
     private final Minecraft mc = Minecraft.getMinecraft();
     private final Map<BlockPos, Float> blockFadeMap = new HashMap<>();
     private final Map<Entity, MinecartFadeState> minecartFadeMap = new HashMap<>();
+    private static final Map<String, ColorSetting> colorCache = new HashMap<>();
 
     public StorageESP() {
         super("StorageESP", "@HauptInformation: " +
@@ -251,6 +252,64 @@ public class StorageESP extends Module {
                         getColorValue("FurnaceBlue"),
                         getAlphaValue("FurnaceAlpha") * state.alpha);
             }
+        }
+    }
+
+    // Method to initialize and cache settings
+    private void initializeSettings() {
+        // Toggles for each storage unit
+        Galacticc.instance.settingsManager.rSetting(new Setting("NormalChest", this, true));
+        Galacticc.instance.settingsManager.rSetting(new Setting("EnderChest", this, true));
+        Galacticc.instance.settingsManager.rSetting(new Setting("TrappedChest", this, true));
+        Galacticc.instance.settingsManager.rSetting(new Setting("Furnace", this, true));
+        Galacticc.instance.settingsManager.rSetting(new Setting("Dispenser", this, true));
+        Galacticc.instance.settingsManager.rSetting(new Setting("MinecartChest", this, true));
+        Galacticc.instance.settingsManager.rSetting(new Setting("MinecartFurnace", this, true));
+
+        // Add color and alpha sliders for each storage type
+        addColorSetting("Chest", 255, 255, 0, 0.3F);
+        addColorSetting("Ender", 0, 0, 255, 0.3F);
+        addColorSetting("Trapped", 255, 255, 0, 0.3F);
+        addColorSetting("Furnace", 128, 128, 128, 0.3F);
+        addColorSetting("Dispenser", 255, 128, 128, 0.3F);
+
+        // Adding sliders for Fade Speed, RGBA values, and Range
+        Galacticc.instance.settingsManager.rSetting(new Setting("Duration", this, 5.0F, 1.0F, 40.0F, false));
+        Galacticc.instance.settingsManager.rSetting(new Setting("Range", this, 15.0F, 3.0F, 40.0F, false));
+    }
+
+    // Helper method to add color settings
+    private void addColorSetting(String type, int red, int green, int blue, float alpha) {
+        Galacticc.instance.settingsManager.rSetting(new Setting(type + "Red", this, red, 0, 255, true));
+        Galacticc.instance.settingsManager.rSetting(new Setting(type + "Green", this, green, 0, 255, true));
+        Galacticc.instance.settingsManager.rSetting(new Setting(type + "Blue", this, blue, 0, 255, true));
+        Galacticc.instance.settingsManager.rSetting(new Setting(type + "Alpha", this, alpha, 0.0F, 1.0F, false));
+
+        // Cache the initial values
+        colorCache.put(type, new ColorSetting(red, green, blue, alpha));
+    }
+
+    // Update cache on settings change
+    private void updateColorCache() {
+        for (String type : colorCache.keySet()) {
+            int red = getColorValue(type + "Red");
+            int green = getColorValue(type + "Green");
+            int blue = getColorValue(type + "Blue");
+            float alpha = getAlphaValue(type + "Alpha");
+
+            colorCache.put(type, new ColorSetting(red, green, blue, alpha));
+        }
+    }
+
+    private static class ColorSetting {
+        final int red, green, blue;
+        final float alpha;
+
+        ColorSetting(int red, int green, int blue, float alpha) {
+            this.red = red;
+            this.green = green;
+            this.blue = blue;
+            this.alpha = alpha;
         }
     }
 

@@ -80,20 +80,31 @@ public class ESP extends Module {
 
         // Process entities
         for (Entity entity : mc.world.loadedEntityList) {
+            if (entity == null || entity.isDead || !entity.isEntityAlive()) {
+                continue; // Skip invalid entities
+            }
+
             double distanceSq = mc.player.getDistanceSq(entity);
 
-            // Skip early if the entity is far beyond the maximum range
-            if (distanceSq > cachedRange * cachedRange) continue;
+            if (distanceSq > cachedRange * cachedRange) {
+                continue; // Skip entities outside range
+            }
 
-            // Perform expensive checks only after filtering by distance
             if ((cachedShowMonsters && entity instanceof IMob) ||
                     (cachedShowAnimals && entity instanceof EntityAnimal) ||
                     (cachedShowEndCrystals && entity instanceof EntityEnderCrystal)) {
 
-                // Skip entities inside NoRenderRange
-                if (mc.player.getDistance(entity) <= cachedNoRenderRange && !isObstructed(entity)) continue;
-                if (!isEntityInFrustum(entity)) continue;
-                if (!isEntityInFOV(entity)) continue;
+                if (mc.player.getDistance(entity) <= cachedNoRenderRange && !isObstructed(entity)) {
+                    continue; // Skip entities in no-render range
+                }
+
+                if (!isEntityInFrustum(entity)) {
+                    continue; // Skip entities not in frustum
+                }
+
+                if (!isEntityInFOV(entity)) {
+                    continue; // Skip entities not in field of view
+                }
 
                 drawEntityOutline(entity, partialTicks, renderManager);
             }
@@ -125,24 +136,34 @@ public class ESP extends Module {
     }
 
     private void drawEntityOutline(Entity entity, double partialTicks, RenderManager renderManager) {
+        if (entity == null) {
+            return; // Skip if entity is null
+        }
+
         Render<Entity> entityRenderer = renderManager.getEntityRenderObject(entity);
 
-        if (entityRenderer != null) {
-            double x = entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * partialTicks - renderManager.viewerPosX;
-            double y = entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * partialTicks - renderManager.viewerPosY;
-            double z = entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * partialTicks - renderManager.viewerPosZ;
+        if (entityRenderer == null) {
+            return; // Skip if no renderer is available for the entity
+        }
 
-            GlStateManager.pushMatrix();
-            GlStateManager.translate(x, y, z);
-            GL11.glLineWidth(2.0f);
-            GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_LINE);
+        double x = entity.lastTickPosX + (entity.posX - entity.lastTickPosX) * partialTicks - renderManager.viewerPosX;
+        double y = entity.lastTickPosY + (entity.posY - entity.lastTickPosY) * partialTicks - renderManager.viewerPosY;
+        double z = entity.lastTickPosZ + (entity.posZ - entity.lastTickPosZ) * partialTicks - renderManager.viewerPosZ;
 
+        GlStateManager.pushMatrix();
+        GlStateManager.translate(x, y, z);
+        GL11.glLineWidth(2.0f);
+        GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_LINE);
+
+        try {
             // Render the entity outline
             entityRenderer.doRender(entity, 0.0f, 0.0f, 0.0f, entity.rotationYaw, (float) partialTicks);
-
-            GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_FILL);
-            GlStateManager.popMatrix();
+        } catch (Exception e) {
+            System.err.println("Failed to render entity outline: " + e.getMessage());
         }
+
+        GL11.glPolygonMode(GL11.GL_FRONT_AND_BACK, GL11.GL_FILL);
+        GlStateManager.popMatrix();
     }
 
     private boolean isEntityInFOV(Entity entity) {
