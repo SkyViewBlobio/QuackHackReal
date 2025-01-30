@@ -4,7 +4,8 @@ import me.kopamed.galacticc.module.combat.*;
 import me.kopamed.galacticc.module.misc.AntiAFK;
 import me.kopamed.galacticc.module.misc.AutoFish;
 import me.kopamed.galacticc.module.misc.AutomaticCreeperLighter;
-import me.kopamed.galacticc.module.misc.RandomChatMessages;
+import me.kopamed.galacticc.module.textstuff.ChangelogDisplay;
+import me.kopamed.galacticc.module.textstuff.RandomChatMessages;
 import me.kopamed.galacticc.module.mod.cKontrolle;
 import me.kopamed.galacticc.module.movement.*;
 import me.kopamed.galacticc.module.player.AutoObsidianMiner;
@@ -44,7 +45,6 @@ public class ModuleManager {
         //************************MISC**************************//
         this.modules.add(new AutoFish());
         this.modules.add(new AntiAFK());
-        this.modules.add(new RandomChatMessages());
         this.modules.add(new AutomaticCreeperLighter());
 
         //************************MOVEMENT**************************//
@@ -86,11 +86,15 @@ public class ModuleManager {
         this.modules.add(new ItemESP());
         this.modules.add(new NameTagHighlight());
         this.modules.add(new ESP());
+        this.modules.add(new LightningOnTotemPop());
+        this.modules.add(new ZombiePortalShader());
 
         //************************TEXT STUFF**************************//
 
         this.modules.add(new Watermark());
         this.modules.add(new Informationen());
+        this.modules.add(new RandomChatMessages());
+        this.modules.add(new ChangelogDisplay());
 
         //************************ BS **************************//
 

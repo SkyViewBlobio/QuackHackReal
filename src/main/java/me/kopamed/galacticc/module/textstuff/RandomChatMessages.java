@@ -1,4 +1,4 @@
-package me.kopamed.galacticc.module.misc;
+package me.kopamed.galacticc.module.textstuff;
 
 import com.mojang.realmsclient.gui.ChatFormatting;
 import me.kopamed.galacticc.module.Category;
@@ -27,7 +27,7 @@ public class RandomChatMessages extends Module {
     public RandomChatMessages() {
         super("RandomChatMessages", "" +
                 ChatFormatting.BLUE + ChatFormatting.BOLD + ChatFormatting.UNDERLINE + "Hauptinformation:|" + ChatFormatting.WHITE +
-                "Zeigt dir irgendwelche Nachrichten im Chat" , false , false, Category.SONSTIGES);
+                "Zeigt dir irgendwelche Nachrichten im Chat" , false , false, Category.TEXTSTUFF);
     }
 
     @Override

@@ -17,6 +17,7 @@ import net.minecraft.network.play.client.CPacketUseEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.*;
+import net.minecraft.world.EnumDifficulty;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -37,10 +38,9 @@ public class CrystalAttackModule extends Module {
         Galacticc.instance.settingsManager.rSetting(new Setting("Tick Delay", this, 2, 0, 10, true));
         Galacticc.instance.settingsManager.rSetting(new Setting("MinimumPlaceDamage", this, 2, 0, 10, true));
         Galacticc.instance.settingsManager.rSetting(new Setting("EnemyToCrystalDistance", this, 4.5, 0, 10, false)); // Slider for max distance
-
+        Galacticc.instance.settingsManager.rSetting(new Setting("SelfDamage", this, 2, 0, 10, true)); // New setting
 
     }
-
     @SubscribeEvent
     public void onTick(TickEvent.PlayerTickEvent event) {
         if (mc.player == null || mc.world == null || event.phase != TickEvent.Phase.START) {
@@ -50,6 +50,7 @@ public class CrystalAttackModule extends Module {
         tickDelay = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Tick Delay").getValDouble();
         minimumDamagePlace = Galacticc.instance.settingsManager.getSettingByName(this, "MinimumPlaceDamage").getValDouble();
         enemyToCrystalDistance = Galacticc.instance.settingsManager.getSettingByName(this, "EnemyToCrystalDistance").getValDouble();
+        double maxSelfDamage = Galacticc.instance.settingsManager.getSettingByName(this, "SelfDamage").getValDouble(); // New line
 
         ticksElapsed++;
         if (ticksElapsed < tickDelay) {
@@ -67,7 +68,7 @@ public class CrystalAttackModule extends Module {
 
         EntityPlayer targetPlayer = findBestTarget(playersInRange);
         if (targetPlayer != null) {
-            BlockPos bestPlacement = findBestPlacement(targetPlayer);
+            BlockPos bestPlacement = findBestPlacement(targetPlayer, maxSelfDamage); // Pass maxSelfDamage
             if (bestPlacement != null) {
                 placeCrystal(bestPlacement);
                 breakNearbyCrystals();
@@ -101,72 +102,51 @@ public class CrystalAttackModule extends Module {
         return bestTarget;
     }
 
-    private BlockPos findBestPlacement(EntityPlayer player) {
+    private BlockPos findBestPlacement(EntityPlayer player, double maxSelfDamage) {
         BlockPos playerPos = new BlockPos(player.posX, player.posY, player.posZ);
 
-        BlockPos bestInRangePos = null;
-        double highestInRangeDamage = 0.0;
+        BlockPos bestPos = null;
+        double bestDamage = -1.0;
+        double closestDistance = Double.MAX_VALUE;
 
-        BlockPos bestOutOfRangePos = null;
-        double highestOutOfRangeDamage = 0.0;
-
-        BlockPos fallbackPos = null; // To store the best fallback position
-        double fallbackDamage = 0.0;
-
-        // Loop through all potential positions in the defined range
         for (BlockPos pos : BlockPos.getAllInBox(playerPos.add(-4, -4, -4), playerPos.add(4, 4, 4))) {
             if (!isValidPlacement(pos)) {
-                continue; // Skip invalid positions
+                continue;
             }
 
-            boolean isThroughWall = isThroughWall(pos, player);
-            double maxDistance = isThroughWall ? 3.0 : 4.5;
-
-            double distanceToPlayer = player.getDistance(pos.getX() + 0.5, pos.getY() + 1.0, pos.getZ() + 0.5);
-            if (distanceToPlayer > maxDistance) {
-                continue; // Skip positions beyond the allowed range
+            // Distance from ATTACKING PLAYER (mc.player)
+            double distanceToAttacker = mc.player.getDistance(pos.getX() + 0.5, pos.getY() + 1.0, pos.getZ() + 0.5);
+            if (distanceToAttacker > 4.5) {
+                continue;
             }
 
-            // Check if position meets the enemyToCrystalDistance requirement
+            // Check line of sight to target
             if (!isWithinEnemyToCrystalDistance(pos, player)) {
-                continue; // Skip positions that don't comply with distance logic
+                continue;
             }
 
-            double damage = calculateCrystalDamage(player, pos);
-
-            // Fallback position logic: Keep track of the best position regardless of the minimum damage
-            if (damage > fallbackDamage) {
-                fallbackDamage = damage;
-                fallbackPos = pos;
+            // Damage to TARGET
+            double damageToTarget = calculateCrystalDamage(player, pos);
+            if (damageToTarget < minimumDamagePlace) {
+                continue;
             }
 
-            // Prioritize positions above the minimum damage threshold
-            if (damage >= minimumDamagePlace) {
-                if (distanceToPlayer <= 4.5) {
-                    if (damage > highestInRangeDamage) {
-                        highestInRangeDamage = damage;
-                        bestInRangePos = pos;
-                    }
-                } else {
-                    if (damage > highestOutOfRangeDamage) {
-                        highestOutOfRangeDamage = damage;
-                        bestOutOfRangePos = pos;
-                    }
-                }
+            // Check self-damage
+            double damageToSelf = calculateCrystalDamage(mc.player, pos);
+            if (damageToSelf > maxSelfDamage) {
+                continue;
+            }
+
+            // Prioritize highest damage first, then closest distance
+            if (damageToTarget > bestDamage ||
+                    (damageToTarget == bestDamage && distanceToAttacker < closestDistance)) {
+                bestDamage = damageToTarget;
+                closestDistance = distanceToAttacker;
+                bestPos = pos;
             }
         }
 
-        // Select the best position based on priority:
-        // 1. Best in-range position above minimum damage
-        // 2. Best out-of-range position above minimum damage
-        // 3. Fallback to the highest damage position (regardless of minimum damage)
-        if (bestInRangePos != null) {
-            return bestInRangePos;
-        }
-        if (bestOutOfRangePos != null) {
-            return bestOutOfRangePos;
-        }
-        return fallbackPos;
+        return bestPos;
     }
 
     private boolean isThroughWall(BlockPos crystalPos, EntityPlayer player) {
@@ -183,7 +163,6 @@ public class CrystalAttackModule extends Module {
         return false; // No obstruction
     }
 
-    // Helper method: Checks if the position is within the valid enemyToCrystalDistance
     private boolean isWithinEnemyToCrystalDistance(BlockPos pos, EntityPlayer player) {
         Vec3d crystalVec = new Vec3d(pos.getX() + 0.5, pos.getY() + 1.0, pos.getZ() + 0.5);
         Vec3d enemyFeetVec = new Vec3d(player.posX, player.posY, player.posZ);
@@ -199,9 +178,8 @@ public class CrystalAttackModule extends Module {
         }
 
         double enemyDistance = crystalVec.distanceTo(enemyFeetVec);
-        return enemyDistance <= enemyToCrystalDistance; // Position valid if within the range
+        return enemyDistance <= 4.5; // Position valid if within the 4.5 block range
     }
-
 
     private boolean isValidPlacement(BlockPos pos) {
         Block block = mc.world.getBlockState(pos).getBlock();
@@ -224,23 +202,26 @@ public class CrystalAttackModule extends Module {
         return true;
     }
 
-
     private double calculateCrystalDamage(Entity target, BlockPos crystalPos) {
         Vec3d explosionPos = new Vec3d(crystalPos.getX() + 0.5, crystalPos.getY() + 1.0, crystalPos.getZ() + 0.5);
 
         double distance = explosionPos.distanceTo(target.getPositionVector());
 
         if (distance > 12.0) {
-            return 0.0; // No damage if out of range
+            return 0.0;
         }
 
         double explosionPower = 6.0;
+
+        if (mc.world.getDifficulty() == EnumDifficulty.HARD) {
+            explosionPower *= 1.5;
+        }
 
         double damage = (1.0 - (distance / 12.0)) * explosionPower;
 
         RayTraceResult rayTraceResult = mc.world.rayTraceBlocks(explosionPos, target.getPositionVector());
         if (rayTraceResult != null && rayTraceResult.typeOfHit != RayTraceResult.Type.MISS) {
-            damage *= 0.5; // Reduce damage if there's no direct line of sight
+            damage *= 0.5;
         }
 
         if (target instanceof EntityPlayer) {
@@ -248,12 +229,15 @@ public class CrystalAttackModule extends Module {
             int armorValue = player.getTotalArmorValue();
             int blastProtection = getBlastProtection(player);
 
-            damage *= (1.0 - Math.min(armorValue, 20) * 0.04); // Armor reduction
-            damage *= (1.0 - blastProtection * 0.08); // Blast Protection reduction
+            damage *= (1.0 - Math.min(armorValue, 20) * 0.04);
+            damage *= (1.0 - blastProtection * 0.08);
         }
 
-        if (Math.abs(crystalPos.getY() - Math.floor(target.posY)) <= 1) {
-            damage *= 1.5; // Boost for feet-level placement
+        // Check if the crystal is placed near the attacker's feet
+        if (target == mc.player) { // Specific check for self-damage
+            if (Math.abs(crystalPos.getY() - Math.floor(mc.player.posY)) <= 1) {
+                damage *= 1.5;
+            }
         }
 
         return Math.max(damage, 0.0);
@@ -268,7 +252,6 @@ public class CrystalAttackModule extends Module {
 
         return blastProtectionLevel;
     }
-
 
     private void placeCrystal(BlockPos pos) {
         if (pos == null) return;
@@ -285,7 +268,12 @@ public class CrystalAttackModule extends Module {
 
         for (EntityEnderCrystal crystal : crystalsInRange) {
             if (crystal != null && crystal.isEntityAlive()) {
-                performAttack(crystal);
+                // ********** FIX **********
+                // Explicitly check distance from the attacking player to the crystal
+                double distanceToCrystal = mc.player.getDistance(crystal.posX, crystal.posY, crystal.posZ);
+                if (distanceToCrystal <= 4.5) {
+                    performAttack(crystal);
+                }
             }
         }
     }
@@ -299,7 +287,6 @@ public class CrystalAttackModule extends Module {
         mc.player.connection.sendPacket(new CPacketUseEntity(target));
         mc.player.swingArm(EnumHand.MAIN_HAND);
     }
-
 
     /**
      * Calculates the rotation angles required to face a specific position.

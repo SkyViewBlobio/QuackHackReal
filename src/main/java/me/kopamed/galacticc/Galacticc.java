@@ -11,11 +11,14 @@ import me.kopamed.galacticc.module.render.FakePlayer;
 import me.kopamed.galacticc.settings.SettingsManager;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.SoundEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.InputEvent;
+import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import org.lwjgl.input.Keyboard;
 
 import java.util.ArrayList;
@@ -23,7 +26,7 @@ import java.util.List;
 
 public class Galacticc {
     public static final String MODID = "quackhack";
-    public static final String VERSION = " v2.0.0";
+    public static final String VERSION = " v2.0.2";
     public static String prefix = ".";
 
     public static Galacticc instance;
@@ -34,6 +37,11 @@ public class Galacticc {
     public CommandManager commandManager;
     public ArrayList<EntityPlayer> bots = new ArrayList<EntityPlayer>();
     public boolean destructed = false;
+    // SoundEvent declaration
+    public static final SoundEvent CHANGELOG_SOUND = new SoundEvent(
+            new ResourceLocation(MODID, "changelogsound") // Use MODID here
+    ).setRegistryName("changelogsound");
+
 
     public void init() {
         // following 5 lines must be in this order or java has a stroke and dies
@@ -47,6 +55,7 @@ public class Galacticc {
         clickGui = new ClickGui();
         commandManager = new CommandManager();
         moduleManager.getModulesList().get(0).setToggled(true); // Toggle the first module
+
     }
 
     @SubscribeEvent
@@ -74,6 +83,12 @@ public class Galacticc {
 
     @Mod.EventHandler
     public void init(FMLInitializationEvent event) {
+        // Sound event registration
+        ForgeRegistries.SOUND_EVENTS.register(CHANGELOG_SOUND);
+
+        // Debugging information
+        System.out.println("Sound registered: " + CHANGELOG_SOUND.getRegistryName());
+
         MinecraftForge.EVENT_BUS.register(new FakePlayer());
     }
 

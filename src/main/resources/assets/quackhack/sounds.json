@@ -1,0 +1,10 @@
+{
+  "changelogsound": {
+    "sounds": [
+      {
+        "name": "quackhack:changelogsound",
+        "stream": false
+      }
+    ]
+  }
+}
