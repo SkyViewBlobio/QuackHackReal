@@ -28,7 +28,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.StreamSupport;
-//todo add enemy range, test with entus if this places bc it places inside the player as of now.
+//todo add enemy range and uh add armor breaker
 @Mod.EventBusSubscriber
 public class CrystalAttackModule extends Module {
     private int ticksElapsed = 0;
