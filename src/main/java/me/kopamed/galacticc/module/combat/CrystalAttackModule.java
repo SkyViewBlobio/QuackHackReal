@@ -28,7 +28,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.StreamSupport;
-//todo add enemy range and uh add armor breaker
+//todo add enemy range and uh add armor breaker tewst?
 @Mod.EventBusSubscriber
 public class CrystalAttackModule extends Module {
     private int ticksElapsed = 0;
