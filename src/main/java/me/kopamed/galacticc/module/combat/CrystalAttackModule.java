@@ -4,309 +4,223 @@ import me.kopamed.galacticc.Galacticc;
 import me.kopamed.galacticc.module.Category;
 import me.kopamed.galacticc.module.Module;
 import me.kopamed.galacticc.settings.Setting;
-import net.minecraft.block.Block;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityEnderCrystal;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Enchantments;
-import net.minecraft.item.ItemStack;
 import net.minecraft.network.play.client.CPacketPlayerTryUseItemOnBlock;
 import net.minecraft.network.play.client.CPacketUseEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
-import net.minecraft.util.math.*;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.EnumDifficulty;
-import net.minecraft.world.World;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
-import java.util.List;
-
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.StreamSupport;
+//todo add enemy range, test with entus if this places bc it places inside the player as of now.
 @Mod.EventBusSubscriber
 public class CrystalAttackModule extends Module {
-    private int tickDelay; // Delay in ticks
-    private int ticksElapsed = 0; // Counter for ticks since the last attack
-    private double minimumDamagePlace; // Minimum damage threshold for placing crystals
-    private double enemyToCrystalDistance; // Maximum allowed distance from the enemy to the crystal position
-
+    private int ticksElapsed = 0;
+    private double minimumDamagePlace;
+    private final Map<EntityPlayer, Double> damageCache = new HashMap<>();
+    private final Map<BlockPos, Boolean> placementCache = new ConcurrentHashMap<>();
 
     public CrystalAttackModule() {
         super("AutoCrystal", "Automatically places and breaks end crystals near other players", false, false, Category.ANGRIFF);
         Galacticc.instance.settingsManager.rSetting(new Setting("Tick Delay", this, 2, 0, 10, true));
-        Galacticc.instance.settingsManager.rSetting(new Setting("MinimumPlaceDamage", this, 2, 0, 10, true));
-        Galacticc.instance.settingsManager.rSetting(new Setting("EnemyToCrystalDistance", this, 4.5, 0, 10, false)); // Slider for max distance
-        Galacticc.instance.settingsManager.rSetting(new Setting("SelfDamage", this, 2, 0, 10, true)); // New setting
-
+        Galacticc.instance.settingsManager.rSetting(new Setting("MinimumPlaceDamage", this, 2, 0, 6, true));
+        Galacticc.instance.settingsManager.rSetting(new Setting("SelfDamage", this, 2, 0, 10, true));
     }
+
     @SubscribeEvent
     public void onTick(TickEvent.PlayerTickEvent event) {
-        if (mc.player == null || mc.world == null || event.phase != TickEvent.Phase.START) {
-            return;
-        }
+        if (mc.player == null || mc.world == null || event.phase != TickEvent.Phase.START) return;
 
-        tickDelay = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Tick Delay").getValDouble();
-        minimumDamagePlace = Galacticc.instance.settingsManager.getSettingByName(this, "MinimumPlaceDamage").getValDouble();
-        enemyToCrystalDistance = Galacticc.instance.settingsManager.getSettingByName(this, "EnemyToCrystalDistance").getValDouble();
-        double maxSelfDamage = Galacticc.instance.settingsManager.getSettingByName(this, "SelfDamage").getValDouble(); // New line
-
-        ticksElapsed++;
-        if (ticksElapsed < tickDelay) {
-            return;
-        }
+        int tickDelay = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Tick Delay").getValDouble();
+        if (ticksElapsed++ < tickDelay) return;
         ticksElapsed = 0;
 
-        List<EntityPlayer> playersInRange = mc.world.getEntitiesWithinAABB(EntityPlayer.class,
-                mc.player.getEntityBoundingBox().grow(4.5),
-                player -> !player.isDead && !player.equals(mc.player));
+        updateSettings();
+        damageCache.clear(); // Clear cache to recalculate priorities with current settings
+        EntityPlayer target = findBestTarget();
+        if (target != null) processTarget(target);
+    }
 
-        if (playersInRange.isEmpty()) {
-            return;
-        }
+    private void updateSettings() {
+        minimumDamagePlace = Galacticc.instance.settingsManager.getSettingByName(this, "MinimumPlaceDamage").getValDouble();
+    }
 
-        EntityPlayer targetPlayer = findBestTarget(playersInRange);
-        if (targetPlayer != null) {
-            BlockPos bestPlacement = findBestPlacement(targetPlayer, maxSelfDamage); // Pass maxSelfDamage
-            if (bestPlacement != null) {
-                placeCrystal(bestPlacement);
-                breakNearbyCrystals();
-            }
+    private EntityPlayer findBestTarget() {
+        return mc.world.getEntitiesWithinAABB(EntityPlayer.class,
+                        mc.player.getEntityBoundingBox().grow(4.5),
+                        player -> !player.isDead && !player.equals(mc.player))
+                .stream()
+                .max(Comparator.comparingDouble(this::calculatePlayerPriority))
+                .orElse(null);
+    }
+
+    private double calculatePlayerPriority(EntityPlayer player) {
+        return damageCache.computeIfAbsent(player, p -> {
+            BlockPos center = new BlockPos(p.posX, p.posY, p.posZ);
+            return StreamSupport.stream(
+                            BlockPos.getAllInBox(center.add(-3, -2, -3), center.add(3, 2, 3)).spliterator(),
+                            true)
+                    .filter(pos -> placementCache.computeIfAbsent(pos, this::isValidPlacement))
+                    .mapToDouble(pos -> calculateCrystalDamage(p, pos))
+                    .filter(damage -> damage >= minimumDamagePlace) // Add this filter
+                    .max()
+                    .orElse(0.0); // No valid positions = 0 priority
+        });
+    }
+
+    private void processTarget(EntityPlayer target) {
+        double maxSelfDamage = Galacticc.instance.settingsManager.getSettingByName(this, "SelfDamage").getValDouble();
+        BlockPos bestPos = findBestPlacement(target, maxSelfDamage);
+        if (bestPos != null) {
+            placeCrystal(bestPos);
+            breakOptimalCrystals();
         }
     }
 
-    private EntityPlayer findBestTarget(List<EntityPlayer> players) {
-        EntityPlayer bestTarget = null;
-        double highestPotentialDamage = 0.0;
 
-        for (EntityPlayer player : players) {
-            BlockPos playerPos = new BlockPos(player.posX, player.posY, player.posZ);
-
-            double maxDamage = 0.0;
-            for (BlockPos pos : BlockPos.getAllInBox(playerPos.add(-4, -4, -4), playerPos.add(4, 4, 4))) {
-                if (isValidPlacement(pos)) {
-                    double damage = calculateCrystalDamage(player, pos);
-                    if (damage > maxDamage) {
-                        maxDamage = damage;
-                    }
-                }
-            }
-
-            if (maxDamage > highestPotentialDamage) {
-                highestPotentialDamage = maxDamage;
-                bestTarget = player;
-            }
-        }
-
-        return bestTarget;
-    }
-
-    private BlockPos findBestPlacement(EntityPlayer player, double maxSelfDamage) {
-        BlockPos playerPos = new BlockPos(player.posX, player.posY, player.posZ);
-
+    private BlockPos findBestPlacement(EntityPlayer target, double maxSelfDamage) {
+        BlockPos center = new BlockPos(target.posX, target.posY, target.posZ);
+        BlockPos.MutableBlockPos mutablePos = new BlockPos.MutableBlockPos();
         BlockPos bestPos = null;
         double bestDamage = -1.0;
         double closestDistance = Double.MAX_VALUE;
 
-        for (BlockPos pos : BlockPos.getAllInBox(playerPos.add(-4, -4, -4), playerPos.add(4, 4, 4))) {
-            if (!isValidPlacement(pos)) {
-                continue;
-            }
+        for (int x = -4; x <= 4; x++) {
+            for (int y = -2; y <= 2; y++) {
+                for (int z = -4; z <= 4; z++) {
+                    mutablePos.setPos(center.getX() + x, center.getY() + y, center.getZ() + z);
 
-            // Distance from ATTACKING PLAYER (mc.player)
-            double distanceToAttacker = mc.player.getDistance(pos.getX() + 0.5, pos.getY() + 1.0, pos.getZ() + 0.5);
-            if (distanceToAttacker > 4.5) {
-                continue;
-            }
+                    if (!isValidPlacement(mutablePos)) continue;
 
-            // Check line of sight to target
-            if (!isWithinEnemyToCrystalDistance(pos, player)) {
-                continue;
-            }
+                    double attackerDistance = mc.player.getDistance(
+                            mutablePos.getX() + 0.5,
+                            mutablePos.getY() + 1.0,
+                            mutablePos.getZ() + 0.5
+                    );
+                    if (attackerDistance > 4.5) continue;
 
-            // Damage to TARGET
-            double damageToTarget = calculateCrystalDamage(player, pos);
-            if (damageToTarget < minimumDamagePlace) {
-                continue;
-            }
+                    if (!hasLineOfSightToFeet(mutablePos, target)) continue;
 
-            // Check self-damage
-            double damageToSelf = calculateCrystalDamage(mc.player, pos);
-            if (damageToSelf > maxSelfDamage) {
-                continue;
-            }
+                    double targetDamage = calculateCrystalDamage(target, mutablePos);
+                    double selfDamage = calculateCrystalDamage(mc.player, mutablePos);
 
-            // Prioritize highest damage first, then closest distance
-            if (damageToTarget > bestDamage ||
-                    (damageToTarget == bestDamage && distanceToAttacker < closestDistance)) {
-                bestDamage = damageToTarget;
-                closestDistance = distanceToAttacker;
-                bestPos = pos;
+                    // Use pre-reduction damage for target threshold
+                    double targetDamageRaw = calculateCrystalDamage(target, mutablePos);
+                    boolean selfDamageValid = maxSelfDamage > 0 ?
+                            selfDamage <= maxSelfDamage :
+                            selfDamage <= 0.1; // Increased tolerance for "no self damage"
+
+                    if (targetDamageRaw < minimumDamagePlace || !selfDamageValid) continue;
+
+                    if (targetDamage > bestDamage ||
+                            (targetDamage == bestDamage && attackerDistance < closestDistance)) {
+                        bestPos = mutablePos.toImmutable();
+                        bestDamage = targetDamage;
+                        closestDistance = attackerDistance;
+                    }
+                }
             }
         }
-
         return bestPos;
     }
 
-    private boolean isThroughWall(BlockPos crystalPos, EntityPlayer player) {
-        Vec3d crystalVec = new Vec3d(crystalPos.getX() + 0.5, crystalPos.getY() + 1.0, crystalPos.getZ() + 0.5);
-        Vec3d playerFeetVec = new Vec3d(player.posX, player.posY, player.posZ);
-
-        RayTraceResult result = mc.world.rayTraceBlocks(crystalVec, playerFeetVec, false, true, false);
-
-        if (result != null && result.typeOfHit == RayTraceResult.Type.BLOCK) {
-            Block block = mc.world.getBlockState(result.getBlockPos()).getBlock();
-            return block != Blocks.AIR; // Return true if blocked by a non-air block
-        }
-
-        return false; // No obstruction
-    }
-
-    private boolean isWithinEnemyToCrystalDistance(BlockPos pos, EntityPlayer player) {
-        Vec3d crystalVec = new Vec3d(pos.getX() + 0.5, pos.getY() + 1.0, pos.getZ() + 0.5);
-        Vec3d enemyFeetVec = new Vec3d(player.posX, player.posY, player.posZ);
-
-        // Check line of sight between the crystal position and the player's feet
-        RayTraceResult result = mc.world.rayTraceBlocks(crystalVec, enemyFeetVec, false, true, false);
-
-        if (result != null && result.typeOfHit == RayTraceResult.Type.BLOCK) {
-            Block block = mc.world.getBlockState(result.getBlockPos()).getBlock();
-            if (block != Blocks.AIR) {
-                return false; // Obstruction found, position is invalid
-            }
-        }
-
-        double enemyDistance = crystalVec.distanceTo(enemyFeetVec);
-        return enemyDistance <= 4.5; // Position valid if within the 4.5 block range
+    private boolean hasLineOfSightToFeet(BlockPos pos, EntityPlayer target) {
+        Vec3d crystalPos = new Vec3d(pos.getX() + 0.5, pos.getY() + 1.0, pos.getZ() + 0.5);
+        Vec3d targetFeet = new Vec3d(target.posX, target.posY, target.posZ);
+        return mc.world.rayTraceBlocks(crystalPos, targetFeet, false, true, false) == null;
     }
 
     private boolean isValidPlacement(BlockPos pos) {
-        Block block = mc.world.getBlockState(pos).getBlock();
-        if (block != Blocks.BEDROCK && block != Blocks.OBSIDIAN) {
-            return false;
-        }
+        // Original validation checks
+        IBlockState state = mc.world.getBlockState(pos);
+        if (state.getBlock() != Blocks.BEDROCK && state.getBlock() != Blocks.OBSIDIAN) return false;
 
         BlockPos above1 = pos.up();
         BlockPos above2 = pos.up(2);
-        if (!mc.world.isAirBlock(above1) || !mc.world.isAirBlock(above2)) {
-            return false;
-        }
+        if (!mc.world.isAirBlock(above1) || !mc.world.isAirBlock(above2)) return false;
 
-        for (Entity entity : mc.world.getEntitiesWithinAABBExcludingEntity(null, new AxisAlignedBB(pos.up()))) {
-            if (entity instanceof EntityPlayer) {
-                return false;
-            }
-        }
-
-        return true;
+        // Original collision check (only check the first air block)
+        return mc.world.getEntitiesWithinAABBExcludingEntity(null, new AxisAlignedBB(above1))
+                .stream()
+                .noneMatch(e -> e instanceof EntityPlayer);
     }
+
 
     private double calculateCrystalDamage(Entity target, BlockPos crystalPos) {
-        Vec3d explosionPos = new Vec3d(crystalPos.getX() + 0.5, crystalPos.getY() + 1.0, crystalPos.getZ() + 0.5);
+        Vec3d explosionVec = new Vec3d(crystalPos.getX() + 0.5, crystalPos.getY() + 1.0, crystalPos.getZ() + 0.5);
+        double distanceSq = explosionVec.squareDistanceTo(target.getPositionVector());
+        if (distanceSq > 144.0) return 0.0;
 
-        double distance = explosionPos.distanceTo(target.getPositionVector());
+        double scaledDistance = Math.sqrt(distanceSq) / 12.0;
+        double rawDamage = (1.0 - scaledDistance) * getExplosionPower();
 
-        if (distance > 12.0) {
-            return 0.0;
-        }
+        // Calculate damage before reductions for minimumDamagePlace check
+        double preReductionDamage = rawDamage;
+        if (hasObstruction(explosionVec, target.getPositionVector())) preReductionDamage *= 0.5;
 
-        double explosionPower = 6.0;
-
-        if (mc.world.getDifficulty() == EnumDifficulty.HARD) {
-            explosionPower *= 1.5;
-        }
-
-        double damage = (1.0 - (distance / 12.0)) * explosionPower;
-
-        RayTraceResult rayTraceResult = mc.world.rayTraceBlocks(explosionPos, target.getPositionVector());
-        if (rayTraceResult != null && rayTraceResult.typeOfHit != RayTraceResult.Type.MISS) {
-            damage *= 0.5;
-        }
-
+        // Apply reductions for final damage
+        double finalDamage = preReductionDamage;
         if (target instanceof EntityPlayer) {
-            EntityPlayer player = (EntityPlayer) target;
-            int armorValue = player.getTotalArmorValue();
-            int blastProtection = getBlastProtection(player);
-
-            damage *= (1.0 - Math.min(armorValue, 20) * 0.04);
-            damage *= (1.0 - blastProtection * 0.08);
+            finalDamage = applyProtectionReductions((EntityPlayer) target, finalDamage);
         }
 
-        // Check if the crystal is placed near the attacker's feet
-        if (target == mc.player) { // Specific check for self-damage
-            if (Math.abs(crystalPos.getY() - Math.floor(mc.player.posY)) <= 1) {
-                damage *= 1.5;
-            }
-        }
-
-        return Math.max(damage, 0.0);
+        // Return pre-reduction damage for placement checks
+        return (target == mc.player) ? finalDamage : preReductionDamage;
     }
 
-    private int getBlastProtection(EntityPlayer player) {
-        int blastProtectionLevel = 0;
 
-        for (ItemStack armorPiece : player.getArmorInventoryList()) {
-            blastProtectionLevel += EnchantmentHelper.getEnchantmentLevel(Enchantments.BLAST_PROTECTION, armorPiece);
-        }
+    private double getExplosionPower() {
+        return mc.world.getDifficulty() == EnumDifficulty.HARD ? 9.0 : 6.0;
+    }
 
-        return blastProtectionLevel;
+    private boolean hasObstruction(Vec3d start, Vec3d end) {
+        return mc.world.rayTraceBlocks(start, end, false, true, false) != null;
+    }
+
+    private double applyProtectionReductions(EntityPlayer player, double damage) {
+        int armor = player.getTotalArmorValue();
+        int blastProt = StreamSupport.stream(player.getArmorInventoryList().spliterator(), false)
+                .mapToInt(stack -> EnchantmentHelper.getEnchantmentLevel(Enchantments.BLAST_PROTECTION, stack))
+                .sum();
+
+        damage *= (1.0 - Math.min(armor, 20) * 0.04);
+        return damage * (1.0 - blastProt * 0.08);
+    }
+
+
+    private void breakOptimalCrystals() {
+        mc.world.getEntitiesWithinAABB(EntityEnderCrystal.class, mc.player.getEntityBoundingBox().grow(4.5))
+                .stream()
+                .filter(crystal -> crystal != null && crystal.isEntityAlive())
+                .filter(crystal -> mc.player.getDistanceSq(crystal) <= 20.25)
+                .max(Comparator.comparingDouble(crystal ->
+                        -crystal.getDistanceSq(mc.player.posX, mc.player.posY, mc.player.posZ)))
+                .ifPresent(this::performAttack);
     }
 
     private void placeCrystal(BlockPos pos) {
-        if (pos == null) return;
-
-        // Send packet to place the end crystal
         mc.player.connection.sendPacket(new CPacketPlayerTryUseItemOnBlock(
                 pos, EnumFacing.UP, EnumHand.MAIN_HAND, 0.5f, 0.5f, 0.5f));
     }
 
-    private void breakNearbyCrystals() {
-        // Find and break all end crystals within range
-        List<EntityEnderCrystal> crystalsInRange = mc.world.getEntitiesWithinAABB(EntityEnderCrystal.class,
-                mc.player.getEntityBoundingBox().grow(4.5));
-
-        for (EntityEnderCrystal crystal : crystalsInRange) {
-            if (crystal != null && crystal.isEntityAlive()) {
-                // ********** FIX **********
-                // Explicitly check distance from the attacking player to the crystal
-                double distanceToCrystal = mc.player.getDistance(crystal.posX, crystal.posY, crystal.posZ);
-                if (distanceToCrystal <= 4.5) {
-                    performAttack(crystal);
-                }
-            }
-        }
-    }
-
-    private void performAttack(EntityEnderCrystal target) {
-        if (target == null || !target.isEntityAlive()) {
-            return;
-        }
-
-        // Send attack packet
-        mc.player.connection.sendPacket(new CPacketUseEntity(target));
+    private void performAttack(EntityEnderCrystal crystal) {
+        mc.player.connection.sendPacket(new CPacketUseEntity(crystal));
         mc.player.swingArm(EnumHand.MAIN_HAND);
-    }
-
-    /**
-     * Calculates the rotation angles required to face a specific position.
-     *
-     * @param to The target position to face.
-     * @return An array containing yaw and pitch angles.
-     */
-    private float[] calculateAngles(Vec3d to) {
-        Vec3d eyesPosition = mc.player.getPositionEyes(1.0F);
-        double deltaX = to.x - eyesPosition.x;
-        double deltaY = to.y - eyesPosition.y;
-        double deltaZ = to.z - eyesPosition.z;
-
-        float yaw = (float) (Math.toDegrees(Math.atan2(deltaZ, deltaX)) - 90.0);
-        float distanceXZ = (float) Math.sqrt(deltaX * deltaX + deltaZ * deltaZ);
-        float pitch = (float) Math.toDegrees(-Math.atan2(deltaY, distanceXZ));
-
-        yaw = MathHelper.wrapDegrees(yaw);
-        pitch = MathHelper.wrapDegrees(pitch);
-
-        return new float[]{yaw, pitch};
     }
 }
