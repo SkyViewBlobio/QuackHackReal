@@ -28,7 +28,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.StreamSupport;
-//todo add enemy range and uh add armor breaker tewst?
+//todo last cleanup? maybe?
 @Mod.EventBusSubscriber
 public class CrystalAttackModule extends Module {
     private int ticksElapsed = 0;
@@ -63,7 +63,7 @@ public class CrystalAttackModule extends Module {
 
     private EntityPlayer findBestTarget() {
         return mc.world.getEntitiesWithinAABB(EntityPlayer.class,
-                        mc.player.getEntityBoundingBox().grow(4.5),
+                        mc.player.getEntityBoundingBox().grow(16.5), // Changed from 4.5 to 16.5
                         player -> !player.isDead && !player.equals(mc.player))
                 .stream()
                 .max(Comparator.comparingDouble(this::calculatePlayerPriority))
@@ -95,38 +95,49 @@ public class CrystalAttackModule extends Module {
 
 
     private BlockPos findBestPlacement(EntityPlayer target, double maxSelfDamage) {
-        BlockPos center = new BlockPos(target.posX, target.posY, target.posZ);
+        BlockPos attackerCenter = new BlockPos(mc.player.posX, mc.player.posY, mc.player.posZ);
         BlockPos.MutableBlockPos mutablePos = new BlockPos.MutableBlockPos();
         BlockPos bestPos = null;
         double bestDamage = -1.0;
         double closestDistance = Double.MAX_VALUE;
 
+        // Search around attacker (4.5 blocks) instead of target
         for (int x = -4; x <= 4; x++) {
             for (int y = -2; y <= 2; y++) {
                 for (int z = -4; z <= 4; z++) {
-                    mutablePos.setPos(center.getX() + x, center.getY() + y, center.getZ() + z);
+                    mutablePos.setPos(
+                            attackerCenter.getX() + x,
+                            attackerCenter.getY() + y,
+                            attackerCenter.getZ() + z
+                    );
 
-                    if (!isValidPlacement(mutablePos)) continue;
-
+                    // Skip placements outside your 4.5-block reach
                     double attackerDistance = mc.player.getDistance(
                             mutablePos.getX() + 0.5,
                             mutablePos.getY() + 1.0,
                             mutablePos.getZ() + 0.5
                     );
-                    if (attackerDistance > 4.5) continue;
+                    if (attackerDistance > 4.5 || !isValidPlacement(mutablePos)) continue;
 
+                    // Check if target is within explosion radius (12 blocks)
+                    double targetDistance = target.getDistance(
+                            mutablePos.getX() + 0.5,
+                            mutablePos.getY() + 1.0,
+                            mutablePos.getZ() + 0.5
+                    );
+                    if (targetDistance > 12.0) continue;
+
+                    // Rest of logic (damage/LOS checks) remains the same...
                     if (!hasLineOfSightToFeet(mutablePos, target)) continue;
 
                     double targetDamage = calculateCrystalDamage(target, mutablePos);
                     double selfDamage = calculateCrystalDamage(mc.player, mutablePos);
 
-                    // Use pre-reduction damage for target threshold
-                    double targetDamageRaw = calculateCrystalDamage(target, mutablePos);
                     boolean selfDamageValid = maxSelfDamage > 0 ?
                             selfDamage <= maxSelfDamage :
-                            selfDamage <= 0.1; // Increased tolerance for "no self damage"
+                            selfDamage <= 0.1;
 
-                    if (targetDamageRaw < minimumDamagePlace || !selfDamageValid) continue;
+                    if (targetDamage < minimumDamagePlace || !selfDamageValid) continue;
 
                     if (targetDamage > bestDamage ||
                             (targetDamage == bestDamage && attackerDistance < closestDistance)) {
@@ -161,29 +172,24 @@ public class CrystalAttackModule extends Module {
                 .noneMatch(e -> e instanceof EntityPlayer);
     }
 
-
     private double calculateCrystalDamage(Entity target, BlockPos crystalPos) {
         Vec3d explosionVec = new Vec3d(crystalPos.getX() + 0.5, crystalPos.getY() + 1.0, crystalPos.getZ() + 0.5);
         double distanceSq = explosionVec.squareDistanceTo(target.getPositionVector());
         if (distanceSq > 144.0) return 0.0;
 
         double scaledDistance = Math.sqrt(distanceSq) / 12.0;
-        double rawDamage = (1.0 - scaledDistance) * getExplosionPower();
+        double preReductionDamage = (1.0 - scaledDistance) * getExplosionPower(); // Direct initialization
 
-        // Calculate damage before reductions for minimumDamagePlace check
-        double preReductionDamage = rawDamage;
-        if (hasObstruction(explosionVec, target.getPositionVector())) preReductionDamage *= 0.5;
+        if (hasObstruction(explosionVec, target.getPositionVector()))
+            preReductionDamage *= 0.5;
 
-        // Apply reductions for final damage
         double finalDamage = preReductionDamage;
         if (target instanceof EntityPlayer) {
             finalDamage = applyProtectionReductions((EntityPlayer) target, finalDamage);
         }
 
-        // Return pre-reduction damage for placement checks
         return (target == mc.player) ? finalDamage : preReductionDamage;
     }
-
 
     private double getExplosionPower() {
         return mc.world.getDifficulty() == EnumDifficulty.HARD ? 9.0 : 6.0;
