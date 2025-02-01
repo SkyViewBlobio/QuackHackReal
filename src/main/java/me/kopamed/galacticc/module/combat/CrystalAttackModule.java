@@ -1,10 +1,15 @@
 package me.kopamed.galacticc.module.combat;
 
+import com.mojang.realmsclient.gui.ChatFormatting;
 import me.kopamed.galacticc.Galacticc;
 import me.kopamed.galacticc.module.Category;
 import me.kopamed.galacticc.module.Module;
 import me.kopamed.galacticc.settings.Setting;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.renderer.BufferBuilder;
+import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.renderer.Tessellator;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.item.EntityEnderCrystal;
@@ -19,13 +24,14 @@ import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.EnumDifficulty;
+import net.minecraftforge.client.event.RenderWorldLastEvent;
+import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
+import org.lwjgl.opengl.GL11;
 
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.StreamSupport;
 //todo last cleanup? maybe?
@@ -35,25 +41,143 @@ public class CrystalAttackModule extends Module {
     private double minimumDamagePlace;
     private final Map<EntityPlayer, Double> damageCache = new HashMap<>();
     private final Map<BlockPos, Boolean> placementCache = new ConcurrentHashMap<>();
+    private EntityPlayer currentTarget = null;
+    private double currentTargetDamage = 0.0;
+    private double currentSelfDamage = 0.0;
+    private final Queue<Long> crystalPlaceTimes = new LinkedList<>();
+    private static final int CPS_WINDOW_SECONDS = 3;
+    private BlockPos lastPlacementPos = null;
+    private static final float BASE_R = 0.0f;
+    private static final float BASE_G = 212f / 255f;
+    private static final float BASE_B = 250f / 255f;
+    private static final float BASE_FILL_A = 0.40f;
+    private static final float BASE_OUTLINE_A = 1.0f;
+    private static final float LINE_WIDTH = 2.0F;
+    private final Map<BlockPos, Long> fadeBlocks = new HashMap<>();
+    private static final long FADE_DURATION_MS = 500;
 
     public CrystalAttackModule() {
-        super("AutoCrystal", "Automatically places and breaks end crystals near other players", false, false, Category.ANGRIFF);
+        super("AutoCrystal", "" +
+                        ChatFormatting.BLUE + ChatFormatting.BOLD + ChatFormatting.UNDERLINE + "Hauptinformation:|" + ChatFormatting.WHITE +
+                        "Platziert und zerbricht automatisch Endkristalle| in der Naehe von anderen Spielern, um| maximalen Schaden zu verursachen.|" +
+                        ChatFormatting.BLUE + ChatFormatting.BOLD + ChatFormatting.UNDERLINE + "Optionen:|" + ChatFormatting.RED +
+                        "- Tick Delay: " + ChatFormatting.WHITE +
+                        "Bestimmt das time-out zwischen| Kristallplatzierungen.|" + ChatFormatting.RED +
+                        "- MinimumPlaceDamage: " + ChatFormatting.WHITE +
+                        "Legt den minimalen Schaden fest, den| eine Platzier-position erzielen muss." + ChatFormatting.RED +
+                        "- SelfDamage: " + ChatFormatting.WHITE +
+                        "Bestimmt, wie viel Selbst-schaden erlaubt ist." +
+                        ChatFormatting.BLUE + ChatFormatting.BOLD + ChatFormatting.UNDERLINE + "Nutzungsinformation:|" + ChatFormatting.WHITE +
+                        "Schaden, so wie Selbst-schaden sollten nicht| zu hoch/niedrig sein. Ein ausgleich ist immer angebracht." +
+                        "Es ist uebrigens sinnvoll zwischen Grundgestein| anstatt auf dem Grundgestein zu laufen." +
+                        "Weiterhin ist es sinnvoll Obsidian das den Gegner| umrandet abzubauen, um einen Kristall dort zu platzieren." +
+                        "Der groeßte schaden kann uebrigens nur dann erzielt werden wenn| der Kristall auf Fußhoehe platziert wird." +
+                        "Wenn die Ruestung deines Gegners| kurz vor dem zerbrechen ist dann platzier Kristalle automatisch| mit rechtsclick in deren Naehe." +
+                        "Wenn du an den Extra-Infos interessiert bist, die hinter dem| AutoCrystal Modul angezeigt wird (Nur wenn du unter| MOD-Kategorie von Simpel auf Komplex umschaltest)." +
+                        "Dann ist die bedeutung der infos wie folgt;| Ziel-Name, Ziel-schaden, Selbst-schaden,| Wie viele Kristalle/Sekunde platziert werden.",
+                false, false, Category.ANGRIFF);
         Galacticc.instance.settingsManager.rSetting(new Setting("Tick Delay", this, 2, 0, 10, true));
         Galacticc.instance.settingsManager.rSetting(new Setting("MinimumPlaceDamage", this, 2, 0, 6, true));
         Galacticc.instance.settingsManager.rSetting(new Setting("SelfDamage", this, 2, 0, 10, true));
+        MinecraftForge.EVENT_BUS.register(this);
+    }
+
+    @SubscribeEvent
+    public void onRenderWorldLast(RenderWorldLastEvent event) {
+        long now = System.currentTimeMillis();
+        Iterator<Map.Entry<BlockPos, Long>> iter = fadeBlocks.entrySet().iterator();
+        while (iter.hasNext()) {
+            Map.Entry<BlockPos, Long> entry = iter.next();
+            long elapsed = now - entry.getValue();
+            if (elapsed >= FADE_DURATION_MS) {
+                iter.remove();
+            } else {
+                float fadeAlpha = 1.0f - (float) elapsed / FADE_DURATION_MS;
+                drawTopFace(entry.getKey(), event.getPartialTicks(), fadeAlpha);
+            }
+        }
+        if (lastPlacementPos != null) {
+            drawTopFace(lastPlacementPos, event.getPartialTicks(), 1.0f);
+        }
+    }
+
+    private void drawTopFace(BlockPos pos, float partialTicks, float alphaMultiplier) {
+        double viewerX = mc.getRenderManager().viewerPosX;
+        double viewerY = mc.getRenderManager().viewerPosY;
+        double viewerZ = mc.getRenderManager().viewerPosZ;
+        double x = pos.getX() - viewerX;
+        double y = pos.getY() - viewerY;
+        double z = pos.getZ() - viewerZ;
+
+        float fillAlpha = BASE_FILL_A * alphaMultiplier;
+        float outlineAlpha = BASE_OUTLINE_A * alphaMultiplier;
+
+        GlStateManager.pushMatrix();
+        GlStateManager.disableCull();
+        GlStateManager.disableTexture2D();
+        GlStateManager.enableBlend();
+        GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA, GL11.GL_ONE_MINUS_SRC_ALPHA, GL11.GL_ONE, GL11.GL_ZERO);
+        GlStateManager.disableDepth();
+        GlStateManager.depthMask(false);
+
+        Tessellator tessellator = Tessellator.getInstance();
+        BufferBuilder buffer = tessellator.getBuffer();
+
+        buffer.begin(GL11.GL_QUADS, DefaultVertexFormats.POSITION_COLOR);
+        buffer.pos(x,     y + 1.01, z    ).color(BASE_R, BASE_G, BASE_B, fillAlpha).endVertex();
+        buffer.pos(x + 1, y + 1.01, z    ).color(BASE_R, BASE_G, BASE_B, fillAlpha).endVertex();
+        buffer.pos(x + 1, y + 1.01, z + 1).color(BASE_R, BASE_G, BASE_B, fillAlpha).endVertex();
+        buffer.pos(x,     y + 1.01, z + 1).color(BASE_R, BASE_G, BASE_B, fillAlpha).endVertex();
+        tessellator.draw();
+
+        GlStateManager.glLineWidth(LINE_WIDTH);
+        buffer.begin(GL11.GL_LINE_LOOP, DefaultVertexFormats.POSITION_COLOR);
+        buffer.pos(x,     y + 1.01, z    ).color(BASE_R, BASE_G, BASE_B, outlineAlpha).endVertex();
+        buffer.pos(x + 1, y + 1.01, z    ).color(BASE_R, BASE_G, BASE_B, outlineAlpha).endVertex();
+        buffer.pos(x + 1, y + 1.01, z + 1).color(BASE_R, BASE_G, BASE_B, outlineAlpha).endVertex();
+        buffer.pos(x,     y + 1.01, z + 1).color(BASE_R, BASE_G, BASE_B, outlineAlpha).endVertex();
+        tessellator.draw();
+
+        GlStateManager.depthMask(true);
+        GlStateManager.enableDepth();
+        GlStateManager.enableTexture2D();
+        GlStateManager.disableBlend();
+        GlStateManager.enableCull();
+        GlStateManager.popMatrix();
+    }
+
+    @Override
+    public String getHUDInfo() {
+        long currentTime = System.currentTimeMillis();
+        while (!crystalPlaceTimes.isEmpty() &&
+                currentTime - crystalPlaceTimes.peek() > CPS_WINDOW_SECONDS * 1000) {
+            crystalPlaceTimes.poll();
+        }
+
+        double cps = crystalPlaceTimes.size() / (double) CPS_WINDOW_SECONDS;
+
+        String targetName = currentTarget != null ? currentTarget.getName() : "N/A";
+        return ChatFormatting.GRAY + String.format("[%s ,%.1f ,S %.1f, %.1f]",
+                targetName,
+                currentTargetDamage,
+                currentSelfDamage,
+                cps);
     }
 
     @SubscribeEvent
     public void onTick(TickEvent.PlayerTickEvent event) {
         if (mc.player == null || mc.world == null || event.phase != TickEvent.Phase.START) return;
 
+        // Remove any old CPS reset code here
+
         int tickDelay = (int) Galacticc.instance.settingsManager.getSettingByName(this, "Tick Delay").getValDouble();
         if (ticksElapsed++ < tickDelay) return;
         ticksElapsed = 0;
 
         updateSettings();
-        damageCache.clear(); // Clear cache to recalculate priorities with current settings
+        damageCache.clear();
         EntityPlayer target = findBestTarget();
+        currentTarget = target;
         if (target != null) processTarget(target);
     }
 
@@ -93,7 +217,6 @@ public class CrystalAttackModule extends Module {
         }
     }
 
-
     private BlockPos findBestPlacement(EntityPlayer target, double maxSelfDamage) {
         BlockPos attackerCenter = new BlockPos(mc.player.posX, mc.player.posY, mc.player.posZ);
         BlockPos.MutableBlockPos mutablePos = new BlockPos.MutableBlockPos();
@@ -101,7 +224,10 @@ public class CrystalAttackModule extends Module {
         double bestDamage = -1.0;
         double closestDistance = Double.MAX_VALUE;
 
-        // Search around attacker (4.5 blocks) instead of target
+        // Reset damage values when starting new search
+        currentTargetDamage = 0.0;
+        currentSelfDamage = 0.0;
+
         for (int x = -4; x <= 4; x++) {
             for (int y = -2; y <= 2; y++) {
                 for (int z = -4; z <= 4; z++) {
@@ -111,7 +237,6 @@ public class CrystalAttackModule extends Module {
                             attackerCenter.getZ() + z
                     );
 
-                    // Skip placements outside your 4.5-block reach
                     double attackerDistance = mc.player.getDistance(
                             mutablePos.getX() + 0.5,
                             mutablePos.getY() + 1.0,
@@ -119,7 +244,6 @@ public class CrystalAttackModule extends Module {
                     );
                     if (attackerDistance > 4.5 || !isValidPlacement(mutablePos)) continue;
 
-                    // Check if target is within explosion radius (12 blocks)
                     double targetDistance = target.getDistance(
                             mutablePos.getX() + 0.5,
                             mutablePos.getY() + 1.0,
@@ -127,7 +251,6 @@ public class CrystalAttackModule extends Module {
                     );
                     if (targetDistance > 12.0) continue;
 
-                    // Rest of logic (damage/LOS checks) remains the same...
                     if (!hasLineOfSightToFeet(mutablePos, target)) continue;
 
                     double targetDamage = calculateCrystalDamage(target, mutablePos);
@@ -144,9 +267,14 @@ public class CrystalAttackModule extends Module {
                         bestPos = mutablePos.toImmutable();
                         bestDamage = targetDamage;
                         closestDistance = attackerDistance;
+                        currentSelfDamage = selfDamage; // Update self damage
                     }
                 }
             }
+        }
+
+        if (bestPos != null) {
+            currentTargetDamage = bestDamage; // Update target damage
         }
         return bestPos;
     }
@@ -209,7 +337,6 @@ public class CrystalAttackModule extends Module {
         return damage * (1.0 - blastProt * 0.08);
     }
 
-
     private void breakOptimalCrystals() {
         mc.world.getEntitiesWithinAABB(EntityEnderCrystal.class, mc.player.getEntityBoundingBox().grow(4.5))
                 .stream()
@@ -223,6 +350,12 @@ public class CrystalAttackModule extends Module {
     private void placeCrystal(BlockPos pos) {
         mc.player.connection.sendPacket(new CPacketPlayerTryUseItemOnBlock(
                 pos, EnumFacing.UP, EnumHand.MAIN_HAND, 0.5f, 0.5f, 0.5f));
+
+        if (lastPlacementPos != null) {
+            fadeBlocks.put(lastPlacementPos.toImmutable(), System.currentTimeMillis());
+        }
+        lastPlacementPos = pos.toImmutable();
+        crystalPlaceTimes.add(System.currentTimeMillis());
     }
 
     private void performAttack(EntityEnderCrystal crystal) {

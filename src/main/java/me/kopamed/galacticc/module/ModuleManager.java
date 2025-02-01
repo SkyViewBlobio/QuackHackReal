@@ -38,6 +38,7 @@ public class ModuleManager {
         this.modules.add(new CrystalAttackModule());
         //this.modules.add(new OneShotArrowModule());
         // need to fix autostart. this.modules.add(new AutoClicker());
+        this.modules.add(new ObsidianSurround());
 
         //************************Mod**************************//
         this.modules.add(new cKontrolle());

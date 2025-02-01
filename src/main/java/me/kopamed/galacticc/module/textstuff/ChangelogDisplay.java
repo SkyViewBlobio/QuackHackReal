@@ -53,13 +53,9 @@ public class ChangelogDisplay extends Module {
         String version = TextFormatting.DARK_PURPLE + "QuackHack" + CLIENT_VERSION;
         String title = TextFormatting.RED + "Change-log";
         String[] changelog = {
-                TextFormatting.WHITE + "- AutoCrystal der automatisch Kristalle in der nähe von Spielern platziert und explodiert.",
-                TextFormatting.WHITE + "- Leistung und code verbersserungen.",
-                TextFormatting.WHITE + "- Neue einordung von RandomChatMessages von Sonstiges > TextStuff.",
-                TextFormatting.WHITE + "- VersionUpdateNote die dir anzeigt was neu ist hinzugefügt.",
-                TextFormatting.WHITE + "- BlitzTotem unter Visuelles hinzugefügt.",
-                TextFormatting.WHITE + "- AutomaticBridgeBuilder hat einen 5-block Modus bekommen."
-
+                TextFormatting.WHITE + "- AutoCrystal komplett neugeschrieben und verbessert fehler behoben.",
+                TextFormatting.WHITE + "- AutoCrystal hat nun ein Indikator wo er platziert.",
+                TextFormatting.WHITE + "- ObsidianSurround hinzugefuegt aber immernoch nicht funktionstuechtig.",
         };
 
         Minecraft.getMinecraft().ingameGUI.getChatGUI().printChatMessage(new TextComponentString(version));

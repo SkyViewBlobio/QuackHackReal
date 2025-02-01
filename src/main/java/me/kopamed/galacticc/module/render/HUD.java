@@ -115,7 +115,7 @@ public class HUD extends Module {
     }
 
     private void renderWatermark(ScaledResolution sr) {
-        String waterMarkText = "QuackHack | 1.12.2+Internal-AutoCrystal | v2.0.2b+"; // Static watermark text
+        String waterMarkText = "QuackHack | 1.12.2+Internal-AutoCrystal | v2.0.9b+"; // Static watermark text
         FontRenderer fr = Minecraft.getMinecraft().fontRenderer;  // Updated here
 
         // Draw a border around the watermark (this still remains)
